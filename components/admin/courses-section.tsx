@@ -412,6 +412,9 @@ function CourseOverzicht({ onSelectCourse, onNieuweCourse }: {
 
 function CourseDetail({ course, onTerug }: { course: typeof courses[0]; onTerug: () => void }) {
   const [openModuleId, setOpenModuleId] = useState<string | null>(courseDetailModules[0]?.id ?? null)
+  const [bewerkLesId, setBewerkLesId] = useState<string | null>(null)
+  const [nieuweLesModuleId, setNieuweLesModuleId] = useState<string | null>(null)
+  const [nieuweLesType, setNieuweLesType] = useState<"video" | "tekst" | "quiz" | "opdracht" | null>(null)
 
   return (
     <div className="flex flex-col gap-5 p-6">
@@ -439,7 +442,7 @@ function CourseDetail({ course, onTerug }: { course: typeof courses[0]; onTerug:
         </div>
       </div>
 
-      {/* Twee-koloms layout (zelfde als programma detail) */}
+      {/* Twee-koloms layout */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[340px_1fr]">
         {/* Links: Course info */}
         <div className="flex flex-col gap-5">
@@ -465,7 +468,6 @@ function CourseDetail({ course, onTerug }: { course: typeof courses[0]; onTerug:
                 <label className="text-xs font-medium text-foreground">Titel</label>
                 <Input defaultValue={course.titel} className="text-sm" />
               </div>
-
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-medium text-foreground">Beschrijving</label>
                 <Textarea defaultValue={course.beschrijving} rows={3} className="text-sm resize-none" />
@@ -498,7 +500,6 @@ function CourseDetail({ course, onTerug }: { course: typeof courses[0]; onTerug:
                 </div>
               </div>
 
-              {/* Pricing */}
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-medium text-foreground">Gratis course</label>
@@ -512,7 +513,6 @@ function CourseDetail({ course, onTerug }: { course: typeof courses[0]; onTerug:
                 )}
               </div>
 
-              {/* Status */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-medium text-foreground">Status</label>
                 <Select defaultValue={course.status}>
@@ -525,7 +525,6 @@ function CourseDetail({ course, onTerug }: { course: typeof courses[0]; onTerug:
                 </Select>
               </div>
 
-              {/* Stats */}
               <div className="border-t border-border pt-3 flex flex-col gap-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-muted-foreground">Modules</span>
@@ -610,56 +609,280 @@ function CourseDetail({ course, onTerug }: { course: typeof courses[0]; onTerug:
                   </div>
 
                   <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Switch defaultChecked={module.isVerplicht} />
+                      <label className="text-xs text-muted-foreground">Verplichte module</label>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
                     <label className="text-xs font-medium text-foreground">Lessen</label>
-                    <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1 border-border">
-                      <Plus className="size-3" />
-                      Les toevoegen
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1 border-border">
+                          <Plus className="size-3" />
+                          Les toevoegen
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => { setNieuweLesModuleId(module.id); setNieuweLesType("video"); setBewerkLesId(null) }}>
+                          <Video className="mr-2 size-3.5 text-chart-5" />
+                          Video les
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => { setNieuweLesModuleId(module.id); setNieuweLesType("tekst"); setBewerkLesId(null) }}>
+                          <FileText className="mr-2 size-3.5 text-chart-4" />
+                          Tekst les
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => { setNieuweLesModuleId(module.id); setNieuweLesType("quiz"); setBewerkLesId(null) }}>
+                          <Award className="mr-2 size-3.5 text-chart-2" />
+                          Quiz
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => { setNieuweLesModuleId(module.id); setNieuweLesType("opdracht"); setBewerkLesId(null) }}>
+                          <BookOpen className="mr-2 size-3.5 text-primary" />
+                          Opdracht
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
 
                   <div className="flex flex-col gap-2">
                     {module.lessen.map((les) => {
                       const LesIcon = lesTypeIcons[les.type]
+                      const isBewerken = bewerkLesId === les.id
+
                       return (
-                        <div key={les.id} className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border bg-card hover:bg-secondary/30 transition-colors">
-                          <GripVertical className="size-3.5 text-muted-foreground/40" />
-                          <div className={cn("flex size-8 items-center justify-center rounded-md", lesTypeKleuren[les.type])}>
-                            <LesIcon className="size-4" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">{les.titel}</p>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-[10px] text-muted-foreground capitalize">{les.type}</span>
-                              <span className="text-[10px] text-muted-foreground">{les.duurMin} min</span>
-                              {les.isPreview && (
-                                <Badge variant="outline" className="text-[9px] h-4 border-border px-1">
-                                  <Eye className="size-2.5 mr-0.5" />
-                                  Preview
-                                </Badge>
-                              )}
+                        <div key={les.id} className="flex flex-col">
+                          {/* Les rij */}
+                          <button
+                            onClick={() => { setBewerkLesId(isBewerken ? null : les.id); setNieuweLesModuleId(null); setNieuweLesType(null) }}
+                            className={cn(
+                              "flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-colors text-left w-full",
+                              isBewerken
+                                ? "border-primary/30 bg-primary/5 ring-1 ring-primary/20"
+                                : "border-border bg-card hover:bg-secondary/30"
+                            )}
+                          >
+                            <GripVertical className="size-3.5 text-muted-foreground/40 shrink-0" />
+                            <div className={cn("flex size-8 items-center justify-center rounded-md shrink-0", lesTypeKleuren[les.type])}>
+                              <LesIcon className="size-4" />
                             </div>
-                          </div>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="size-7 text-muted-foreground">
-                                <MoreHorizontal className="size-3.5" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-foreground truncate">{les.titel}</p>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <span className="text-[10px] text-muted-foreground capitalize">{les.type}</span>
+                                <span className="text-[10px] text-muted-foreground">{les.duurMin} min</span>
+                                {les.isPreview && (
+                                  <Badge variant="outline" className="text-[9px] h-4 border-border px-1">
+                                    <Eye className="size-2.5 mr-0.5" />
+                                    Preview
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
+                              <Button variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-destructive">
+                                <Trash2 className="size-3.5" />
                               </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>Bewerken</DropdownMenuItem>
-                              <DropdownMenuItem>Dupliceren</DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem className="text-destructive">Verwijderen</DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                            </div>
+                          </button>
+
+                          {/* Inline les editor */}
+                          {isBewerken && (
+                            <LesEditor les={les} onSluiten={() => setBewerkLesId(null)} />
+                          )}
                         </div>
                       )
                     })}
+
+                    {/* Nieuwe les formulier (verschijnt na type selectie) */}
+                    {nieuweLesModuleId === module.id && nieuweLesType && (
+                      <LesEditor
+                        les={null}
+                        type={nieuweLesType}
+                        onSluiten={() => { setNieuweLesModuleId(null); setNieuweLesType(null) }}
+                      />
+                    )}
                   </div>
                 </div>
               )}
             </Card>
           ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// --- Les Editor Component (inline, per type) --------------------------------
+// Wordt getoond onder de les-rij als je erop klikt of bij "Les toevoegen"
+
+function LesEditor({ les, type, onSluiten }: {
+  les: { id: string; titel: string; type: "video" | "tekst" | "quiz" | "opdracht"; duurMin: number; isPreview: boolean } | null
+  type?: "video" | "tekst" | "quiz" | "opdracht"
+  onSluiten: () => void
+}) {
+  const lesType = les?.type || type || "video"
+  const isNieuw = !les
+
+  return (
+    <div className="mt-1 rounded-lg border border-primary/20 bg-card p-4 flex flex-col gap-4">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className={cn("flex size-6 items-center justify-center rounded", lesTypeKleuren[lesType])}>
+            {lesType === "video" && <Video className="size-3.5" />}
+            {lesType === "tekst" && <FileText className="size-3.5" />}
+            {lesType === "quiz" && <Award className="size-3.5" />}
+            {lesType === "opdracht" && <BookOpen className="size-3.5" />}
+          </div>
+          <span className="text-xs font-semibold text-foreground capitalize">
+            {isNieuw ? `Nieuwe ${lesType} les` : `${lesType} les bewerken`}
+          </span>
+        </div>
+        <Button variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground" onClick={onSluiten}>
+          Sluiten
+        </Button>
+      </div>
+
+      {/* Basis velden (alle types) */}
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_100px]">
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-medium text-foreground">Titel</label>
+          <Input defaultValue={les?.titel ?? ""} placeholder="Les titel..." className="text-sm" />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-medium text-foreground">Duur (min)</label>
+          <Input type="number" defaultValue={les?.duurMin ?? 5} min={1} className="text-sm" />
+        </div>
+      </div>
+
+      {/* Type-specifieke content */}
+      {lesType === "video" && (
+        <div className="flex flex-col gap-3">
+          {/* Video upload zone — Supabase Storage: course-videos/{lesson_id}.mp4 */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-foreground">Video</label>
+            <div className="relative rounded-lg overflow-hidden bg-secondary aspect-video border-2 border-dashed border-border hover:border-primary/30 transition-colors cursor-pointer">
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                <div className="size-12 rounded-full bg-muted flex items-center justify-center">
+                  <Upload className="size-5 text-muted-foreground" />
+                </div>
+                <p className="text-xs font-medium text-muted-foreground">Klik om video te uploaden</p>
+                <p className="text-[10px] text-muted-foreground/60">MP4, MOV, WebM. Max 500MB.</p>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-foreground">Of externe URL</label>
+            <Input placeholder="https://youtube.com/watch?v=... of Vimeo link" className="text-sm" />
+            <p className="text-[10px] text-muted-foreground">YouTube en Vimeo links worden automatisch ingebed in de cursus.</p>
+          </div>
+        </div>
+      )}
+
+      {lesType === "tekst" && (
+        <div className="flex flex-col gap-1.5">
+          {/* Tekst content — opgeslagen als Markdown in course_lessons.content */}
+          <label className="text-xs font-medium text-foreground">Lesinhoud</label>
+          <Textarea
+            placeholder={"Schrijf de lesinhoud hier... (Markdown wordt ondersteund)\n\n# Kop 1\n## Kop 2\n\n- Lijst item\n- **Vetgedrukt**\n\n> Citaat of tip"}
+            rows={10}
+            className="text-sm font-mono resize-y min-h-[200px]"
+          />
+          <p className="text-[10px] text-muted-foreground">Markdown syntax: **vet**, *cursief*, # koppen, - lijsten, {'>'} citaten</p>
+        </div>
+      )}
+
+      {lesType === "quiz" && (
+        <div className="flex flex-col gap-3">
+          {/* Quiz builder — opgeslagen als JSON in course_lessons.content */}
+          <label className="text-xs font-medium text-foreground">Quiz vragen</label>
+
+          {/* Voorbeeld vraag 1 */}
+          <Card className="border-border p-0 gap-0">
+            <CardContent className="p-4 flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold text-primary">Vraag 1</span>
+                <Button variant="ghost" size="icon" className="size-6 text-muted-foreground hover:text-destructive">
+                  <Trash2 className="size-3" />
+                </Button>
+              </div>
+              <Input placeholder="Typ je vraag..." className="text-sm" />
+              <div className="flex flex-col gap-2">
+                {["A", "B", "C", "D"].map((letter) => (
+                  <div key={letter} className="flex items-center gap-2">
+                    <button className={cn(
+                      "flex size-7 items-center justify-center rounded-md border text-xs font-semibold transition-colors",
+                      letter === "A"
+                        ? "border-success bg-success/10 text-success"
+                        : "border-border text-muted-foreground hover:border-success/50 hover:text-success"
+                    )}>
+                      {letter}
+                    </button>
+                    <Input placeholder={`Antwoord ${letter}...`} className="text-sm flex-1" />
+                  </div>
+                ))}
+              </div>
+              <p className="text-[10px] text-muted-foreground">Klik op de letter om het juiste antwoord te selecteren (groen = correct)</p>
+            </CardContent>
+          </Card>
+
+          <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 border-dashed border-border w-full">
+            <Plus className="size-3.5" />
+            Vraag toevoegen
+          </Button>
+        </div>
+      )}
+
+      {lesType === "opdracht" && (
+        <div className="flex flex-col gap-3">
+          {/* Opdracht — opgeslagen in course_lessons.content als Markdown */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-foreground">Opdracht beschrijving</label>
+            <Textarea
+              placeholder="Beschrijf de opdracht die de client moet uitvoeren..."
+              rows={5}
+              className="text-sm resize-y"
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-foreground">Bijlagen</label>
+            <div className="rounded-lg border-2 border-dashed border-border p-4 flex flex-col items-center gap-2 hover:border-primary/30 transition-colors cursor-pointer">
+              <Upload className="size-5 text-muted-foreground" />
+              <p className="text-xs text-muted-foreground">Upload PDF, afbeeldingen of andere bestanden</p>
+              <p className="text-[10px] text-muted-foreground/60">Max 50MB per bestand</p>
+            </div>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-foreground">Inlever type</label>
+            <Select defaultValue="tekst">
+              <SelectTrigger className="text-sm h-9"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="tekst">Tekst antwoord</SelectItem>
+                <SelectItem value="bestand">Bestand upload</SelectItem>
+                <SelectItem value="foto">Foto / video</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      )}
+
+      {/* Opties (alle types) */}
+      <div className="flex items-center justify-between border-t border-border pt-3">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Switch defaultChecked={les?.isPreview ?? false} />
+            <label className="text-xs text-muted-foreground">Gratis preview</label>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="h-8 text-xs" onClick={onSluiten}>
+            Annuleren
+          </Button>
+          <Button size="sm" className="h-8 text-xs gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90" onClick={onSluiten}>
+            <CheckCircle2 className="size-3.5" />
+            {isNieuw ? "Les toevoegen" : "Opslaan"}
+          </Button>
         </div>
       </div>
     </div>
