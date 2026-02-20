@@ -158,14 +158,14 @@ export default function ShoppingListScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: theme.colors.primary,
+    backgroundColor: theme.colors.headerDark,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: theme.colors.primary,
+    backgroundColor: theme.colors.headerDark,
   },
   backBtn: {
     width: 36,

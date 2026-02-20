@@ -35,6 +35,8 @@ export default function RestTimer({
 
   if (state === 'idle') return null;
 
+  const ringColor = state === 'finished' ? theme.colors.success : theme.colors.primary;
+
   return (
     <View style={styles.container}>
       <Text style={styles.label}>
@@ -43,7 +45,6 @@ export default function RestTimer({
 
       <View style={styles.timerWrapper}>
         <Svg width={SIZE} height={SIZE}>
-          {/* Background circle */}
           <Circle
             cx={SIZE / 2}
             cy={SIZE / 2}
@@ -52,12 +53,11 @@ export default function RestTimer({
             strokeWidth={STROKE_WIDTH}
             fill="none"
           />
-          {/* Progress circle */}
           <Circle
             cx={SIZE / 2}
             cy={SIZE / 2}
             r={RADIUS}
-            stroke={state === 'finished' ? theme.colors.success : theme.colors.secondary}
+            stroke={ringColor}
             strokeWidth={STROKE_WIDTH}
             fill="none"
             strokeDasharray={CIRCUMFERENCE}
@@ -79,19 +79,19 @@ export default function RestTimer({
       <View style={styles.controls}>
         {state === 'running' && (
           <TouchableOpacity style={styles.controlButton} onPress={onPause}>
-            <Ionicons name="pause" size={20} color={theme.colors.text} />
+            <Ionicons name="pause" size={18} color={theme.colors.text} />
             <Text style={styles.controlText}>Pauze</Text>
           </TouchableOpacity>
         )}
         {state === 'paused' && (
           <TouchableOpacity style={styles.controlButton} onPress={onResume}>
-            <Ionicons name="play" size={20} color={theme.colors.text} />
+            <Ionicons name="play" size={18} color={theme.colors.text} />
             <Text style={styles.controlText}>Hervatten</Text>
           </TouchableOpacity>
         )}
         {(state === 'running' || state === 'paused') && (
           <TouchableOpacity style={[styles.controlButton, styles.skipButton]} onPress={onSkip}>
-            <Ionicons name="play-skip-forward" size={20} color="#fff" />
+            <Ionicons name="play-skip-forward" size={18} color="#fff" />
             <Text style={[styles.controlText, { color: '#fff' }]}>Overslaan</Text>
           </TouchableOpacity>
         )}
@@ -107,17 +107,15 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
     borderRadius: 16,
     marginVertical: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
+    ...theme.shadows.md,
   },
   label: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 14,
+    fontWeight: '700',
     color: theme.colors.textSecondary,
     marginBottom: 16,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   timerWrapper: {
     width: SIZE,
@@ -147,7 +145,7 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 20,
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: 12,
     backgroundColor: theme.colors.background,
   },
   skipButton: {

@@ -275,14 +275,14 @@ export default function MealPlanScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: theme.colors.primary,
+    backgroundColor: theme.colors.headerDark,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: theme.colors.primary,
+    backgroundColor: theme.colors.headerDark,
   },
   backBtn: {
     width: 36,
@@ -346,11 +346,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 2,
-    elevation: 1,
+    ...theme.shadows.sm,
   },
   dayTabActive: {
     backgroundColor: theme.colors.primary,
@@ -423,11 +419,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
     borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
+    ...theme.shadows.md,
   },
   mealHeader: {
     flexDirection: 'row',

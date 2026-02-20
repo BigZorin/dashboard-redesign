@@ -36,7 +36,7 @@ function addDays(date: Date, days: number): Date {
 
 function formatDateRange(start: Date, end: Date): string {
   const opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short' };
-  return `${start.toLocaleDateString('nl-NL', opts)} – ${end.toLocaleDateString('nl-NL', opts)}`;
+  return `${start.toLocaleDateString('nl-NL', opts)} - ${end.toLocaleDateString('nl-NL', opts)}`;
 }
 
 export default function ProgramDetailScreen({ route, navigation }: any) {
@@ -55,7 +55,6 @@ export default function ProgramDetailScreen({ route, navigation }: any) {
     }, [assignmentId, queryClient])
   );
 
-  // All blocks start collapsed — user taps to open
   React.useEffect(() => {
     if (program) {
       setExpandedBlocks(new Set());
@@ -63,7 +62,6 @@ export default function ProgramDetailScreen({ route, navigation }: any) {
     }
   }, [program?.currentBlockIndex]);
 
-  // Calculate block start dates
   const blockDates = useMemo(() => {
     if (!program) return [];
     const startDate = new Date(program.startDate);
@@ -94,7 +92,6 @@ export default function ProgramDetailScreen({ route, navigation }: any) {
     });
   };
 
-  // Calculate absolute week number: sum of all previous block weeks + weekIndex within block
   const getAbsoluteWeekNumber = (blockIndex: number, weekIndex: number): number => {
     let total = 0;
     for (let i = 0; i < blockIndex; i++) {
@@ -110,14 +107,12 @@ export default function ProgramDetailScreen({ route, navigation }: any) {
     const weekEntry = weeklyMap[templateId]?.[weekNum];
 
     if (weekEntry) {
-      // Existing client_workout for this template+week — navigate to it
       navigation.navigate('WorkoutDetail', {
         workoutId: weekEntry.id,
         weekNumber: weekNum,
         clientProgramId: assignmentId,
       });
     } else {
-      // No client_workout yet — navigate with template data + week context
       navigation.navigate('WorkoutDetail', {
         templateData: {
           workoutTemplate: bw.workoutTemplate,
@@ -155,46 +150,50 @@ export default function ProgramDetailScreen({ route, navigation }: any) {
             />
           ) : (
             <View style={styles.bannerFallback}>
-              <Ionicons name="barbell-outline" size={56} color="rgba(255,255,255,0.1)" />
+              <Ionicons name="barbell-outline" size={56} color="rgba(255,255,255,0.12)" />
             </View>
           )}
           {/* Bottom gradient overlay */}
-          <View style={styles.bannerGradient} />
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
+          <View style={styles.bannerOverlay} />
+
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <Ionicons name="arrow-back" size={22} color="#fff" />
           </TouchableOpacity>
+
           {program.program.description ? (
-            <TouchableOpacity
-              style={styles.infoButton}
-              onPress={() => setShowInfo(true)}
-            >
+            <TouchableOpacity style={styles.infoButton} onPress={() => setShowInfo(true)}>
               <Ionicons name="information-circle-outline" size={22} color="#fff" />
             </TouchableOpacity>
           ) : null}
+
           <View style={styles.bannerTitleArea}>
             <Text style={styles.bannerTitle} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>
               {program.program.name}
             </Text>
             <View style={styles.bannerMeta}>
-              <Text style={styles.bannerMetaText}>
-                {blocks.length} {blocks.length === 1 ? 'blok' : 'blokken'}
-              </Text>
-              <View style={styles.bannerMetaDivider} />
-              <Text style={styles.bannerMetaText}>
-                {blocks.reduce((sum, b) => sum + (b.durationWeeks || 1), 0)} weken
-              </Text>
-              <View style={styles.bannerMetaDivider} />
-              <Text style={styles.bannerMetaText}>
-                {blocks.reduce((sum, b) => sum + b.workouts.length, 0)} trainingen
-              </Text>
+              <View style={styles.bannerMetaChip}>
+                <Ionicons name="layers-outline" size={12} color="rgba(255,255,255,0.8)" />
+                <Text style={styles.bannerMetaText}>
+                  {blocks.length} {blocks.length === 1 ? 'blok' : 'blokken'}
+                </Text>
+              </View>
+              <View style={styles.bannerMetaChip}>
+                <Ionicons name="calendar-outline" size={12} color="rgba(255,255,255,0.8)" />
+                <Text style={styles.bannerMetaText}>
+                  {blocks.reduce((sum, b) => sum + (b.durationWeeks || 1), 0)} weken
+                </Text>
+              </View>
+              <View style={styles.bannerMetaChip}>
+                <Ionicons name="barbell-outline" size={12} color="rgba(255,255,255,0.8)" />
+                <Text style={styles.bannerMetaText}>
+                  {blocks.reduce((sum, b) => sum + b.workouts.length, 0)} trainingen
+                </Text>
+              </View>
             </View>
           </View>
         </View>
 
-        {/* Blocks → Weeks → Workouts */}
+        {/* Blocks */}
         <View style={styles.blocksContainer}>
           {blocks.map((block, blockIndex) => {
             const isCurrentBlock = blockIndex === program.currentBlockIndex;
@@ -206,7 +205,7 @@ export default function ProgramDetailScreen({ route, navigation }: any) {
               <View key={block.id} style={styles.blockSection}>
                 {/* Block Header */}
                 <TouchableOpacity
-                  style={styles.blockHeader}
+                  style={[styles.blockHeader, isCurrentBlock && styles.blockHeaderActive]}
                   onPress={() => toggleBlock(blockIndex)}
                   activeOpacity={0.7}
                 >
@@ -217,14 +216,14 @@ export default function ProgramDetailScreen({ route, navigation }: any) {
                         {block.name}
                       </Text>
                       <Text style={styles.blockSubtitle} numberOfLines={1}>
-                        {weekCount} {weekCount === 1 ? 'week' : 'weken'} · {block.workouts.length} trainingen
+                        {weekCount} {weekCount === 1 ? 'week' : 'weken'} - {block.workouts.length} trainingen
                       </Text>
                     </View>
                   </View>
                   <Ionicons
                     name={isBlockExpanded ? 'chevron-up' : 'chevron-down'}
                     size={20}
-                    color={theme.colors.textSecondary}
+                    color={isCurrentBlock ? theme.colors.primary : theme.colors.textSecondary}
                   />
                 </TouchableOpacity>
 
@@ -266,16 +265,12 @@ export default function ProgramDetailScreen({ route, navigation }: any) {
                             </View>
                             <View style={styles.weekHeaderRight}>
                               {completedInWeek > 0 && (
-                                <Text style={[
-                                  styles.weekCompletionText,
-                                  allDone && styles.weekCompletionDone,
-                                ]}>
-                                  {completedInWeek}/{totalInWeek}
-                                </Text>
+                                <View style={[styles.completionBadge, allDone && styles.completionBadgeDone]}>
+                                  <Text style={[styles.completionBadgeText, allDone && styles.completionBadgeTextDone]}>
+                                    {completedInWeek}/{totalInWeek}
+                                  </Text>
+                                </View>
                               )}
-                              <Text style={styles.weekWorkoutCount}>
-                                {block.workouts.length}
-                              </Text>
                               <Ionicons
                                 name={isWeekExpanded ? 'chevron-up' : 'chevron-down'}
                                 size={16}
@@ -311,7 +306,7 @@ export default function ProgramDetailScreen({ route, navigation }: any) {
                                         isInProgress && styles.workoutDayColInProgress,
                                       ]}>
                                         {isCompleted ? (
-                                          <Ionicons name="checkmark" size={16} color="#10b981" />
+                                          <Ionicons name="checkmark" size={16} color={theme.colors.success} />
                                         ) : (
                                           <Text style={[
                                             styles.workoutDayLabel,
@@ -327,22 +322,16 @@ export default function ProgramDetailScreen({ route, navigation }: any) {
                                           isCompleted && styles.workoutNameCompleted,
                                         ]} numberOfLines={1}>{template.name}</Text>
                                         <View style={styles.workoutMeta}>
-                                          {isCompleted && weekEntry?.completedAt && (
-                                            <Text style={styles.workoutMetaCompleted}>
-                                              Voltooid
-                                            </Text>
+                                          {isCompleted && (
+                                            <Text style={styles.workoutMetaCompleted}>Voltooid</Text>
                                           )}
                                           {isInProgress && (
-                                            <Text style={styles.workoutMetaInProgress}>
-                                              Bezig
-                                            </Text>
+                                            <Text style={styles.workoutMetaInProgress}>Bezig</Text>
                                           )}
                                           {!isCompleted && !isInProgress && (
                                             <>
                                               {template.durationMinutes && (
-                                                <Text style={styles.workoutMetaText}>
-                                                  {template.durationMinutes} min
-                                                </Text>
+                                                <Text style={styles.workoutMetaText}>{template.durationMinutes} min</Text>
                                               )}
                                               <Text style={styles.workoutMetaText}>
                                                 {template.exercises.length} oefeningen
@@ -351,7 +340,11 @@ export default function ProgramDetailScreen({ route, navigation }: any) {
                                           )}
                                         </View>
                                       </View>
-                                      <Ionicons name="chevron-forward" size={18} color={isCompleted ? '#10b981' : theme.colors.primary} />
+                                      <Ionicons
+                                        name="chevron-forward"
+                                        size={18}
+                                        color={isCompleted ? theme.colors.success : theme.colors.primary}
+                                      />
                                     </TouchableOpacity>
                                   );
                                 })
@@ -410,10 +403,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: theme.colors.textSecondary,
   },
-  // Banner
+
+  // Banner - premium gradient
   bannerContainer: {
     position: 'relative',
-    height: 180,
+    height: 200,
   },
   banner: {
     ...StyleSheet.absoluteFillObject,
@@ -422,15 +416,13 @@ const styles = StyleSheet.create({
   },
   bannerFallback: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: theme.colors.primary,
+    backgroundColor: theme.colors.headerDark,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  bannerGradient: {
+  bannerOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'transparent',
-    // Simulate bottom gradient with layered overlay
-    borderBottomWidth: 0,
+    backgroundColor: 'rgba(30,24,57,0.5)',
   },
   backButton: {
     position: 'absolute',
@@ -439,7 +431,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: 'rgba(0,0,0,0.35)',
+    backgroundColor: 'rgba(0,0,0,0.3)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -450,7 +442,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: 'rgba(0,0,0,0.35)',
+    backgroundColor: 'rgba(0,0,0,0.3)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -460,7 +452,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     paddingHorizontal: 20,
-    paddingBottom: 14,
+    paddingBottom: 16,
     paddingTop: 40,
   },
   bannerTitle: {
@@ -470,30 +462,29 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0,0,0,0.8)',
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 10,
-    marginBottom: 8,
-    textTransform: 'uppercase',
+    marginBottom: 10,
   },
   bannerMeta: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
     flexWrap: 'wrap',
   },
+  bannerMetaChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+  },
   bannerMetaText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
-    color: 'rgba(255,255,255,0.85)',
-    textShadowColor: 'rgba(0,0,0,0.5)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
-    textTransform: 'uppercase',
+    color: 'rgba(255,255,255,0.9)',
   },
-  bannerMetaDivider: {
-    width: 3,
-    height: 3,
-    borderRadius: 2,
-    backgroundColor: 'rgba(255,255,255,0.5)',
-    marginHorizontal: 8,
-  },
+
   // Modal
   modalOverlay: {
     flex: 1,
@@ -504,10 +495,11 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: theme.colors.surface,
-    borderRadius: 16,
-    padding: 20,
+    borderRadius: 20,
+    padding: 24,
     width: '100%',
     maxHeight: '70%',
+    ...theme.shadows.lg,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -525,22 +517,28 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
     lineHeight: 23,
   },
+
   // Blocks
   blocksContainer: {
-    paddingTop: 0,
+    paddingTop: 4,
   },
   blockSection: {
-    marginBottom: 4,
+    marginBottom: 2,
   },
   blockHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 14,
+    paddingVertical: 16,
     backgroundColor: theme.colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
+  },
+  blockHeaderActive: {
+    backgroundColor: theme.colors.surface,
+    borderLeftWidth: 3,
+    borderLeftColor: theme.colors.primary,
   },
   blockHeaderLeft: {
     flexDirection: 'row',
@@ -566,7 +564,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
     color: theme.colors.text,
-    textTransform: 'uppercase',
   },
   blockTitleActive: {
     color: theme.colors.primary,
@@ -574,34 +571,35 @@ const styles = StyleSheet.create({
   blockSubtitle: {
     fontSize: 13,
     color: theme.colors.textSecondary,
-    marginTop: 1,
-    textTransform: 'uppercase',
+    marginTop: 2,
   },
+
   // Weeks
   weeksContainer: {
     paddingHorizontal: 20,
-    paddingTop: 4,
-    paddingBottom: 8,
+    paddingTop: 8,
+    paddingBottom: 12,
   },
   blockDesc: {
     fontSize: 13,
     color: theme.colors.textSecondary,
-    lineHeight: 18,
-    marginBottom: 8,
+    lineHeight: 19,
+    marginBottom: 10,
     marginTop: 4,
   },
   weekCard: {
     backgroundColor: theme.colors.surface,
-    borderRadius: 12,
+    borderRadius: 14,
     overflow: 'hidden',
     marginTop: 8,
+    ...theme.shadows.sm,
   },
   weekHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingVertical: 13,
   },
   weekHeaderLeft: {
     flex: 1,
@@ -610,36 +608,33 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: theme.colors.text,
-    textTransform: 'uppercase',
   },
   weekDates: {
     fontSize: 12,
     color: theme.colors.textTertiary,
-    marginTop: 1,
-    textTransform: 'uppercase',
+    marginTop: 2,
   },
   weekHeaderRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
   },
-  weekCompletionText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: theme.colors.textTertiary,
-  },
-  weekCompletionDone: {
-    color: '#10b981',
-  },
-  weekWorkoutCount: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: theme.colors.textTertiary,
+  completionBadge: {
     backgroundColor: theme.colors.background,
     paddingHorizontal: 8,
-    paddingVertical: 2,
+    paddingVertical: 3,
     borderRadius: 10,
-    overflow: 'hidden',
+  },
+  completionBadgeDone: {
+    backgroundColor: `${theme.colors.success}18`,
+  },
+  completionBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: theme.colors.textTertiary,
+  },
+  completionBadgeTextDone: {
+    color: theme.colors.success,
   },
   weekBody: {
     borderTopWidth: 1,
@@ -651,26 +646,27 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingVertical: 16,
   },
+
   // Workout row
   workoutRow: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingVertical: 13,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },
   workoutDayCol: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    backgroundColor: `${theme.colors.primary}12`,
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    backgroundColor: theme.colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
   },
   workoutDayColCompleted: {
-    backgroundColor: '#d1fae5',
+    backgroundColor: `${theme.colors.success}18`,
   },
   workoutDayColInProgress: {
     backgroundColor: '#dbeafe',
@@ -679,7 +675,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: theme.colors.primary,
-    textTransform: 'uppercase',
   },
   workoutDayLabelInProgress: {
     color: '#3b82f6',
@@ -691,7 +686,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: theme.colors.text,
-    textTransform: 'uppercase',
   },
   workoutNameCompleted: {
     color: theme.colors.textSecondary,
@@ -699,23 +693,20 @@ const styles = StyleSheet.create({
   workoutMeta: {
     flexDirection: 'row',
     gap: 10,
-    marginTop: 2,
+    marginTop: 3,
   },
   workoutMetaText: {
     fontSize: 12,
     color: theme.colors.textSecondary,
-    textTransform: 'uppercase',
   },
   workoutMetaCompleted: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#10b981',
-    textTransform: 'uppercase',
+    color: theme.colors.success,
   },
   workoutMetaInProgress: {
     fontSize: 12,
     fontWeight: '600',
     color: '#3b82f6',
-    textTransform: 'uppercase',
   },
 });

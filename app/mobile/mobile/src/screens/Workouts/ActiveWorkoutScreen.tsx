@@ -36,8 +36,8 @@ type SetLog = {
   weightKg: number | null;
   actualRpe: number | null;
   actualRir: number | null;
-  savedToDb?: boolean; // true once persisted to Supabase
-  dbLogId?: string;    // workout_logs.id from Supabase
+  savedToDb?: boolean;
+  dbLogId?: string;
 };
 
 function getPrescriptionLabel(ex: any): string | null {
@@ -67,7 +67,6 @@ export default function ActiveWorkoutScreen({ route, navigation }: any) {
   const completeWorkoutMutation = useCompleteWorkout();
   const timer = useRestTimer();
 
-  // Support both workoutId (fetched) and templateData (passed from program)
   const isFromTemplate = !workoutId && !!templateData;
   const isLoading = workoutId ? fetchLoading : false;
   const workout = workoutId
@@ -76,7 +75,6 @@ export default function ActiveWorkoutScreen({ route, navigation }: any) {
       ? { id: null, workoutTemplate: templateData.workoutTemplate }
       : null;
 
-  // Live-save: the actual client_workout ID in the DB
   const [liveWorkoutId, setLiveWorkoutId] = useState<string | null>(workoutId || null);
   const [isInitializing, setIsInitializing] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -90,7 +88,6 @@ export default function ActiveWorkoutScreen({ route, navigation }: any) {
   const [rpeInput, setRpeInput] = useState<number | null>(null);
   const [rirInput, setRirInput] = useState<number | null>(null);
 
-  // Previous week reference data (grouped by exercise_id)
   const [prevWeekByExercise, setPrevWeekByExercise] = useState<
     Record<string, Array<{ setNumber: number; repsCompleted: number; weightKg: number | null; actualRpe: number | null }>>
   >({});
@@ -99,7 +96,7 @@ export default function ActiveWorkoutScreen({ route, navigation }: any) {
   const currentExercise = exercises[currentExerciseIndex];
   const totalExercises = exercises.length;
 
-  // ─── Load previous week's data ─────────────────────────────────
+  // Load previous week's data
   useEffect(() => {
     if (resolvedProgramId && resolvedWeekNumber != null && resolvedWeekNumber > 0 && workout?.workoutTemplate?.id) {
       fetchPreviousWeekLogs(resolvedProgramId, workout.workoutTemplate.id, resolvedWeekNumber)
@@ -115,36 +112,27 @@ export default function ActiveWorkoutScreen({ route, navigation }: any) {
     }
   }, [resolvedProgramId, resolvedWeekNumber, workout?.workoutTemplate?.id]);
 
-  // ─── Initialize workout session ───────────────────────────────
+  // Initialize workout session
   useEffect(() => {
     initializeSession();
   }, [workout]);
 
   async function initializeSession() {
     if (!workout?.workoutTemplate) return;
-
     try {
-      // Check for a saved session in AsyncStorage
       const savedSession = await AsyncStorage.getItem(ACTIVE_WORKOUT_KEY);
       if (savedSession) {
         const session = JSON.parse(savedSession);
-        // Resume if same template
         const currentTemplateId = workout.workoutTemplate.id;
         if (session.templateId === currentTemplateId && session.liveWorkoutId) {
           setLiveWorkoutId(session.liveWorkoutId);
           setCurrentExerciseIndex(session.currentExerciseIndex || 0);
-
-          // Load existing logs from DB
           try {
             const dbLogs = await loadWorkoutLogs(session.liveWorkoutId);
             if (dbLogs.length > 0) {
-              // Rebuild exerciseLogs from DB data
               const rebuilt: Record<string, SetLog[]> = {};
               for (const log of dbLogs) {
-                // Find the template exercise that matches this exercise_id
-                const templateEx = exercises.find(
-                  (ex: any) => ex.exercise?.id === log.exerciseId
-                );
+                const templateEx = exercises.find((ex: any) => ex.exercise?.id === log.exerciseId);
                 if (templateEx) {
                   if (!rebuilt[templateEx.id]) rebuilt[templateEx.id] = [];
                   rebuilt[templateEx.id].push({
@@ -159,15 +147,11 @@ export default function ActiveWorkoutScreen({ route, navigation }: any) {
               }
               setExerciseLogs(rebuilt);
             }
-          } catch (e) {
-            console.log('Could not load existing logs, starting fresh');
-          }
+          } catch (e) {}
           setIsInitializing(false);
           return;
         }
       }
-
-      // For template workouts: create client_workout immediately
       if (isFromTemplate) {
         const newId = await startWorkout(
           templateData.workoutTemplate.id,
@@ -176,65 +160,40 @@ export default function ActiveWorkoutScreen({ route, navigation }: any) {
           resolvedWeekNumber,
         );
         setLiveWorkoutId(newId);
-        // Save session to AsyncStorage
-        await AsyncStorage.setItem(
-          ACTIVE_WORKOUT_KEY,
-          JSON.stringify({
-            templateId: workout.workoutTemplate.id,
-            liveWorkoutId: newId,
-            currentExerciseIndex: 0,
-          })
-        );
+        await AsyncStorage.setItem(ACTIVE_WORKOUT_KEY, JSON.stringify({
+          templateId: workout.workoutTemplate.id, liveWorkoutId: newId, currentExerciseIndex: 0,
+        }));
       } else if (workoutId) {
         setLiveWorkoutId(workoutId);
-        // Also save to AsyncStorage for resume
-        await AsyncStorage.setItem(
-          ACTIVE_WORKOUT_KEY,
-          JSON.stringify({
-            templateId: workout.workoutTemplate.id,
-            liveWorkoutId: workoutId,
-            currentExerciseIndex: 0,
-          })
-        );
+        await AsyncStorage.setItem(ACTIVE_WORKOUT_KEY, JSON.stringify({
+          templateId: workout.workoutTemplate.id, liveWorkoutId: workoutId, currentExerciseIndex: 0,
+        }));
       }
     } catch (err: any) {
-      console.error('Failed to initialize workout session:', err?.message);
       Alert.alert('Fout', `Kon workout niet starten: ${err?.message || 'Onbekende fout'}`);
     }
     setIsInitializing(false);
   }
 
-  // ─── Persist exercise index to AsyncStorage ───────────────────
   const saveSessionState = useCallback(async (exerciseIdx: number) => {
     if (!liveWorkoutId || !workout?.workoutTemplate) return;
     try {
-      await AsyncStorage.setItem(
-        ACTIVE_WORKOUT_KEY,
-        JSON.stringify({
-          templateId: workout.workoutTemplate.id,
-          liveWorkoutId,
-          currentExerciseIndex: exerciseIdx,
-        })
-      );
+      await AsyncStorage.setItem(ACTIVE_WORKOUT_KEY, JSON.stringify({
+        templateId: workout.workoutTemplate.id, liveWorkoutId, currentExerciseIndex: exerciseIdx,
+      }));
     } catch {}
   }, [liveWorkoutId, workout]);
 
-  // Auto-fill weight from previous week or prescription when switching exercises
   useEffect(() => {
     if (!currentExercise) return;
     const exerciseId = currentExercise.exercise?.id;
     const prevSets = exerciseId ? prevWeekByExercise[exerciseId] : undefined;
-
-    // Prefer previous week's weight, fall back to prescribed
     if (prevSets && prevSets.length > 0) {
       const lastWeight = prevSets[prevSets.length - 1].weightKg;
       setWeightInput(lastWeight != null ? String(lastWeight) : '');
     } else {
       const intensity = currentExercise.intensityType || 'weight';
-      if (
-        (intensity === 'weight' || intensity === 'percentage') &&
-        currentExercise.prescribedWeightKg
-      ) {
+      if ((intensity === 'weight' || intensity === 'percentage') && currentExercise.prescribedWeightKg) {
         setWeightInput(String(currentExercise.prescribedWeightKg));
       } else {
         setWeightInput('');
@@ -247,9 +206,7 @@ export default function ActiveWorkoutScreen({ route, navigation }: any) {
 
   const completedSetsCount = useMemo(() => {
     let count = 0;
-    Object.values(exerciseLogs).forEach((sets) => {
-      count += sets.length;
-    });
+    Object.values(exerciseLogs).forEach((sets) => { count += sets.length; });
     return count;
   }, [exerciseLogs]);
 
@@ -257,7 +214,6 @@ export default function ActiveWorkoutScreen({ route, navigation }: any) {
     return exercises.reduce((sum: number, ex: any) => sum + (ex.sets || 1), 0);
   }, [exercises]);
 
-  // ─── Loading state ────────────────────────────────────────────
   if (isLoading || isInitializing) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
@@ -288,39 +244,18 @@ export default function ActiveWorkoutScreen({ route, navigation }: any) {
   const showRirInput = intensityType === 'rir';
   const isBodyweight = intensityType === 'bodyweight';
   const prescriptionLabel = getPrescriptionLabel(currentExercise);
+  const progressPercent = totalSetsCount > 0 ? (completedSetsCount / totalSetsCount) * 100 : 0;
 
-  // ─── Log set: save to DB immediately ──────────────────────────
   const handleLogSet = async () => {
     const reps = parseInt(repsInput) || 0;
-    if (reps <= 0) {
-      Alert.alert('Voer reps in', 'Vul het aantal herhalingen in.');
-      return;
-    }
-    if (!liveWorkoutId) {
-      Alert.alert('Fout', 'Workout sessie niet gestart. Herstart de workout.');
-      return;
-    }
-    if (!currentExercise.exercise?.id) {
-      Alert.alert('Fout', 'Oefening data ontbreekt.');
-      return;
-    }
+    if (reps <= 0) { Alert.alert('Voer reps in', 'Vul het aantal herhalingen in.'); return; }
+    if (!liveWorkoutId) { Alert.alert('Fout', 'Workout sessie niet gestart.'); return; }
+    if (!currentExercise.exercise?.id) { Alert.alert('Fout', 'Oefening data ontbreekt.'); return; }
 
     const weight = weightInput ? parseFloat(weightInput) : null;
-    const newSet: SetLog = {
-      repsCompleted: reps,
-      weightKg: weight,
-      actualRpe: rpeInput,
-      actualRir: rirInput,
-      savedToDb: false,
-    };
-
-    // Add to local state immediately (optimistic)
+    const newSet: SetLog = { repsCompleted: reps, weightKg: weight, actualRpe: rpeInput, actualRir: rirInput, savedToDb: false };
     const updatedSets = [...(exerciseLogs[currentExercise.id] || []), newSet];
-    setExerciseLogs((prev) => ({
-      ...prev,
-      [currentExercise.id]: updatedSets,
-    }));
-
+    setExerciseLogs((prev) => ({ ...prev, [currentExercise.id]: updatedSets }));
     setRepsInput('');
     setRpeInput(null);
     setRirInput(null);
@@ -329,43 +264,29 @@ export default function ActiveWorkoutScreen({ route, navigation }: any) {
     const isLastSetForExercise = newSetsCompleted >= totalSets;
     const isLastExercise = currentExerciseIndex >= totalExercises - 1;
 
-    // Start rest timer if not the last set of the last exercise
     if (!(isLastSetForExercise && isLastExercise)) {
       const restSeconds = currentExercise.restSeconds;
-      if (restSeconds && restSeconds > 0) {
-        timer.start(restSeconds);
-      }
+      if (restSeconds && restSeconds > 0) timer.start(restSeconds);
     }
 
-    // Save to DB in background
     setSavingSet(true);
     try {
       const dbLogId = await saveSetLog(liveWorkoutId, {
-        exerciseId: currentExercise.exercise.id,
-        setNumber: newSetsCompleted,
-        repsCompleted: reps,
-        weightKg: weight,
+        exerciseId: currentExercise.exercise.id, setNumber: newSetsCompleted,
+        repsCompleted: reps, weightKg: weight,
         prescribedReps: currentExercise.reps || null,
         prescribedWeightKg: currentExercise.prescribedWeightKg ?? null,
         prescribedRpe: currentExercise.prescribedRpe ?? null,
         prescribedRir: currentExercise.prescribedRir ?? null,
-        actualRpe: rpeInput,
-        actualRir: rirInput,
+        actualRpe: rpeInput, actualRir: rirInput,
       });
-
-      // Mark as saved
       setExerciseLogs((prev) => {
         const sets = [...(prev[currentExercise.id] || [])];
         const idx = sets.length - 1;
-        if (idx >= 0) {
-          sets[idx] = { ...sets[idx], savedToDb: true, dbLogId };
-        }
+        if (idx >= 0) sets[idx] = { ...sets[idx], savedToDb: true, dbLogId };
         return { ...prev, [currentExercise.id]: sets };
       });
-    } catch (err: any) {
-      console.error('saveSetLog error:', err?.message, err?.code, err?.details);
-      // Don't remove from local state — keep optimistic, can retry
-    }
+    } catch (err: any) {}
     setSavingSet(false);
   };
 
@@ -389,12 +310,8 @@ export default function ActiveWorkoutScreen({ route, navigation }: any) {
     }
   };
 
-  // ─── Finish: just mark completed (logs already saved) ─────────
   const handleFinishWorkout = () => {
-    const unsavedCount = Object.values(exerciseLogs)
-      .flat()
-      .filter((s) => !s.savedToDb).length;
-
+    const unsavedCount = Object.values(exerciseLogs).flat().filter((s) => !s.savedToDb).length;
     Alert.alert(
       'Workout Voltooien',
       `Je hebt ${completedSetsCount}/${totalSetsCount} sets voltooid.${unsavedCount > 0 ? ` (${unsavedCount} sets worden nog opgeslagen)` : ''} Workout afronden?`,
@@ -407,71 +324,39 @@ export default function ActiveWorkoutScreen({ route, navigation }: any) {
             setIsSubmitting(true);
             try {
               await finishWorkout(liveWorkoutId);
-              // Clear session
               await AsyncStorage.removeItem(ACTIVE_WORKOUT_KEY);
-
-              // Invalidate queries so lists + program overview refresh
               queryClient.invalidateQueries({ queryKey: workoutKeys.lists() });
               queryClient.invalidateQueries({ queryKey: programKeys.all });
-
-              Alert.alert('Gelukt!', 'Workout voltooid!', [
-                {
-                  text: 'OK',
-                  onPress: () => {
-                    // If from a program → pop back to ProgramDetail (skip WorkoutDetail)
-                    // Stack: ProgramDetail → WorkoutDetail → ActiveWorkout = pop 2
-                    // If from regular workout list: pop 1 to WorkoutDetail
-                    if (resolvedProgramId) {
-                      navigation.pop(2);
-                    } else {
-                      navigation.pop(1);
-                    }
-                  },
-                },
-              ]);
+              Alert.alert('Gelukt!', 'Workout voltooid!', [{
+                text: 'OK',
+                onPress: () => { resolvedProgramId ? navigation.pop(2) : navigation.pop(1); },
+              }]);
             } catch (err: any) {
-              console.error('finishWorkout error:', err?.message);
               Alert.alert('Fout', `Kan workout niet afronden: ${err?.message}`);
-            } finally {
-              setIsSubmitting(false);
-            }
+            } finally { setIsSubmitting(false); }
           },
         },
       ]
     );
   };
 
-  // ─── Quit: keep data, can resume later ────────────────────────
   const handleQuit = () => {
     const hasSets = completedSetsCount > 0;
     Alert.alert(
       'Workout pauzeren?',
-      hasSets
-        ? `Je ${completedSetsCount} gelogde sets zijn opgeslagen. Je kunt later verdergaan.`
-        : 'Je kunt later verdergaan.',
+      hasSets ? `Je ${completedSetsCount} gelogde sets zijn opgeslagen.` : 'Je kunt later verdergaan.',
       [
         { text: 'Doorgaan', style: 'cancel' },
-        {
-          text: 'Pauzeren',
-          onPress: () => navigation.goBack(),
-        },
-        ...(hasSets
-          ? []
-          : [
-              {
-                text: 'Verwijderen',
-                style: 'destructive' as const,
-                onPress: async () => {
-                  if (liveWorkoutId && isFromTemplate) {
-                    try {
-                      await deleteWorkout(liveWorkoutId);
-                      await AsyncStorage.removeItem(ACTIVE_WORKOUT_KEY);
-                    } catch {}
-                  }
-                  navigation.goBack();
-                },
-              },
-            ]),
+        { text: 'Pauzeren', onPress: () => navigation.goBack() },
+        ...(hasSets ? [] : [{
+          text: 'Verwijderen', style: 'destructive' as const,
+          onPress: async () => {
+            if (liveWorkoutId && isFromTemplate) {
+              try { await deleteWorkout(liveWorkoutId); await AsyncStorage.removeItem(ACTIVE_WORKOUT_KEY); } catch {}
+            }
+            navigation.goBack();
+          },
+        }]),
       ]
     );
   };
@@ -480,54 +365,47 @@ export default function ActiveWorkoutScreen({ route, navigation }: any) {
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={handleQuit} style={styles.headerButton}>
-          <Ionicons name="close" size={24} color={theme.colors.text} />
+        <TouchableOpacity onPress={handleQuit} style={styles.headerBtn}>
+          <Ionicons name="close" size={22} color="#fff" />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle} numberOfLines={1}>
             {workout.workoutTemplate.name}
           </Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <View style={styles.headerSubRow}>
             <Text style={styles.headerSubtitle}>
               {completedSetsCount}/{totalSetsCount} sets
             </Text>
-            {savingSet && (
-              <ActivityIndicator size="small" color={theme.colors.textSecondary} />
-            )}
+            {savingSet && <ActivityIndicator size="small" color="rgba(255,255,255,0.6)" />}
           </View>
         </View>
         <TouchableOpacity
           onPress={handleFinishWorkout}
-          style={styles.headerButton}
+          style={styles.headerBtn}
           disabled={completedSetsCount === 0 || isSubmitting}
         >
           <Ionicons
             name="checkmark-done"
-            size={24}
-            color={completedSetsCount > 0 ? theme.colors.success : '#ccc'}
+            size={22}
+            color={completedSetsCount > 0 ? theme.colors.success : 'rgba(255,255,255,0.3)'}
           />
         </TouchableOpacity>
       </View>
 
       {/* Progress bar */}
       <View style={styles.progressBar}>
-        <View
-          style={[
-            styles.progressFill,
-            { width: `${totalSetsCount > 0 ? (completedSetsCount / totalSetsCount) * 100 : 0}%` },
-          ]}
-        />
+        <View style={[styles.progressFill, { width: `${progressPercent}%` }]} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
         {/* Exercise navigation */}
         <View style={styles.exerciseNav}>
           <TouchableOpacity
             onPress={handlePreviousExercise}
             disabled={currentExerciseIndex === 0}
-            style={[styles.navButton, currentExerciseIndex === 0 && styles.navButtonDisabled]}
+            style={[styles.navBtn, currentExerciseIndex === 0 && styles.navBtnDisabled]}
           >
-            <Ionicons name="chevron-back" size={20} color={currentExerciseIndex === 0 ? '#ccc' : theme.colors.text} />
+            <Ionicons name="chevron-back" size={18} color={currentExerciseIndex === 0 ? theme.colors.border : theme.colors.text} />
           </TouchableOpacity>
           <Text style={styles.exerciseCounter}>
             Oefening {currentExerciseIndex + 1} / {totalExercises}
@@ -535,13 +413,13 @@ export default function ActiveWorkoutScreen({ route, navigation }: any) {
           <TouchableOpacity
             onPress={handleNextExercise}
             disabled={currentExerciseIndex >= totalExercises - 1}
-            style={[styles.navButton, currentExerciseIndex >= totalExercises - 1 && styles.navButtonDisabled]}
+            style={[styles.navBtn, currentExerciseIndex >= totalExercises - 1 && styles.navBtnDisabled]}
           >
-            <Ionicons name="chevron-forward" size={20} color={currentExerciseIndex >= totalExercises - 1 ? '#ccc' : theme.colors.text} />
+            <Ionicons name="chevron-forward" size={18} color={currentExerciseIndex >= totalExercises - 1 ? theme.colors.border : theme.colors.text} />
           </TouchableOpacity>
         </View>
 
-        {/* Current exercise info */}
+        {/* Current exercise card */}
         <View style={styles.exerciseCard}>
           {(currentExercise.exercise?.gifUrl || currentExercise.exercise?.thumbnailUrl) && (
             <Image
@@ -564,7 +442,7 @@ export default function ActiveWorkoutScreen({ route, navigation }: any) {
             )}
             {currentExercise.restSeconds && (
               <View style={styles.metaChip}>
-                <Ionicons name="timer-outline" size={12} color={theme.colors.textSecondary} />
+                <Ionicons name="timer-outline" size={11} color={theme.colors.textSecondary} />
                 <Text style={styles.metaChipText}>{currentExercise.restSeconds}s rust</Text>
               </View>
             )}
@@ -575,13 +453,13 @@ export default function ActiveWorkoutScreen({ route, navigation }: any) {
             <View style={styles.prescriptionBanner}>
               {prescriptionLabel && (
                 <View style={styles.prescriptionItem}>
-                  <Ionicons name="fitness-outline" size={14} color={theme.colors.primary} />
+                  <Ionicons name="fitness-outline" size={13} color={theme.colors.primary} />
                   <Text style={styles.prescriptionLabel}>Doel: {prescriptionLabel}</Text>
                 </View>
               )}
               {currentExercise.tempo && (
                 <View style={styles.prescriptionItem}>
-                  <Ionicons name="timer-outline" size={14} color={theme.colors.primary} />
+                  <Ionicons name="timer-outline" size={13} color={theme.colors.primary} />
                   <Text style={styles.prescriptionLabel}>Tempo: {currentExercise.tempo}</Text>
                 </View>
               )}
@@ -594,14 +472,12 @@ export default function ActiveWorkoutScreen({ route, navigation }: any) {
 
           {/* Previous week reference */}
           {(() => {
-            const prevSets = currentExercise.exercise?.id
-              ? prevWeekByExercise[currentExercise.exercise.id]
-              : undefined;
+            const prevSets = currentExercise.exercise?.id ? prevWeekByExercise[currentExercise.exercise.id] : undefined;
             if (!prevSets || prevSets.length === 0) return null;
             return (
               <View style={styles.prevWeekRef}>
                 <View style={styles.prevWeekRefHeader}>
-                  <Ionicons name="time-outline" size={14} color={theme.colors.textTertiary} />
+                  <Ionicons name="time-outline" size={13} color={theme.colors.textTertiary} />
                   <Text style={styles.prevWeekRefLabel}>Vorige week</Text>
                 </View>
                 <View style={styles.prevWeekRefSets}>
@@ -611,12 +487,8 @@ export default function ActiveWorkoutScreen({ route, navigation }: any) {
                         <Text style={styles.prevWeekRefBadgeText}>{s.setNumber}</Text>
                       </View>
                       <Text style={styles.prevWeekRefReps}>{s.repsCompleted} reps</Text>
-                      {s.weightKg != null && (
-                        <Text style={styles.prevWeekRefWeight}>{s.weightKg} kg</Text>
-                      )}
-                      {s.actualRpe != null && (
-                        <Text style={styles.prevWeekRefRpe}>RPE {s.actualRpe}</Text>
-                      )}
+                      {s.weightKg != null && <Text style={styles.prevWeekRefWeight}>{s.weightKg} kg</Text>}
+                      {s.actualRpe != null && <Text style={styles.prevWeekRefRpe}>RPE {s.actualRpe}</Text>}
                     </View>
                   ))}
                 </View>
@@ -635,8 +507,7 @@ export default function ActiveWorkoutScreen({ route, navigation }: any) {
                   <Text style={styles.setNumberText}>{idx + 1}</Text>
                 </View>
                 <Text style={styles.setText}>
-                  {set.repsCompleted} reps
-                  {set.weightKg != null ? ` × ${set.weightKg} kg` : ''}
+                  {set.repsCompleted} reps{set.weightKg != null ? ` x ${set.weightKg} kg` : ''}
                 </Text>
                 {set.actualRpe != null && (
                   <View style={styles.feedbackPill}>
@@ -648,11 +519,11 @@ export default function ActiveWorkoutScreen({ route, navigation }: any) {
                     <Text style={styles.feedbackPillText}>RIR {set.actualRir}</Text>
                   </View>
                 )}
-                {set.savedToDb ? (
-                  <Ionicons name="checkmark-circle" size={20} color={theme.colors.success} />
-                ) : (
-                  <Ionicons name="cloud-upload-outline" size={20} color={theme.colors.textTertiary} />
-                )}
+                <Ionicons
+                  name={set.savedToDb ? "checkmark-circle" : "cloud-upload-outline"}
+                  size={18}
+                  color={set.savedToDb ? theme.colors.success : theme.colors.textTertiary}
+                />
               </View>
             ))}
           </View>
@@ -674,9 +545,7 @@ export default function ActiveWorkoutScreen({ route, navigation }: any) {
         {/* Set input */}
         {!allSetsForExerciseDone && timer.state !== 'running' && timer.state !== 'paused' && (
           <View style={styles.inputCard}>
-            <Text style={styles.inputTitle}>
-              Set {setsCompleted + 1} van {totalSets}
-            </Text>
+            <Text style={styles.inputTitle}>Set {setsCompleted + 1} van {totalSets}</Text>
 
             <View style={styles.inputRow}>
               <View style={styles.inputGroup}>
@@ -687,7 +556,7 @@ export default function ActiveWorkoutScreen({ route, navigation }: any) {
                   onChangeText={setRepsInput}
                   keyboardType="number-pad"
                   placeholder={currentExercise.reps || '0'}
-                  placeholderTextColor="#ccc"
+                  placeholderTextColor={theme.colors.border}
                 />
               </View>
               {!isBodyweight && (
@@ -699,7 +568,7 @@ export default function ActiveWorkoutScreen({ route, navigation }: any) {
                     onChangeText={setWeightInput}
                     keyboardType="decimal-pad"
                     placeholder="optioneel"
-                    placeholderTextColor="#ccc"
+                    placeholderTextColor={theme.colors.border}
                   />
                 </View>
               )}
@@ -713,11 +582,7 @@ export default function ActiveWorkoutScreen({ route, navigation }: any) {
                   {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((val) => {
                     const isSelected = rpeInput === val;
                     const bgColor = isSelected
-                      ? val <= 5
-                        ? '#22c55e'
-                        : val <= 7
-                        ? '#eab308'
-                        : '#ef4444'
+                      ? val <= 5 ? theme.colors.success : val <= 7 ? theme.colors.warning : theme.colors.error
                       : theme.colors.background;
                     return (
                       <TouchableOpacity
@@ -725,30 +590,13 @@ export default function ActiveWorkoutScreen({ route, navigation }: any) {
                         style={[styles.rpeButton, { backgroundColor: bgColor }]}
                         onPress={() => setRpeInput(isSelected ? null : val)}
                       >
-                        <Text
-                          style={[
-                            styles.rpeButtonText,
-                            isSelected && { color: '#fff' },
-                          ]}
-                        >
-                          {val}
-                        </Text>
+                        <Text style={[styles.rpeButtonText, isSelected && { color: '#fff' }]}>{val}</Text>
                       </TouchableOpacity>
                     );
                   })}
                 </View>
                 <Text style={styles.feedbackHint}>
-                  {rpeInput
-                    ? rpeInput <= 5
-                      ? 'Licht'
-                      : rpeInput <= 7
-                      ? 'Gemiddeld'
-                      : rpeInput === 8
-                      ? 'Zwaar'
-                      : rpeInput === 9
-                      ? 'Zeer zwaar'
-                      : 'Maximaal'
-                    : 'Optioneel — tik om te selecteren'}
+                  {rpeInput ? rpeInput <= 5 ? 'Licht' : rpeInput <= 7 ? 'Gemiddeld' : rpeInput === 8 ? 'Zwaar' : rpeInput === 9 ? 'Zeer zwaar' : 'Maximaal' : 'Optioneel'}
                 </Text>
               </View>
             )}
@@ -763,30 +611,16 @@ export default function ActiveWorkoutScreen({ route, navigation }: any) {
                     return (
                       <TouchableOpacity
                         key={val}
-                        style={[
-                          styles.rirButton,
-                          isSelected && styles.rirButtonSelected,
-                        ]}
+                        style={[styles.rirButton, isSelected && styles.rirButtonSelected]}
                         onPress={() => setRirInput(isSelected ? null : val)}
                       >
-                        <Text
-                          style={[
-                            styles.rirButtonText,
-                            isSelected && styles.rirButtonTextSelected,
-                          ]}
-                        >
-                          {val}
-                        </Text>
+                        <Text style={[styles.rirButtonText, isSelected && styles.rirButtonTextSelected]}>{val}</Text>
                       </TouchableOpacity>
                     );
                   })}
                 </View>
                 <Text style={styles.feedbackHint}>
-                  {rirInput != null
-                    ? rirInput === 0
-                      ? 'Tot falen'
-                      : `${rirInput} rep${rirInput > 1 ? 's' : ''} over`
-                    : 'Hoeveel reps had je nog kunnen doen?'}
+                  {rirInput != null ? rirInput === 0 ? 'Tot falen' : `${rirInput} rep${rirInput > 1 ? 's' : ''} over` : 'Hoeveel reps had je nog kunnen doen?'}
                 </Text>
               </View>
             )}
@@ -815,11 +649,7 @@ export default function ActiveWorkoutScreen({ route, navigation }: any) {
                 <Ionicons name="arrow-forward" size={20} color="#fff" />
               </TouchableOpacity>
             ) : (
-              <TouchableOpacity
-                style={styles.finishButton}
-                onPress={handleFinishWorkout}
-                disabled={isSubmitting}
-              >
+              <TouchableOpacity style={styles.finishButton} onPress={handleFinishWorkout} disabled={isSubmitting}>
                 {isSubmitting ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
@@ -852,18 +682,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: theme.colors.textSecondary,
   },
+  // Dark branded header
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: theme.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: theme.colors.headerDark,
   },
-  headerButton: {
+  headerBtn: {
     width: 40,
     height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -874,64 +704,72 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: theme.colors.text,
+    color: '#fff',
+  },
+  headerSubRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 2,
   },
   headerSubtitle: {
     fontSize: 12,
-    color: theme.colors.textSecondary,
-    marginTop: 2,
+    color: 'rgba(255,255,255,0.6)',
   },
+  // Progress bar
   progressBar: {
-    height: 4,
-    backgroundColor: theme.colors.border,
+    height: 3,
+    backgroundColor: 'rgba(108,58,237,0.15)',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: theme.colors.success,
+    backgroundColor: theme.colors.primary,
+    borderRadius: 2,
   },
   scrollContent: {
     padding: 20,
     paddingBottom: 40,
   },
+  // Exercise navigation
   exerciseNav: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 16,
   },
-  navButton: {
+  navBtn: {
     width: 36,
     height: 36,
     borderRadius: 18,
     backgroundColor: theme.colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
+    ...theme.shadows.sm,
   },
-  navButtonDisabled: {
+  navBtnDisabled: {
     opacity: 0.4,
   },
   exerciseCounter: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     color: theme.colors.textSecondary,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
-  exerciseGif: {
-    width: '100%',
-    height: 180,
-    borderRadius: 12,
-    marginBottom: 12,
-    backgroundColor: theme.colors.border,
-  },
+  // Exercise card
   exerciseCard: {
     backgroundColor: theme.colors.surface,
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
+    ...theme.shadows.md,
+  },
+  exerciseGif: {
+    width: '100%',
+    height: 180,
+    borderRadius: 12,
+    marginBottom: 14,
+    backgroundColor: theme.colors.background,
   },
   exerciseName: {
     fontSize: 22,
@@ -954,14 +792,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   metaChipText: {
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: 12,
+    fontWeight: '600',
     color: theme.colors.textSecondary,
   },
   prescriptionBanner: {
     marginTop: 12,
     padding: 12,
-    backgroundColor: '#ede9fe',
+    backgroundColor: theme.colors.primaryLight,
     borderRadius: 10,
     gap: 6,
   },
@@ -971,7 +809,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   prescriptionLabel: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     color: theme.colors.primary,
   },
@@ -980,11 +818,13 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
     fontStyle: 'italic',
     marginTop: 10,
+    lineHeight: 20,
   },
+  // Previous week reference
   prevWeekRef: {
     marginTop: 12,
     padding: 12,
-    backgroundColor: '#f8fafc',
+    backgroundColor: theme.colors.background,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: theme.colors.border,
@@ -996,14 +836,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   prevWeekRefLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
     color: theme.colors.textTertiary,
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
-  prevWeekRefSets: {
-    gap: 4,
-  },
+  prevWeekRefSets: { gap: 4 },
   prevWeekRefRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1036,49 +875,52 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
     color: theme.colors.textTertiary,
-    backgroundColor: theme.colors.background,
+    backgroundColor: theme.colors.surface,
     paddingHorizontal: 6,
     paddingVertical: 1,
     borderRadius: 4,
   },
-  setsLog: {
-    marginBottom: 12,
-  },
+  // Sets log
+  setsLog: { marginBottom: 12 },
   setsLogTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     color: theme.colors.textSecondary,
     marginBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   setRow: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: theme.colors.surface,
-    borderRadius: 10,
+    borderRadius: 12,
     padding: 12,
     marginBottom: 6,
     gap: 10,
+    ...theme.shadows.sm,
   },
   setNumber: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#d1fae5',
+    backgroundColor: `${theme.colors.success}18`,
     justifyContent: 'center',
     alignItems: 'center',
   },
   setNumberText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#065f46',
+    color: theme.colors.success,
   },
   setText: {
     flex: 1,
     fontSize: 15,
+    fontWeight: '500',
     color: theme.colors.text,
   },
   feedbackPill: {
-    backgroundColor: '#ede9fe',
+    backgroundColor: theme.colors.primaryLight,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 8,
@@ -1088,16 +930,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: theme.colors.primary,
   },
+  // Input card
   inputCard: {
     backgroundColor: theme.colors.surface,
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
+    ...theme.shadows.md,
   },
   inputTitle: {
     fontSize: 16,
@@ -1110,28 +949,27 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 16,
   },
-  inputGroup: {
-    flex: 1,
-  },
+  inputGroup: { flex: 1 },
   inputLabel: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '700',
     color: theme.colors.textSecondary,
     marginBottom: 6,
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   input: {
     backgroundColor: theme.colors.background,
-    borderRadius: 10,
+    borderRadius: 12,
     padding: 14,
     fontSize: 18,
     fontWeight: '600',
     color: theme.colors.text,
     textAlign: 'center',
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
-  feedbackSection: {
-    marginBottom: 16,
-  },
+  feedbackSection: { marginBottom: 16 },
   feedbackLabel: {
     fontSize: 13,
     fontWeight: '600',
@@ -1141,7 +979,7 @@ const styles = StyleSheet.create({
   feedbackHint: {
     fontSize: 11,
     color: theme.colors.textTertiary,
-    marginTop: 4,
+    marginTop: 6,
   },
   rpeRow: {
     flexDirection: 'row',
@@ -1149,10 +987,12 @@ const styles = StyleSheet.create({
   },
   rpeButton: {
     flex: 1,
-    height: 36,
-    borderRadius: 8,
+    height: 38,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   rpeButtonText: {
     fontSize: 13,
@@ -1165,14 +1005,17 @@ const styles = StyleSheet.create({
   },
   rirButton: {
     flex: 1,
-    height: 40,
-    borderRadius: 10,
+    height: 42,
+    borderRadius: 12,
     backgroundColor: theme.colors.background,
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   rirButtonSelected: {
     backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
   },
   rirButtonText: {
     fontSize: 16,
@@ -1182,23 +1025,24 @@ const styles = StyleSheet.create({
   rirButtonTextSelected: {
     color: '#fff',
   },
+  // Log set button
   logSetButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: theme.colors.secondary,
+    backgroundColor: theme.colors.primary,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 14,
+    ...theme.shadows.md,
   },
   logSetButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '700',
   },
-  nextSection: {
-    marginTop: 8,
-  },
+  // Next/Finish
+  nextSection: { marginTop: 8 },
   nextButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1206,7 +1050,8 @@ const styles = StyleSheet.create({
     gap: 8,
     backgroundColor: theme.colors.primary,
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 14,
+    ...theme.shadows.md,
   },
   nextButtonText: {
     color: '#fff',
@@ -1218,9 +1063,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#10b981',
+    backgroundColor: theme.colors.success,
     paddingVertical: 16,
-    borderRadius: 12,
+    borderRadius: 14,
+    ...theme.shadows.md,
   },
   finishButtonText: {
     color: '#fff',

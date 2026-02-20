@@ -127,7 +127,7 @@ export default function ProgramsScreen({ navigation }: any) {
         <Ionicons
           name="chevron-forward"
           size={20}
-          color="#999"
+          color={theme.colors.textTertiary}
           style={styles.chevron}
         />
       </TouchableOpacity>
@@ -144,7 +144,7 @@ export default function ProgramsScreen({ navigation }: any) {
       >
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
+            <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
           <Text style={styles.title}>Mijn Programma's</Text>
           <View style={{ width: 24 }} />
@@ -152,7 +152,7 @@ export default function ProgramsScreen({ navigation }: any) {
 
         {programs.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="layers-outline" size={64} color="#ccc" />
+            <Ionicons name="layers-outline" size={64} color={theme.colors.border} />
             <Text style={styles.emptyTitle}>Geen Programma's</Text>
             <Text style={styles.emptyText}>
               Je coach kan trainingsprogramma's aan je toewijzen.
@@ -194,13 +194,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    backgroundColor: theme.colors.headerDark,
   },
   title: {
     fontSize: 18,
-    fontWeight: '600',
-    color: theme.colors.text,
+    fontWeight: '700',
+    color: '#fff',
   },
   loadingContainer: {
     flex: 1,
@@ -228,11 +227,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    ...theme.shadows.md,
   },
   bannerContainer: {
     position: 'relative',

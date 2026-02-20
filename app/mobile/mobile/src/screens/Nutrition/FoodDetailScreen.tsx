@@ -73,7 +73,7 @@ export default function FoodDetailScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
+          <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Product details</Text>
         <View style={{ width: 24 }} />
@@ -174,11 +174,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 14,
+    backgroundColor: theme.colors.headerDark,
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: theme.colors.text,
+    fontWeight: '700',
+    color: '#fff',
   },
   scroll: {
     flex: 1,

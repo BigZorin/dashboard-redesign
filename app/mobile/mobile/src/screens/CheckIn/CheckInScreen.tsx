@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSubmitCheckIn } from '../../hooks/useCheckIn';
 import { useCheckInTemplate } from '../../hooks/useCheckInTemplate';
 import DynamicCheckInScreen from './DynamicCheckInScreen';
+import { theme } from '../../constants/theme';
 
 const QUESTIONS = [
   {
@@ -68,7 +69,7 @@ export default function CheckInScreen({ navigation }: any) {
     return (
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator size="large" color="#007AFF" />
+          <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       </SafeAreaView>
     );
@@ -183,7 +184,7 @@ export default function CheckInScreen({ navigation }: any) {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeButton}>
-          <Ionicons name="close" size={28} color="#1a1a1a" />
+          <Ionicons name="close" size={28} color={theme.colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Wekelijkse Check-in</Text>
         <View style={styles.closeButton} />
@@ -210,7 +211,7 @@ export default function CheckInScreen({ navigation }: any) {
       <View style={styles.footer}>
         {currentQuestion > 0 && (
           <TouchableOpacity style={styles.backButton} onPress={handleBack}>
-            <Ionicons name="chevron-back" size={24} color="#007AFF" />
+            <Ionicons name="chevron-back" size={24} color={theme.colors.primary} />
             <Text style={styles.backButtonText}>Vorige</Text>
           </TouchableOpacity>
         )}
@@ -235,7 +236,7 @@ export default function CheckInScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -244,7 +245,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E5EA',
+    borderBottomColor: theme.colors.border,
   },
   closeButton: {
     width: 40,
@@ -252,15 +253,15 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 17,
     fontWeight: '600',
-    color: '#1a1a1a',
+    color: theme.colors.text,
   },
   progressBar: {
     height: 4,
-    backgroundColor: '#E5E5EA',
+    backgroundColor: theme.colors.border,
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#007AFF',
+    backgroundColor: theme.colors.primary,
   },
   content: {
     flex: 1,
@@ -270,13 +271,13 @@ const styles = StyleSheet.create({
   },
   questionNumber: {
     fontSize: 14,
-    color: '#8E8E93',
+    color: theme.colors.textTertiary,
     marginBottom: 8,
   },
   questionTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#1a1a1a',
+    color: theme.colors.text,
     marginBottom: 32,
     lineHeight: 32,
   },
@@ -292,39 +293,39 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#E5E5EA',
-    backgroundColor: '#fff',
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
   },
   scaleButtonActive: {
-    borderColor: '#007AFF',
-    backgroundColor: '#E5F0FF',
+    borderColor: theme.colors.primary,
+    backgroundColor: theme.colors.primaryLight,
   },
   scaleNumber: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#F2F2F7',
+    backgroundColor: theme.colors.background,
     justifyContent: 'center',
     alignItems: 'center',
     fontSize: 18,
     fontWeight: '600',
-    color: '#1a1a1a',
+    color: theme.colors.text,
     textAlign: 'center',
     lineHeight: 40,
     marginRight: 16,
   },
   scaleNumberActive: {
-    backgroundColor: '#007AFF',
+    backgroundColor: theme.colors.primary,
     color: '#fff',
   },
   scaleLabel: {
     fontSize: 16,
-    color: '#1a1a1a',
+    color: theme.colors.text,
     flex: 1,
   },
   scaleLabelActive: {
     fontWeight: '600',
-    color: '#007AFF',
+    color: theme.colors.primary,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -335,26 +336,26 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 48,
     fontWeight: '700',
-    color: '#1a1a1a',
+    color: theme.colors.text,
     padding: 16,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#E5E5EA',
-    backgroundColor: '#F2F2F7',
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.background,
   },
   unit: {
     fontSize: 24,
     fontWeight: '600',
-    color: '#8E8E93',
+    color: theme.colors.textTertiary,
   },
   textArea: {
     fontSize: 16,
-    color: '#1a1a1a',
+    color: theme.colors.text,
     padding: 16,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#E5E5EA',
-    backgroundColor: '#F2F2F7',
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.background,
     minHeight: 150,
   },
   footer: {
@@ -362,8 +363,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 16,
     borderTopWidth: 1,
-    borderTopColor: '#E5E5EA',
-    backgroundColor: '#fff',
+    borderTopColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
   },
   backButton: {
     flexDirection: 'row',
@@ -372,13 +373,14 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     fontSize: 16,
-    color: '#007AFF',
+    color: theme.colors.primary,
+    fontWeight: '600',
     marginLeft: 4,
   },
   nextButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#007AFF',
+    backgroundColor: theme.colors.primary,
     paddingHorizontal: 24,
     paddingVertical: 14,
     borderRadius: 12,

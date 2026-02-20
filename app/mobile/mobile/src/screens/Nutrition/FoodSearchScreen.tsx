@@ -64,7 +64,7 @@ export default function FoodSearchScreen() {
           {item.calories} kcal | E{item.protein}g | K{item.carbs}g | V{item.fat}g
         </Text>
       </View>
-      <Ionicons name="chevron-forward" size={18} color="#C7C7CC" />
+      <Ionicons name="chevron-forward" size={18} color={theme.colors.textTertiary} />
     </TouchableOpacity>
   );
 
@@ -72,7 +72,7 @@ export default function FoodSearchScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
+          <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Zoek voeding</Text>
         <View style={{ width: 24 }} />
@@ -140,11 +140,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 14,
+    backgroundColor: theme.colors.headerDark,
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: theme.colors.text,
+    fontWeight: '700',
+    color: '#fff',
   },
   searchContainer: {
     paddingHorizontal: 20,

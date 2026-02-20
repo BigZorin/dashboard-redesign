@@ -73,7 +73,7 @@ export default function AddFoodScreen() {
       <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => setMode('options')}>
-            <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
+            <Ionicons name="arrow-back" size={24} color="#fff" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Handmatig invoeren</Text>
           <View style={{ width: 24 }} />
@@ -199,9 +199,9 @@ export default function AddFoodScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Voeding toevoegen</Text>
+            <Ionicons name="arrow-back" size={24} color="#fff" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Voeding toevoegen</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -221,7 +221,7 @@ export default function AddFoodScreen() {
             <Text style={styles.optionTitle}>Zoeken</Text>
             <Text style={styles.optionDesc}>Zoek in de voedingsdatabase</Text>
           </View>
-          <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
+          <Ionicons name="chevron-forward" size={20} color={theme.colors.textTertiary} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -230,25 +230,25 @@ export default function AddFoodScreen() {
             navigation.navigate('BarcodeScanner' as never, { date, mealType } as never)
           }
         >
-          <View style={[styles.optionIcon, { backgroundColor: '#FFD16620' }]}>
-            <Ionicons name="barcode-outline" size={24} color="#FFD166" />
+          <View style={[styles.optionIcon, { backgroundColor: `${theme.colors.warning}20` }]}>
+            <Ionicons name="barcode-outline" size={24} color={theme.colors.warning} />
           </View>
           <View style={styles.optionText}>
             <Text style={styles.optionTitle}>Barcode scannen</Text>
             <Text style={styles.optionDesc}>Scan het etiket van een product</Text>
           </View>
-          <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
+          <Ionicons name="chevron-forward" size={20} color={theme.colors.textTertiary} />
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.optionCard} onPress={() => setMode('manual')}>
-          <View style={[styles.optionIcon, { backgroundColor: '#EF476F20' }]}>
-            <Ionicons name="create-outline" size={24} color="#EF476F" />
+          <View style={[styles.optionIcon, { backgroundColor: `${theme.colors.error}20` }]}>
+            <Ionicons name="create-outline" size={24} color={theme.colors.error} />
           </View>
           <View style={styles.optionText}>
             <Text style={styles.optionTitle}>Handmatig invoeren</Text>
             <Text style={styles.optionDesc}>Voer voedingswaarden zelf in</Text>
           </View>
-          <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
+          <Ionicons name="chevron-forward" size={20} color={theme.colors.textTertiary} />
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -266,13 +266,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    backgroundColor: theme.colors.headerDark,
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: theme.colors.text,
+    fontWeight: '700',
+    color: '#fff',
   },
   mealLabel: {
     fontSize: 14,
@@ -293,11 +292,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 3,
-    elevation: 1,
+    ...theme.shadows.sm,
   },
   optionIcon: {
     width: 48,
