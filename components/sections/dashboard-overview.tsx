@@ -10,12 +10,23 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 // ============================================================================
 // PLACEHOLDER DATA — Vervang met echte data uit Supabase
 //
-// Supabase tabellen:
-//   - clients (actieve cliënten count, status)
-//   - messages (ongelezen berichten count)
-//   - client_sessions (sessies deze week)
-//   - client_checkins (recente check-ins, compliance)
-//   - client_programs (voortgang per cliënt)
+// COACH-SCOPED DATA:
+//   Alle data op dit dashboard is gefilterd op de ingelogde coach.
+//   De coach ziet ALLEEN data van zijn/haar eigen toegewezen clienten.
+//   Filter: WHERE clients.coach_id = auth.uid()
+//
+// Supabase tabellen (altijd gefilterd op coach_id):
+//   - clients (actieve cliënten count WHERE coach_id = auth.uid())
+//   - messages (ongelezen berichten WHERE conversation coach_id = auth.uid())
+//   - client_sessions (sessies deze week WHERE coach_id = auth.uid())
+//   - client_checkins (recente check-ins van eigen clienten)
+//   - client_programs (voortgang van eigen clienten)
+//
+// RLS Policies (verplicht):
+//   - clients: SELECT WHERE coach_id = auth.uid()
+//   - client_sessions: SELECT WHERE coach_id = auth.uid()
+//   - client_checkins: SELECT via JOIN clients WHERE coach_id = auth.uid()
+//   - messages: SELECT via JOIN conversations WHERE coach_id = auth.uid()
 //
 // BELANGRIJK: GEEN financiële data op het coach dashboard!
 // Omzet, betalingen, abonnementen, facturatie zijn ADMIN-ONLY.

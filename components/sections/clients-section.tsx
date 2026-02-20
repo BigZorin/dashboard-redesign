@@ -18,11 +18,22 @@ import {
 // ============================================================================
 // PLACEHOLDER DATA — Vervang met echte cliëntdata uit Supabase
 //
-// Supabase tabellen:
-//   - clients (naam, email, status, tags, avatar_url, created_at)
-//   - client_programs (huidig programma, voortgang %, huidige week)
-//   - client_checkins (laatste check-in datum, gewichtstrend)
-//   - client_sessions (volgende geplande sessie)
+// COACH-SCOPED DATA:
+//   De coach ziet ALLEEN zijn/haar eigen toegewezen clienten.
+//   Filter: WHERE clients.coach_id = auth.uid()
+//   Een coach kan NOOIT clienten van andere coaches zien.
+//
+// Supabase tabellen (gefilterd op coach_id):
+//   - clients (naam, email, status, tags, avatar_url WHERE coach_id = auth.uid())
+//   - client_programs (huidig programma via JOIN clients WHERE coach_id = auth.uid())
+//   - client_checkins (laatste check-in via JOIN clients WHERE coach_id = auth.uid())
+//   - client_sessions (volgende sessie via JOIN clients WHERE coach_id = auth.uid())
+//
+// RLS Policy op clients tabel:
+//   SELECT: WHERE coach_id = auth.uid() (coach ziet alleen eigen clienten)
+//   UPDATE: WHERE coach_id = auth.uid() (coach kan alleen eigen clienten bewerken)
+//   DELETE: NIET toegestaan voor coaches (admin-only via /admin)
+//   INSERT: NIET toegestaan voor coaches (clienten worden via /admin goedgekeurd)
 //
 // Status: actief | risico (>3 dagen geen activiteit) | gepauzeerd
 // Tags: opgeslagen als text[] array in clients tabel

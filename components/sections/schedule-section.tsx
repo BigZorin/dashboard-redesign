@@ -15,7 +15,12 @@ import { cn } from "@/lib/utils"
 // ============================================================================
 // PLACEHOLDER DATA — Vervang met echte agenda-data uit Supabase + Google Calendar API
 //
-// Supabase tabellen:
+// COACH-SCOPED DATA:
+//   De coach ziet ALLEEN zijn/haar eigen sessies en beschikbaarheid.
+//   Filter: WHERE client_sessions.coach_id = auth.uid()
+//   Filter: WHERE coach_availability.coach_id = auth.uid()
+//
+// Supabase tabellen (gefilterd op coach_id):
 //   - client_sessions (id, coach_id, client_id, type, status, start_time, end_time, modus, locatie, notities)
 //     type: "pt_sessie" | "video_call"
 //     status: "gepland" | "bevestigd" | "voltooid" | "no_show" | "geannuleerd"
@@ -24,6 +29,11 @@ import { cn } from "@/lib/utils"
 //     Coach stelt wekelijkse beschikbaarheid in. Wordt getoond aan clienten in de app.
 //   - coach_google_calendar (id, coach_id, access_token, refresh_token, calendar_id, last_sync)
 //     OAuth2 tokens voor twee-weg sync. Webhook voor real-time updates.
+//
+// RLS Policies:
+//   client_sessions: SELECT/INSERT/UPDATE WHERE coach_id = auth.uid()
+//   coach_availability: SELECT/INSERT/UPDATE/DELETE WHERE coach_id = auth.uid()
+//   coach_google_calendar: SELECT/UPDATE WHERE coach_id = auth.uid()
 //
 // Google Calendar integratie (twee-weg sync):
 //   - OAuth2 flow: coach klikt "Verbind Google Calendar" -> redirect naar Google consent -> callback slaat tokens op

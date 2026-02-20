@@ -28,6 +28,16 @@ import { AiSheet } from "@/components/client-detail/ai-sheet"
 // PLACEHOLDER DATA — Client basisgegevens
 // Vervang met echte data uit Supabase tabel: clients
 // In productie: fetch op basis van clientId prop
+//
+// COACH-SCOPED DATA:
+//   De coach kan ALLEEN zijn/haar eigen clienten bekijken.
+//   Server-side check: WHERE clients.id = :clientId AND clients.coach_id = auth.uid()
+//   Als de client niet van deze coach is -> redirect naar clientenlijst
+//   Een coach kan NOOIT een client van een andere coach openen.
+//
+// GEEN financiële data op deze pagina!
+//   Betalingen, abonnementen, bedragen zijn ADMIN-ONLY (/admin -> Facturatie)
+//   De coach ziet alleen het pakket-label (bijv. "Premium") zonder bedragen.
 // ============================================================================
 
 /** Cliënt basisgegevens — Supabase tabel: clients */

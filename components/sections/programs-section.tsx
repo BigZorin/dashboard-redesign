@@ -70,15 +70,25 @@ import { cn } from "@/lib/utils"
 // ============================================================================
 // PLACEHOLDER DATA — Vervang met echte programma's uit Supabase
 //
-// Supabase tabellen:
-//   - programs (id, naam, beschrijving, categorie, duur_weken, sessies_per_week, status, banner_url, created_at)
+// COACH-SCOPED DATA:
+//   De coach ziet ALLEEN programma's die hij/zij zelf heeft aangemaakt.
+//   Filter: WHERE programs.coach_id = auth.uid()
+//   Clienten-count per programma: alleen eigen clienten (client_programs via JOIN)
+//
+// Supabase tabellen (gefilterd op coach_id):
+//   - programs (id, naam, beschrijving, categorie, duur_weken, sessies_per_week, status, banner_url, coach_id, created_at)
 //   - program_blocks (id, program_id, naam, kleur, volgorde, aantal_weken)
 //   - block_weeks (id, block_id, week_nummer)
 //   - week_workouts (id, week_id, naam, dag, volgorde)
 //   - workout_exercises (id, workout_id, exercise_id, sets, reps, intensiteit_type, intensiteit_waarde, rust, notities, volgorde)
 //   - exercises (id, naam, spiergroep, categorie, instructies, video_url, thumbnail_url)
-//   - client_programs (program_id, client_id — voor clienten count)
-//   - ai_generated_programs (prompt, result_json, coach_id — AI programma generatie)
+//   - client_programs (program_id, client_id — client count gefilterd op coach's eigen clienten)
+//   - ai_generated_programs (prompt, result_json, coach_id = auth.uid())
+//
+// RLS Policies:
+//   programs: SELECT/INSERT/UPDATE/DELETE WHERE coach_id = auth.uid()
+//   program_blocks/weeks/workouts: via JOIN programs WHERE coach_id = auth.uid()
+//   exercises: gedeelde tabel, iedereen kan lezen (geen coach filter)
 //
 // Supabase Storage buckets:
 //   - "program-banners" (banner afbeeldingen per programma, path: program-banners/{program_id}.jpg)

@@ -17,7 +17,20 @@ import { cn } from "@/lib/utils"
 //   - Bestanden (PDF, documenten, trainingsschema's — via Supabase Storage)
 //   - Afbeeldingen (foto's, voortgangsfoto's — via Supabase Storage)
 //
-// Supabase tabellen: conversations, messages, message_attachments
+// COACH-SCOPED DATA:
+//   De coach ziet ALLEEN gesprekken met zijn/haar eigen clienten.
+//   Filter: WHERE conversations.coach_id = auth.uid()
+//   Een coach kan NOOIT berichten van andere coaches of hun clienten zien.
+//
+// Supabase tabellen (gefilterd op coach_id):
+//   - conversations (coach_id = auth.uid(), client_id)
+//   - messages (via JOIN conversations WHERE coach_id = auth.uid())
+//   - message_attachments (via JOIN messages -> conversations)
+//
+// RLS Policies:
+//   conversations: SELECT/INSERT WHERE coach_id = auth.uid()
+//   messages: SELECT/INSERT WHERE conversation.coach_id = auth.uid()
+//
 // Supabase Storage bucket: "chat-attachments" (bestanden + afbeeldingen)
 // Real-time: Supabase Realtime subscription op messages tabel
 // ============================================================================
