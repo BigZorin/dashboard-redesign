@@ -36,19 +36,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-
-// ============================================================================
-// PLACEHOLDER DATA — Vervang met echte data uit Supabase
-//
-// Supabase tabellen:
-//   - users (admin profiel via auth.users + users tabel)
-//
-// ROLGEBASEERDE TOEGANG:
-//   - Dit component wordt alleen gerenderd op /admin (beschermd door middleware + page guard)
-//   - Admin profiel wordt opgehaald via Supabase Auth (ingelogde user met rol "admin")
-//   - users tabel kolom "rol": "admin" | "coach" | "client"
-//   - Als een niet-admin hier terechtkomt, vangt de page.tsx redirect dit op
-// ============================================================================
+import { logout } from "@/app/actions/auth"
+import type { CoachProfile } from "@/app/actions/profile"
 
 const adminNavItems = [
   { title: "Overzicht", icon: LayoutDashboard, id: "overview" },
@@ -63,20 +52,13 @@ const beheerNavItems = [
   { title: "Facturatie", icon: CreditCard, id: "facturatie" },
 ]
 
-/** Admin profiel — Vervang met ingelogde admin data */
-const adminProfile = {
-  naam: "Zorin Wijnands",
-  initialen: "ZW",
-  rol: "Admin",
-  avatarUrl: "",
-}
-
 interface AdminSidebarProps {
   activeSection: string
   onSectionChange: (section: string) => void
+  profile: CoachProfile
 }
 
-export function AdminSidebar({ activeSection, onSectionChange }: AdminSidebarProps) {
+export function AdminSidebar({ activeSection, onSectionChange, profile }: AdminSidebarProps) {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="px-3 py-4">
@@ -87,7 +69,7 @@ export function AdminSidebar({ activeSection, onSectionChange }: AdminSidebarPro
                 <Zap className="size-4" />
               </div>
               <div className="flex flex-col gap-0.5 leading-none">
-                <span className="font-semibold text-sm">CoachHub</span>
+                <span className="font-semibold text-sm">Evotion</span>
                 <span className="text-xs text-sidebar-foreground/60">Admin Panel</span>
               </div>
             </SidebarMenuButton>
@@ -170,16 +152,16 @@ export function AdminSidebar({ activeSection, onSectionChange }: AdminSidebarPro
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton size="lg" className="gap-3 hover:bg-sidebar-accent/50">
                   <Avatar className="size-8 border-2 border-chart-5/30">
-                    <AvatarImage src={adminProfile.avatarUrl} alt="Admin avatar" />
+                    <AvatarImage src={profile.avatarUrl} alt="Admin avatar" />
                     <AvatarFallback className="bg-chart-5/10 text-chart-5 text-xs font-semibold">
-                      {adminProfile.initialen}
+                      {profile.initialen}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col gap-0.5 leading-none">
-                    <span className="font-medium text-sm">{adminProfile.naam}</span>
+                    <span className="font-medium text-sm">{profile.naam}</span>
                     <span className="text-xs text-sidebar-foreground/50 flex items-center gap-1">
                       <Crown className="size-2.5" />
-                      {adminProfile.rol}
+                      {profile.rol}
                     </span>
                   </div>
                   <ChevronDown className="ml-auto size-4 text-sidebar-foreground/40" />
@@ -195,7 +177,10 @@ export function AdminSidebar({ activeSection, onSectionChange }: AdminSidebarPro
                   Help & Support
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-destructive">
+                <DropdownMenuItem
+                  className="text-destructive"
+                  onClick={() => logout()}
+                >
                   <LogOut className="mr-2 size-4" />
                   Uitloggen
                 </DropdownMenuItem>

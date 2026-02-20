@@ -1,80 +1,8 @@
-"use client"
+import { getCoachProfile } from '@/app/actions/profile'
+import { CoachingDashboardClient } from '@/components/coaching-dashboard-client'
 
-import { useState } from "react"
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
-import { CoachingSidebar } from "@/components/coaching-sidebar"
-import { DashboardHeader } from "@/components/dashboard-header"
-import { DashboardOverview } from "@/components/sections/dashboard-overview"
-import { ClientsSection } from "@/components/sections/clients-section"
-import { ProgramsSection } from "@/components/sections/programs-section"
-import { NutritionSection } from "@/components/sections/nutrition-section"
-import { MessagesSection } from "@/components/sections/messages-section"
-import { ScheduleSection } from "@/components/sections/schedule-section"
-import { ContentSection } from "@/components/sections/content-section"
-import { SettingsSection } from "@/components/sections/settings-section"
-import { ClientDetailSection } from "@/components/sections/client-detail-section"
+export default async function CoachingDashboard() {
+  const profile = await getCoachProfile()
 
-// ============================================================================
-// SECTIE CONFIGURATIE — Titels en subtitels per navigatie-sectie
-// Vervang "Mark" met de naam van de ingelogde coach
-// ============================================================================
-const sectieConfig: Record<string, { titel: string; subtitel?: string }> = {
-  dashboard: { titel: "Dashboard", subtitel: "Welkom terug, Mark" },
-  clients: { titel: "Cliënten", subtitel: "Beheer je coaching cliënten" },
-  programs: { titel: "Programma's", subtitel: "Trainingsprogramma's & workouts" },
-  nutrition: { titel: "Voeding", subtitel: "Voedingsplannen & tracking" },
-  messages: { titel: "Berichten", subtitel: "Cliëntcommunicatie" },
-  schedule: { titel: "Agenda", subtitel: "Sessies & beschikbaarheid" },
-  content: { titel: "Content", subtitel: "Bestanden & educatieve bronnen" },
-  settings: { titel: "Instellingen", subtitel: "Accountvoorkeuren" },
-}
-
-export default function CoachingDashboard() {
-  const [activeSectie, setActiveSectie] = useState("dashboard")
-  const [geselecteerdeClientId, setGeselecteerdeClientId] = useState<string | null>(null)
-  const config = sectieConfig[activeSectie] || sectieConfig.dashboard
-
-  // Wanneer een cliënt wordt geselecteerd vanuit de cliëntenlijst
-  const handleSelectClient = (clientId: string) => {
-    setGeselecteerdeClientId(clientId)
-  }
-
-  // Terug naar cliëntenlijst
-  const handleTerugNaarClienten = () => {
-    setGeselecteerdeClientId(null)
-  }
-
-  return (
-    <SidebarProvider>
-      <CoachingSidebar activeSection={activeSectie} onSectionChange={(section) => {
-        setActiveSectie(section)
-        setGeselecteerdeClientId(null)
-      }} />
-      <SidebarInset>
-        {/* Cliënt detail weergave als er een cliënt geselecteerd is */}
-        {geselecteerdeClientId ? (
-          <ClientDetailSection
-            clientId={geselecteerdeClientId}
-            onTerug={handleTerugNaarClienten}
-          />
-        ) : (
-          <>
-            {activeSectie !== "messages" && (
-              <DashboardHeader title={config.titel} subtitle={config.subtitel} />
-            )}
-            <div className="flex-1 overflow-auto">
-              {activeSectie === "dashboard" && <DashboardOverview />}
-              {activeSectie === "clients" && <ClientsSection onSelectClient={handleSelectClient} />}
-              {activeSectie === "programs" && <ProgramsSection />}
-              {activeSectie === "nutrition" && <NutritionSection />}
-              {activeSectie === "messages" && <MessagesSection />}
-              {activeSectie === "schedule" && <ScheduleSection />}
-              {activeSectie === "content" && <ContentSection />}
-              {activeSectie === "settings" && <SettingsSection />}
-            </div>
-          </>
-        )}
-      </SidebarInset>
-    </SidebarProvider>
-  )
+  return <CoachingDashboardClient profile={profile} />
 }
