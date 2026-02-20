@@ -14,6 +14,7 @@ import { ContentSection } from "@/components/sections/content-section"
 import { AnalyticsSection } from "@/components/sections/analytics-section"
 import { BillingSection } from "@/components/sections/billing-section"
 import { SettingsSection } from "@/components/sections/settings-section"
+import { ClientDetailSection } from "@/components/sections/client-detail-section"
 
 // ============================================================================
 // SECTIE CONFIGURATIE — Titels en subtitels per navigatie-sectie
@@ -34,27 +35,48 @@ const sectieConfig: Record<string, { titel: string; subtitel?: string }> = {
 
 export default function CoachingDashboard() {
   const [activeSectie, setActiveSectie] = useState("dashboard")
+  const [geselecteerdeClientId, setGeselecteerdeClientId] = useState<string | null>(null)
   const config = sectieConfig[activeSectie] || sectieConfig.dashboard
+
+  // Wanneer een cliënt wordt geselecteerd vanuit de cliëntenlijst
+  const handleSelectClient = (clientId: string) => {
+    setGeselecteerdeClientId(clientId)
+  }
+
+  // Terug naar cliëntenlijst
+  const handleTerugNaarClienten = () => {
+    setGeselecteerdeClientId(null)
+  }
 
   return (
     <SidebarProvider>
       <CoachingSidebar activeSection={activeSectie} onSectionChange={setActiveSectie} />
       <SidebarInset>
-        {activeSectie !== "messages" && (
-          <DashboardHeader title={config.titel} subtitle={config.subtitel} />
+        {/* Cliënt detail weergave als er een cliënt geselecteerd is */}
+        {geselecteerdeClientId ? (
+          <ClientDetailSection
+            clientId={geselecteerdeClientId}
+            onTerug={handleTerugNaarClienten}
+          />
+        ) : (
+          <>
+            {activeSectie !== "messages" && (
+              <DashboardHeader title={config.titel} subtitle={config.subtitel} />
+            )}
+            <div className="flex-1 overflow-auto">
+              {activeSectie === "dashboard" && <DashboardOverview />}
+              {activeSectie === "clients" && <ClientsSection onSelectClient={handleSelectClient} />}
+              {activeSectie === "programs" && <ProgramsSection />}
+              {activeSectie === "nutrition" && <NutritionSection />}
+              {activeSectie === "messages" && <MessagesSection />}
+              {activeSectie === "schedule" && <ScheduleSection />}
+              {activeSectie === "content" && <ContentSection />}
+              {activeSectie === "analytics" && <AnalyticsSection />}
+              {activeSectie === "billing" && <BillingSection />}
+              {activeSectie === "settings" && <SettingsSection />}
+            </div>
+          </>
         )}
-        <div className="flex-1 overflow-auto">
-          {activeSectie === "dashboard" && <DashboardOverview />}
-          {activeSectie === "clients" && <ClientsSection />}
-          {activeSectie === "programs" && <ProgramsSection />}
-          {activeSectie === "nutrition" && <NutritionSection />}
-          {activeSectie === "messages" && <MessagesSection />}
-          {activeSectie === "schedule" && <ScheduleSection />}
-          {activeSectie === "content" && <ContentSection />}
-          {activeSectie === "analytics" && <AnalyticsSection />}
-          {activeSectie === "billing" && <BillingSection />}
-          {activeSectie === "settings" && <SettingsSection />}
-        </div>
       </SidebarInset>
     </SidebarProvider>
   )
