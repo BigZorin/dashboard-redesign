@@ -20,9 +20,10 @@ import {
 // Elk veld is beschreven zodat Claude dit makkelijk kan koppelen.
 // ============================================================================
 
-/** Lijst van cliënten met hun coaching-status en voortgang */
+/** Lijst van cliënten met hun coaching-status en voortgang — Supabase tabel: clients */
 const clienten = [
   {
+    id: "client_001",                   // <-- Supabase UUID
     naam: "Sarah van Dijk",
     initialen: "SD",
     email: "sarah@email.com",
@@ -35,6 +36,7 @@ const clienten = [
     tags: ["Premium", "Online"],
   },
   {
+    id: "client_002",
     naam: "Tom Bakker",
     initialen: "TB",
     email: "tom@email.com",
@@ -47,6 +49,7 @@ const clienten = [
     tags: ["Online"],
   },
   {
+    id: "client_003",
     naam: "Lisa de Vries",
     initialen: "LV",
     email: "lisa@email.com",
@@ -59,6 +62,7 @@ const clienten = [
     tags: ["Premium", "Competitie"],
   },
   {
+    id: "client_004",
     naam: "James Peters",
     initialen: "JP",
     email: "james@email.com",
@@ -71,6 +75,7 @@ const clienten = [
     tags: ["Online"],
   },
   {
+    id: "client_005",
     naam: "Emma Jansen",
     initialen: "EJ",
     email: "emma@email.com",
@@ -83,6 +88,7 @@ const clienten = [
     tags: ["Hybride"],
   },
   {
+    id: "client_006",
     naam: "David Smit",
     initialen: "DS",
     email: "david@email.com",
@@ -95,6 +101,7 @@ const clienten = [
     tags: ["Online"],
   },
   {
+    id: "client_007",
     naam: "Anna Groot",
     initialen: "AG",
     email: "anna@email.com",
@@ -107,6 +114,7 @@ const clienten = [
     tags: ["Premium", "Hybride"],
   },
   {
+    id: "client_008",
     naam: "Marco Visser",
     initialen: "MV",
     email: "marco@email.com",
@@ -144,7 +152,11 @@ function getTrendIcon(trend: string) {
   }
 }
 
-export function ClientsSection() {
+interface ClientsSectionProps {
+  onSelectClient?: (clientId: string) => void
+}
+
+export function ClientsSection({ onSelectClient }: ClientsSectionProps) {
   return (
     <div className="flex flex-col gap-6 p-6">
       {/* Header */}
@@ -182,28 +194,28 @@ export function ClientsSection() {
         <TabsContent value="alle" className="mt-4">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
             {clienten.map((client) => (
-              <ClientKaart key={client.naam} client={client} />
+              <ClientKaart key={client.id} client={client} onClick={() => onSelectClient?.(client.id)} />
             ))}
           </div>
         </TabsContent>
         <TabsContent value="actief" className="mt-4">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
             {clienten.filter(c => c.status === "actief").map((client) => (
-              <ClientKaart key={client.naam} client={client} />
+              <ClientKaart key={client.id} client={client} onClick={() => onSelectClient?.(client.id)} />
             ))}
           </div>
         </TabsContent>
         <TabsContent value="risico" className="mt-4">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
             {clienten.filter(c => c.status === "risico").map((client) => (
-              <ClientKaart key={client.naam} client={client} />
+              <ClientKaart key={client.id} client={client} onClick={() => onSelectClient?.(client.id)} />
             ))}
           </div>
         </TabsContent>
         <TabsContent value="gepauzeerd" className="mt-4">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
             {clienten.filter(c => c.status === "gepauzeerd").map((client) => (
-              <ClientKaart key={client.naam} client={client} />
+              <ClientKaart key={client.id} client={client} onClick={() => onSelectClient?.(client.id)} />
             ))}
           </div>
         </TabsContent>
@@ -212,9 +224,15 @@ export function ClientsSection() {
   )
 }
 
-function ClientKaart({ client }: { client: typeof clienten[number] }) {
+function ClientKaart({ client, onClick }: { client: typeof clienten[number]; onClick?: () => void }) {
   return (
-    <Card className="border-border shadow-sm hover:border-primary/30 transition-all cursor-pointer group">
+    <Card
+      className="border-border shadow-sm hover:border-primary/30 transition-all cursor-pointer group"
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onClick?.() }}
+    >
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
@@ -230,7 +248,12 @@ function ClientKaart({ client }: { client: typeof clienten[number] }) {
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="size-8 text-muted-foreground">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-8 text-muted-foreground"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <MoreHorizontal className="size-4" />
                 <span className="sr-only">Acties</span>
               </Button>
