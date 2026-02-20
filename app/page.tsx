@@ -50,7 +50,10 @@ export default function CoachingDashboard() {
 
   return (
     <SidebarProvider>
-      <CoachingSidebar activeSection={activeSectie} onSectionChange={setActiveSectie} />
+      <CoachingSidebar activeSection={activeSectie} onSectionChange={(section) => {
+        setActiveSectie(section)
+        setGeselecteerdeClientId(null)
+      }} />
       <SidebarInset>
         {/* Cliënt detail weergave als er een cliënt geselecteerd is */}
         {geselecteerdeClientId ? (
