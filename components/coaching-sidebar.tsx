@@ -57,13 +57,19 @@ const mainNavItems = [
 
 // Beheer secties (Content, Statistieken, Facturatie) zijn verplaatst naar /admin
 
-/** Coach profiel — Vervang met ingelogde coach data */
+/** Coach profiel — Vervang met ingelogde coach data uit Supabase
+ *  Supabase: users tabel (voornaam, achternaam, avatar_url, rol)
+ *  avatar_url: Supabase Storage publieke URL uit bucket "avatars"
+ *    pad: avatars/{user_id}/profile.{ext}
+ *  De avatar wordt gewijzigd in Instellingen -> Profiel tab
+ *  Na upload wordt avatar_url automatisch bijgewerkt in de hele app
+ */
 const coachProfile = {
-  naam: "Mark Jensen",          // <-- Volledige naam coach
-  initialen: "MJ",              // <-- Initialen voor avatar fallback
-  rol: "Online Coach",          // <-- Rol/titel
-  avatarUrl: "",                // <-- URL naar profielfoto (leeg = fallback)
-  planNaam: "Pro Plan",         // <-- Huidig abonnement
+  naam: "Mark Jensen",          // <-- users.voornaam + " " + users.achternaam
+  initialen: "MJ",              // <-- Berekend: voornaam[0] + achternaam[0]
+  rol: "Online Coach",          // <-- users.rol
+  avatarUrl: "",                // <-- users.avatar_url (Supabase Storage)
+  planNaam: "Pro Plan",         // <-- Uit subscription_plans via active subscription
 }
 
 interface CoachingSidebarProps {
