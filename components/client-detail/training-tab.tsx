@@ -91,13 +91,16 @@ const programmas = [
   },
 ]
 
-/** Blokken per programma — Supabase: program_blocks */
+/** Blokken per programma — Supabase: program_blocks
+ *  Elk blok bevat een reeks weken. De kleur bepaalt de visuele weergave in de weekselector.
+ *  Relatie: program_blocks.program_id -> client_programs.id
+ */
 const blokkenPerProgramma: Record<string, Array<{
-  id: string
-  naam: string
-  kleur: string
-  weken: number[]
-  status: "voltooid" | "actief" | "gepland"
+  id: string              // <-- program_blocks.id (UUID)
+  naam: string            // <-- program_blocks.naam (bijv. "Opbouw", "Intensificatie")
+  kleur: string           // <-- program_blocks.kleur (Tailwind class voor weekselector)
+  weken: number[]         // <-- Array van weeknummers die in dit blok vallen
+  status: "voltooid" | "actief" | "gepland"  // <-- Berekend: alle weken voltooid = voltooid, huidige week erin = actief
 }>> = {
   prog_001: [
     { id: "blok_001", naam: "Opbouw", kleur: "bg-chart-2", weken: [1, 2, 3, 4], status: "voltooid" },
@@ -115,11 +118,14 @@ const blokkenPerProgramma: Record<string, Array<{
   ],
 }
 
-/** Week-data — Supabase: block_weeks */
+/** Week-data — Supabase: block_weeks
+ *  Per week de compliance en sessie-telling.
+ *  Relatie: block_weeks.block_id -> program_blocks.id
+ */
 const weekData: Record<number, {
-  compliance: number
-  sessies: string
-  status: "voltooid" | "actief" | "gepland"
+  compliance: number      // <-- block_weeks.compliance (percentage 0-100, berekend uit voltooide sessies)
+  sessies: string         // <-- "voltooide/totaal" sessies (bijv. "3/4")
+  status: "voltooid" | "actief" | "gepland"  // <-- block_weeks.status
 }> = {
   1:  { compliance: 100, sessies: "4/4", status: "voltooid" },
   2:  { compliance: 100, sessies: "4/4", status: "voltooid" },
@@ -135,20 +141,23 @@ const weekData: Record<number, {
   12: { compliance: 0,   sessies: "0/4", status: "gepland" },
 }
 
-/** Trainingen per week — Supabase: week_workouts + workout_exercises */
+/** Trainingen per week — Supabase: week_workouts + workout_exercises
+ *  Relatie: week_workouts.week_id -> block_weeks.id
+ *  Relatie: workout_exercises.workout_id -> week_workouts.id
+ */
 const trainingenPerWeek: Record<number, Array<{
-  id: string
-  naam: string
-  dag: string
-  status: "voltooid" | "gepland" | "overgeslagen"
+  id: string                              // <-- week_workouts.id (UUID)
+  naam: string                            // <-- week_workouts.naam (bijv. "Upper Kracht")
+  dag: string                             // <-- week_workouts.dag (bijv. "Maandag")
+  status: "voltooid" | "gepland" | "overgeslagen"  // <-- week_workouts.status
   oefeningen: Array<{
-    naam: string
-    sets: number
-    reps: string
-    gewicht: string
-    rust: string
-    progressie: "up" | "down" | "neutral"
-    aiSuggestie: string | null
+    naam: string                          // <-- workout_exercises.naam (bijv. "Bench Press")
+    sets: number                          // <-- workout_exercises.sets (aantal sets)
+    reps: string                          // <-- workout_exercises.reps (bijv. "5" of "8-12")
+    gewicht: string                       // <-- workout_exercises.gewicht (bijv. "70 kg")
+    rust: string                          // <-- workout_exercises.rust (bijv. "3 min")
+    progressie: "up" | "down" | "neutral" // <-- Berekend uit verschil met vorige week
+    aiSuggestie: string | null            // <-- ai_suggestions.tekst (null als geen suggestie)
   }>
 }>> = {
   6: [
