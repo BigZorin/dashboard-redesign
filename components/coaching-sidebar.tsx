@@ -180,11 +180,11 @@ export function CoachingSidebar({ activeSection, onSectionChange }: CoachingSide
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent side="top" align="start" className="w-56">
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onSectionChange("settings")}>
                   <Settings className="mr-2 size-4" />
                   Instellingen
                 </DropdownMenuItem>
-                <DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onSectionChange("settings")}>
                   <Bell className="mr-2 size-4" />
                   Meldingen
                 </DropdownMenuItem>
