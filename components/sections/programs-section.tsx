@@ -551,16 +551,10 @@ function ProgrammaDetail({ programma, onTerug }: { programma: Programma; onTerug
             <p className="text-xs text-muted-foreground">Programma bewerken</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-1.5 text-xs">
-            <Users className="size-3.5" />
-            Toewijzen
-          </Button>
-          <Button size="sm" className="gap-1.5 text-xs bg-primary text-primary-foreground hover:bg-primary/90">
-            <Check className="size-3.5" />
-            Opslaan
-          </Button>
-        </div>
+        <Button size="sm" className="gap-1.5 text-xs bg-primary text-primary-foreground hover:bg-primary/90">
+          <Check className="size-3.5" />
+          Opslaan
+        </Button>
       </div>
 
       {/* Twee-koloms layout */}
@@ -613,32 +607,20 @@ function ProgrammaDetail({ programma, onTerug }: { programma: Programma; onTerug
                 />
               </div>
 
-              {/* Categorie & Status */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-medium text-foreground">Categorie</label>
-                  <Select defaultValue={programma.categorie}>
-                    <SelectTrigger className="text-sm h-9">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="kracht">Kracht</SelectItem>
-                      <SelectItem value="afvallen">Afvallen</SelectItem>
-                      <SelectItem value="uithoudingsvermogen">Uithoudingsvermogen</SelectItem>
-                      <SelectItem value="wellness">Wellness</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-medium text-foreground">Sessies/week</label>
-                  <Input
-                    type="number"
-                    defaultValue={programma.sessiesPerWeek}
-                    min={1}
-                    max={7}
-                    className="text-sm h-9"
-                  />
-                </div>
+              {/* Categorie */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-foreground">Categorie</label>
+                <Select defaultValue={programma.categorie}>
+                  <SelectTrigger className="text-sm h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="kracht">Kracht</SelectItem>
+                    <SelectItem value="afvallen">Afvallen</SelectItem>
+                    <SelectItem value="uithoudingsvermogen">Uithoudingsvermogen</SelectItem>
+                    <SelectItem value="wellness">Wellness</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               {/* Stats */}
