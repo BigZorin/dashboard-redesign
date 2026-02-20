@@ -99,42 +99,48 @@ export function MessagesSection() {
     <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
       {/* Gesprekkenlijst */}
       <div className="flex w-80 flex-col border-r border-border bg-card">
-        <div className="flex items-center gap-2 border-b border-border p-4">
+        <div className="flex items-center gap-2 border-b border-border p-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-            <Input placeholder="Zoek gesprekken..." className="pl-9 h-9 bg-secondary border-border" />
+            <Input placeholder="Zoek gesprekken..." className="pl-9 h-9 bg-secondary/60 border-0 focus-visible:ring-1" />
           </div>
         </div>
         <ScrollArea className="flex-1">
-          <div className="flex flex-col">
+          <div className="flex flex-col py-1">
             {gesprekken.map((gesprek) => (
               <button
                 key={gesprek.id}
                 onClick={() => setGeselecteerdChat(gesprek.id)}
                 className={cn(
-                  "flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-secondary/50 border-b border-border/50",
+                  "flex items-center gap-3 px-3 py-2.5 mx-1 rounded-lg text-left transition-colors hover:bg-secondary/60",
                   geselecteerdChat === gesprek.id && "bg-secondary"
                 )}
               >
-                <div className="relative">
-                  <Avatar className="size-10">
-                    <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                <div className="relative shrink-0">
+                  <Avatar className="size-9 border border-border">
+                    <AvatarFallback className="bg-secondary text-foreground text-xs font-semibold">
                       {gesprek.initialen}
                     </AvatarFallback>
                   </Avatar>
                   {gesprek.online && (
-                    <div className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-card bg-success" />
+                    <div className="absolute bottom-0 right-0 size-2.5 rounded-full border-[1.5px] border-card bg-success" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm font-medium text-foreground truncate">{gesprek.naam}</p>
-                    <span className="text-[11px] text-muted-foreground shrink-0 ml-2">{gesprek.tijd}</span>
+                    <p className={cn(
+                      "text-sm truncate",
+                      gesprek.ongelezen > 0 ? "font-semibold text-foreground" : "font-medium text-foreground"
+                    )}>{gesprek.naam}</p>
+                    <span className="text-[10px] text-muted-foreground shrink-0 ml-2">{gesprek.tijd}</span>
                   </div>
-                  <p className="text-xs text-muted-foreground truncate mt-0.5">{gesprek.laatsteBericht}</p>
+                  <p className={cn(
+                    "text-xs truncate mt-0.5",
+                    gesprek.ongelezen > 0 ? "text-foreground/70" : "text-muted-foreground"
+                  )}>{gesprek.laatsteBericht}</p>
                 </div>
                 {gesprek.ongelezen > 0 && (
-                  <div className="flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground shrink-0">
+                  <div className="flex size-4.5 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground shrink-0">
                     {gesprek.ongelezen}
                   </div>
                 )}
@@ -150,13 +156,13 @@ export function MessagesSection() {
         <div className="flex items-center justify-between border-b border-border bg-card px-6 py-3">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <Avatar className="size-9">
-                <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+              <Avatar className="size-9 border border-border">
+                <AvatarFallback className="bg-secondary text-foreground text-xs font-semibold">
                   {geselecteerdGesprek?.initialen}
                 </AvatarFallback>
               </Avatar>
               {geselecteerdGesprek?.online && (
-                <div className="absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full border-2 border-card bg-success" />
+                <div className="absolute bottom-0 right-0 size-2.5 rounded-full border-[1.5px] border-card bg-success" />
               )}
             </div>
             <div>
