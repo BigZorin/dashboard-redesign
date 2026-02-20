@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
     paddingTop: 32,
     paddingBottom: 40,
     gap: 14,
-    ...theme.shadow.lg,
+    ...theme.shadows.lg,
   },
   title: {
     fontSize: theme.fontSize.xxl,

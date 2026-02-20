@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: theme.borderRadius.xxl,
     paddingHorizontal: theme.spacing.xxl,
     paddingTop: 36,
-    ...theme.shadow.lg,
+    ...theme.shadows.lg,
   },
   title: {
     fontSize: theme.fontSize.xxl,

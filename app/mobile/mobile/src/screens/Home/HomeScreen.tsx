@@ -513,10 +513,10 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.lg,
     padding: theme.spacing.lg,
     marginBottom: 10,
-    ...theme.shadow.sm,
+    ...theme.shadows.sm,
   },
   cardFirst: {
-    ...theme.shadow.md,
+    ...theme.shadows.md,
   },
   cardHeader: {
     flexDirection: 'row',

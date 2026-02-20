@@ -669,7 +669,7 @@ const styles = StyleSheet.create({
     padding: theme.spacing.md,
     alignItems: 'center',
     gap: 4,
-    ...theme.shadow.sm,
+    ...theme.shadows.sm,
   },
   statIconWrap: {
     width: 32,
@@ -697,7 +697,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.md,
     padding: theme.spacing.lg,
     marginBottom: theme.spacing.lg,
-    ...theme.shadow.sm,
+    ...theme.shadows.sm,
   },
   descriptionTitle: {
     fontSize: theme.fontSize.md,
@@ -749,7 +749,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.md,
     padding: theme.spacing.lg,
     marginBottom: 10,
-    ...theme.shadow.sm,
+    ...theme.shadows.sm,
   },
   exerciseHeader: {
     flexDirection: 'row',
@@ -879,7 +879,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.md,
     overflow: 'hidden',
     marginTop: theme.spacing.sm,
-    ...theme.shadow.md,
+    ...theme.shadows.md,
   },
   startButtonGradient: {
     flexDirection: 'row',

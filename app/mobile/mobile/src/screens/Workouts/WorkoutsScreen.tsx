@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginBottom: theme.spacing.lg,
     backgroundColor: theme.colors.surface,
-    ...theme.shadow.lg,
+    ...theme.shadows.lg,
   },
   programBannerContainer: {
     height: 180,
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.md,
     padding: theme.spacing.md,
     marginBottom: theme.spacing.sm,
-    ...theme.shadow.sm,
+    ...theme.shadows.sm,
   },
   otherBannerContainer: {
     width: 56,

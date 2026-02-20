@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.xxl,
     padding: 32,
     alignItems: 'center',
-    ...theme.shadow.md,
+    ...theme.shadows.md,
   },
   iconCircle: {
     width: 88,
@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     borderRadius: theme.borderRadius.sm,
     backgroundColor: theme.colors.surface,
-    ...theme.shadow.sm,
+    ...theme.shadows.sm,
   },
   logoutText: {
     fontSize: theme.fontSize.sm,
