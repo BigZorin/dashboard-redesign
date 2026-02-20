@@ -14,6 +14,13 @@ import { cn } from "@/lib/utils"
 //   - client_sessions (sessies deze maand)
 //   - client_checkins (check-in ratio)
 //
+// Stripe data (omzet KPI's):
+//   - Maandelijkse omzet: stripe.balanceTransactions.list() of
+//     berekend uit client_subscriptions.maand_prijs_centen (Supabase)
+//   - Gem. clientwaarde: totaal MRR / actieve clienten
+//   - Betalingen in "Recente Activiteit": stripe.charges.list() of
+//     via webhook data opgeslagen in payments tabel
+//
 // KPI's worden berekend via Supabase RPC of Edge Functions
 // ============================================================================
 

@@ -69,12 +69,24 @@ import { cn } from "@/lib/utils"
 //   - "course-videos" (les-video's, path: course-videos/{lesson_id}.mp4)
 //   - "course-assets" (bijlagen bij lessen: PDF's, afbeeldingen, etc.)
 //
-// TOEGANG & PRICING:
-//   - Courses kunnen gratis of betaald zijn
-//   - Betaalde courses: via Stripe Checkout (eenmalige betaling of abonnement)
-//   - Gratis courses: direct beschikbaar voor alle clienten
-//   - Admins kunnen courses toewijzen aan specifieke clienten of coaches
+// TOEGANG VIA COACHING PAKKETTEN (subscription_plans):
+//   - Courses zijn NIET los te kopen — ze zitten bij coaching pakketten
+//   - subscription_plans.exclusieve_courses: jsonb array van course_ids per pakket
+//   - subscription_plans.all_courses_included: boolean, true = alle courses inclusief
+//   - Client ziet in de app alleen courses die bij zijn/haar actieve pakket horen
+//   - Voorbeeld:
+//     - "Basis" pakket: alleen "Krachttraining Fundamenten" (1 course)
+//     - "Premium" pakket: 4 specifieke courses
+//     - "All-Inclusive" pakket: all_courses_included = true (alle huidige + toekomstige)
+//   - Gratis courses: courses.is_gratis = true -> beschikbaar voor ALLE clienten
 //   - Voortgang wordt per client bijgehouden (course_progress tabel)
+//
+// RLS POLICIES VOOR COURSE TOEGANG:
+//   - SELECT op courses: altijd zichtbaar (titels/beschrijvingen voor marketing)
+//   - SELECT op course_lessons.content: alleen als client een actieve subscription heeft
+//     met een pakket dat deze course bevat (check via subscription_plans koppeling)
+//   - INSERT op course_enrollments: alleen als course in client's pakket zit
+//   - Dit voorkomt dat clienten zonder juist pakket bij premium les-content komen
 //
 // AI INTEGRATIE (TOEKOMSTIG):
 //   - AI kan course-structuur genereren op basis van een onderwerp-prompt

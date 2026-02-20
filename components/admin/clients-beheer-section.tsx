@@ -20,6 +20,15 @@ import { cn } from "@/lib/utils"
 // Client status: "wachtrij" | "goedgekeurd" | "afgewezen"
 // Coach toewijzing: update clients.coach_id
 // Goedkeuring: update clients.status + optioneel Supabase Edge Function trigger
+//
+// STRIPE KOPPELING BIJ CLIENT LIFECYCLE:
+//   - Bij goedkeuring:
+//     1. stripe.customers.create({ email, name, metadata: { client_id, coach_id } })
+//     2. Sla stripe_customer_id op in clients tabel
+//     3. Stuur Payment Link of maak subscription aan via dashboard
+//   - Bij afwijzing: geen Stripe actie nodig
+//   - Bij coach wissel: stripe.customers.update(stripe_customer_id, { metadata: { coach_id } })
+//   - Bij deactivatie: stripe.subscriptions.update(sub_id, { cancel_at_period_end: true })
 // ============================================================================
 
 type ClientStatus = "wachtrij" | "goedgekeurd" | "afgewezen"
