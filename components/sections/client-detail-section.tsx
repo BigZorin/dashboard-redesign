@@ -1,11 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { ArrowLeft, MessageCircle, ClipboardCheck, Sparkles, MoreHorizontal, Mail, CalendarDays } from "lucide-react"
+import { ArrowLeft, MessageCircle, ClipboardCheck, Sparkles, MoreHorizontal, Mail, CalendarDays, Dumbbell, Apple, Activity, TrendingDown, TrendingUp, Minus, AlertTriangle, Scale } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Progress } from "@/components/ui/progress"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,6 +46,30 @@ const clientGegevens = {
   avatarUrl: "",                        // <-- clients.avatar_url (leeg = fallback)
   tags: ["Premium", "Online"],         // <-- clients.tags array
 }
+
+/** Snelle statistieken voor de header strip — Berekend uit meerdere tabellen */
+const headerStats = {
+  gewicht: 71.1,                        // <-- Laatste gewicht uit client_checkins
+  gewichtTrend: -0.4,                   // <-- kg verschil t.o.v. vorige week
+  complianceTraining: 92,               // <-- % trainingen voltooid deze week
+  complianceVoeding: 78,               // <-- % voedingsdoelen gehaald
+  energie: 7,                           // <-- Uit laatste check-in (1-10)
+  openVoorstellen: 2,                   // <-- Aantal onbehandelde AI voorstellen
+}
+
+/** Aandachtspunten — Automatisch gegenereerd op basis van data-analyse */
+const aandachtspunten = [
+  {
+    type: "waarschuwing" as const,       // <-- waarschuwing | info
+    tekst: "Voedingscompliance onder 80% deze week (78%)",
+    categorie: "voeding",
+  },
+  {
+    type: "info" as const,
+    tekst: "2 nieuwe AI-voorstellen wachten op beoordeling",
+    categorie: "ai",
+  },
+]
 
 function getStatusKleur(status: string) {
   switch (status) {
@@ -86,13 +111,13 @@ export function ClientDetailSection({ clientId, onTerug }: ClientDetailSectionPr
       <div className="border-b border-border bg-card px-6 py-4">
         <button
           onClick={onTerug}
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-3"
         >
           <ArrowLeft className="size-4" />
           Terug naar cliënten
         </button>
 
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           {/* Linkerkant: profiel info */}
           <div className="flex items-center gap-4">
             <Avatar className="size-14 border-2 border-primary/20">
@@ -110,7 +135,7 @@ export function ClientDetailSection({ clientId, onTerug }: ClientDetailSectionPr
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                 <span>{client.email}</span>
                 <span className="hidden sm:inline">|</span>
-                <span>{client.programma} &mdash; Week {client.programmWeek} van {client.programmaTotaalWeken}</span>
+                <span>{client.programma} &mdash; Week {client.programmWeek}/{client.programmaTotaalWeken}</span>
               </div>
               <div className="flex items-center gap-2 mt-0.5">
                 {client.tags.map((tag) => (
@@ -161,60 +186,107 @@ export function ClientDetailSection({ clientId, onTerug }: ClientDetailSectionPr
             </DropdownMenu>
           </div>
         </div>
+
+        {/* Quick-stats strip */}
+        <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg bg-secondary/50 px-4 py-2.5 border border-border">
+          <div className="flex items-center gap-2 pr-3 border-r border-border">
+            <Scale className="size-3.5 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">Gewicht</span>
+            <span className="text-sm font-bold text-foreground">{headerStats.gewicht} kg</span>
+            <span className={`flex items-center gap-0.5 text-[11px] font-medium ${headerStats.gewichtTrend < 0 ? "text-success" : headerStats.gewichtTrend > 0 ? "text-destructive" : "text-muted-foreground"}`}>
+              {headerStats.gewichtTrend < 0 ? <TrendingDown className="size-3" /> : headerStats.gewichtTrend > 0 ? <TrendingUp className="size-3" /> : <Minus className="size-3" />}
+              {headerStats.gewichtTrend > 0 ? "+" : ""}{headerStats.gewichtTrend} kg
+            </span>
+          </div>
+          <div className="flex items-center gap-2 pr-3 border-r border-border">
+            <Dumbbell className="size-3.5 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">Training</span>
+            <div className="flex items-center gap-1.5">
+              <Progress value={headerStats.complianceTraining} className="h-1.5 w-16" />
+              <span className={`text-xs font-bold ${headerStats.complianceTraining >= 90 ? "text-success" : "text-warning-foreground"}`}>{headerStats.complianceTraining}%</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 pr-3 border-r border-border">
+            <Apple className="size-3.5 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">Voeding</span>
+            <div className="flex items-center gap-1.5">
+              <Progress value={headerStats.complianceVoeding} className="h-1.5 w-16" />
+              <span className={`text-xs font-bold ${headerStats.complianceVoeding >= 80 ? "text-success" : "text-warning-foreground"}`}>{headerStats.complianceVoeding}%</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 pr-3 border-r border-border">
+            <Activity className="size-3.5 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">Energie</span>
+            <span className="text-sm font-bold text-foreground">{headerStats.energie}/10</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <CalendarDays className="size-3.5 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">Sessie</span>
+            <span className="text-xs font-semibold text-foreground">{client.volgendeSessie}</span>
+          </div>
+          {headerStats.openVoorstellen > 0 && (
+            <div className="ml-auto flex items-center gap-1.5">
+              <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] gap-1">
+                <Sparkles className="size-3" />
+                {headerStats.openVoorstellen} AI voorstellen
+              </Badge>
+            </div>
+          )}
+        </div>
+
+        {/* Aandachtspunten banner */}
+        {aandachtspunten.length > 0 && (
+          <div className="mt-3 flex flex-col gap-1.5">
+            {aandachtspunten.map((punt, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  if (punt.categorie === "voeding") setActieveTab("voeding")
+                  if (punt.categorie === "ai") setActieveTab("ai-coach")
+                  if (punt.categorie === "training") setActieveTab("training")
+                }}
+                className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-left text-xs transition-colors ${
+                  punt.type === "waarschuwing"
+                    ? "bg-warning/10 text-warning-foreground hover:bg-warning/20 border border-warning/20"
+                    : "bg-primary/5 text-primary hover:bg-primary/10 border border-primary/20"
+                }`}
+              >
+                <AlertTriangle className="size-3 shrink-0" />
+                <span>{punt.tekst}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Tabs navigatie */}
+      {/* Tabs navigatie — met iconen voor snellere herkenning */}
       <Tabs value={actieveTab} onValueChange={setActieveTab} className="flex-1 flex flex-col">
         <div className="border-b border-border bg-card px-6">
-          <TabsList className="h-11 bg-transparent p-0 gap-0">
-            <TabsTrigger
-              value="overzicht"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 text-sm"
-            >
-              Overzicht
-            </TabsTrigger>
-            <TabsTrigger
-              value="training"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 text-sm"
-            >
-              Training
-            </TabsTrigger>
-            <TabsTrigger
-              value="voeding"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 text-sm"
-            >
-              Voeding
-            </TabsTrigger>
-            <TabsTrigger
-              value="checkins"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 text-sm"
-            >
-              Check-ins
-            </TabsTrigger>
-            <TabsTrigger
-              value="metingen"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 text-sm"
-            >
-              Metingen
-            </TabsTrigger>
-            <TabsTrigger
-              value="ai-coach"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 text-sm"
-            >
-              AI Coach
-            </TabsTrigger>
-            <TabsTrigger
-              value="notities"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 text-sm"
-            >
-              Notities
-            </TabsTrigger>
-            <TabsTrigger
-              value="instellingen"
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 text-sm"
-            >
-              Instellingen
-            </TabsTrigger>
+          <TabsList className="h-11 bg-transparent p-0 gap-0 overflow-x-auto">
+            {[
+              { value: "overzicht", label: "Overzicht", icon: Activity },
+              { value: "training", label: "Training", icon: Dumbbell },
+              { value: "voeding", label: "Voeding", icon: Apple },
+              { value: "checkins", label: "Check-ins", icon: ClipboardCheck },
+              { value: "metingen", label: "Metingen", icon: Scale },
+              { value: "ai-coach", label: "AI Coach", icon: Sparkles, badge: headerStats.openVoorstellen },
+              { value: "notities", label: "Notities", icon: MessageCircle },
+              { value: "instellingen", label: "Instellingen", icon: CalendarDays },
+            ].map((tab) => (
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-3 text-sm gap-1.5 shrink-0"
+              >
+                <tab.icon className="size-3.5" />
+                <span className="hidden sm:inline">{tab.label}</span>
+                {tab.badge && tab.badge > 0 && (
+                  <span className="flex size-4 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground">
+                    {tab.badge}
+                  </span>
+                )}
+              </TabsTrigger>
+            ))}
           </TabsList>
         </div>
 

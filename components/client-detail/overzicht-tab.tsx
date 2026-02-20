@@ -1,9 +1,10 @@
 "use client"
 
-import { TrendingUp, TrendingDown, CalendarDays, Dumbbell, Apple, Minus, Activity, Moon, Droplets, StickyNote } from "lucide-react"
+import { TrendingUp, TrendingDown, CalendarDays, Dumbbell, Apple, Minus, Activity, Moon, Droplets, StickyNote, Sparkles, ChevronRight, Brain } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 
 // ============================================================================
@@ -92,6 +93,17 @@ const recenteNotities = [
   },
 ]
 
+/** AI Weeksamenvatting — Gegenereerd door AI op basis van alle beschikbare data */
+const aiWeeksamenvatting = {
+  samenvatting: "Sarah heeft een sterke week achter de rug met 92% trainingscompliatie. Haar squat progressie is uitstekend (+2.5 kg). Aandachtspunt is de eiwitinname die al 2 weken onder target zit. Stressniveau is licht verhoogd maar beheersbaar.",
+  aanbevelingen: [
+    { tekst: "Eiwitinname verhogen: voeg extra whey shake toe", categorie: "voeding", prioriteit: "hoog" as const },
+    { tekst: "Squat gewicht volgende week naar 92.5 kg", categorie: "training", prioriteit: "normaal" as const },
+    { tekst: "Slaaphygiëne bespreken i.v.m. werkstress", categorie: "mindset", prioriteit: "normaal" as const },
+  ],
+  // <-- Vervang door AI-gegenereerde tekst via RAG pipeline
+}
+
 function MacroBar({ label, huidig, doel, kleur }: { label: string; huidig: number; doel: number; kleur: string }) {
   const percentage = Math.min(Math.round((huidig / doel) * 100), 100)
   return (
@@ -177,6 +189,47 @@ export function OverzichtTab() {
           </CardContent>
         </Card>
       </div>
+
+      {/* AI Weeksamenvatting — direct zichtbaar voor de coach */}
+      <Card className="border-primary/20 bg-primary/[0.02]">
+        <CardContent className="p-4">
+          <div className="flex items-start gap-3">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+              <Brain className="size-4.5 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm font-semibold text-foreground">AI Weeksamenvatting</h3>
+                  <Badge className="bg-primary/10 text-primary border-primary/20 text-[9px]">Automatisch</Badge>
+                </div>
+                <Button variant="ghost" size="sm" className="h-7 text-[11px] text-primary gap-1 hover:bg-primary/10">
+                  <Sparkles className="size-3" />
+                  Details
+                  <ChevronRight className="size-3" />
+                </Button>
+              </div>
+              <p className="text-sm text-foreground leading-relaxed mb-3">{aiWeeksamenvatting.samenvatting}</p>
+              <div className="flex flex-wrap gap-2">
+                {aiWeeksamenvatting.aanbevelingen.map((aanbeveling, i) => (
+                  <div
+                    key={i}
+                    className={`flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] border ${
+                      aanbeveling.prioriteit === "hoog"
+                        ? "bg-warning/10 text-warning-foreground border-warning/20"
+                        : "bg-secondary/60 text-foreground border-border"
+                    }`}
+                  >
+                    {aanbeveling.prioriteit === "hoog" && <span className="size-1.5 rounded-full bg-warning" />}
+                    <span>{aanbeveling.tekst}</span>
+                    <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 ml-1 capitalize">{aanbeveling.categorie}</Badge>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Kolom 1: Programma + Macro's */}

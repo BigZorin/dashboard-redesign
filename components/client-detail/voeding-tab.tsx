@@ -1,8 +1,9 @@
 "use client"
 
-import { Apple, Droplets, Pill, Clock } from "lucide-react"
+import { Apple, Droplets, Pill, Clock, Edit3, Sparkles } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
 
 // ============================================================================
@@ -172,7 +173,17 @@ export function VoedingTab() {
               <Apple className="size-4 text-primary" />
               Dagelijkse macro-targets
             </CardTitle>
-            <Badge variant="outline" className="text-[10px]">Vandaag</Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-[10px]">Vandaag</Badge>
+              <Button variant="outline" size="sm" className="h-6 text-[10px] gap-1 border-border">
+                <Edit3 className="size-3" />
+                Targets aanpassen
+              </Button>
+              <Button variant="outline" size="sm" className="h-6 text-[10px] gap-1 border-primary/30 text-primary">
+                <Sparkles className="size-3" />
+                AI optimalisatie
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -200,7 +211,13 @@ export function VoedingTab() {
         {/* Maaltijdschema */}
         <Card className="border-border">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold">Maaltijdschema</CardTitle>
+            <div className="flex items-center justify-between w-full">
+              <CardTitle className="text-sm font-semibold">Maaltijdschema</CardTitle>
+              <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1 text-muted-foreground hover:text-primary">
+                <Edit3 className="size-3" />
+                Bewerken
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             {maaltijden.map((maaltijd, i) => (

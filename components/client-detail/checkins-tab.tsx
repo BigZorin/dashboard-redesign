@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { List, LayoutGrid, TrendingUp, TrendingDown, Minus, Camera, MessageSquare } from "lucide-react"
+import { List, LayoutGrid, TrendingUp, TrendingDown, Minus, Camera, MessageSquare, ArrowLeftRight } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -165,6 +165,20 @@ function ScoreBalk({ waarde, max = 10 }: { waarde: number; max?: number }) {
 
 export function CheckinsTab() {
   const [weergave, setWeergave] = useState<"tijdlijn" | "tabel">("tijdlijn")
+  const [vergelijkModus, setVergelijkModus] = useState(false)
+  const [geselecteerdeWeken, setGeselecteerdeWeken] = useState<string[]>([])
+
+  function toggleWeekSelectie(id: string) {
+    setGeselecteerdeWeken(prev => {
+      if (prev.includes(id)) return prev.filter(w => w !== id)
+      if (prev.length >= 2) return [prev[1], id]
+      return [...prev, id]
+    })
+  }
+
+  const vergelijkData = geselecteerdeWeken.length === 2
+    ? geselecteerdeWeken.map(id => checkins.find(c => c.id === id)!).filter(Boolean)
+    : []
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -174,25 +188,39 @@ export function CheckinsTab() {
           <h3 className="text-lg font-semibold text-foreground">Wekelijkse check-ins</h3>
           <p className="text-xs text-muted-foreground">{checkins.length} check-ins vastgelegd</p>
         </div>
-        <div className="flex items-center gap-1 rounded-lg border border-border p-0.5">
+        <div className="flex items-center gap-2">
           <Button
-            variant={weergave === "tijdlijn" ? "default" : "ghost"}
+            variant={vergelijkModus ? "default" : "outline"}
             size="sm"
-            className="h-7 gap-1.5 text-xs"
-            onClick={() => setWeergave("tijdlijn")}
+            className={`h-7 gap-1.5 text-xs ${vergelijkModus ? "bg-primary text-primary-foreground" : "border-border"}`}
+            onClick={() => {
+              setVergelijkModus(!vergelijkModus)
+              if (vergelijkModus) setGeselecteerdeWeken([])
+            }}
           >
-            <LayoutGrid className="size-3.5" />
-            Tijdlijn
+            <ArrowLeftRight className="size-3.5" />
+            {vergelijkModus ? `Vergelijken (${geselecteerdeWeken.length}/2)` : "Vergelijk"}
           </Button>
-          <Button
-            variant={weergave === "tabel" ? "default" : "ghost"}
-            size="sm"
-            className="h-7 gap-1.5 text-xs"
-            onClick={() => setWeergave("tabel")}
-          >
-            <List className="size-3.5" />
-            Tabel
-          </Button>
+          <div className="flex items-center gap-1 rounded-lg border border-border p-0.5">
+            <Button
+              variant={weergave === "tijdlijn" ? "default" : "ghost"}
+              size="sm"
+              className="h-7 gap-1.5 text-xs"
+              onClick={() => setWeergave("tijdlijn")}
+            >
+              <LayoutGrid className="size-3.5" />
+              Tijdlijn
+            </Button>
+            <Button
+              variant={weergave === "tabel" ? "default" : "ghost"}
+              size="sm"
+              className="h-7 gap-1.5 text-xs"
+              onClick={() => setWeergave("tabel")}
+            >
+              <List className="size-3.5" />
+              Tabel
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -205,12 +233,25 @@ export function CheckinsTab() {
           {checkins.map((checkin, i) => (
             <div key={checkin.id} className="relative flex gap-4 pb-6">
               {/* Tijdlijn dot */}
-              <div className="relative z-10 flex size-10 shrink-0 items-center justify-center rounded-full border-2 border-primary/30 bg-card">
+              <button
+                onClick={() => vergelijkModus && toggleWeekSelectie(checkin.id)}
+                className={`relative z-10 flex size-10 shrink-0 items-center justify-center rounded-full border-2 bg-card transition-all ${
+                  vergelijkModus
+                    ? geselecteerdeWeken.includes(checkin.id)
+                      ? "border-primary bg-primary/10 ring-2 ring-primary/30"
+                      : "border-primary/30 hover:border-primary cursor-pointer"
+                    : "border-primary/30"
+                }`}
+              >
                 <span className="text-[11px] font-bold text-primary">W{checkin.weekNummer}</span>
-              </div>
+              </button>
 
               {/* Content kaart */}
-              <Card className="flex-1 border-border">
+              <Card className={`flex-1 transition-all ${
+                vergelijkModus && geselecteerdeWeken.includes(checkin.id)
+                  ? "border-primary/40 ring-1 ring-primary/20"
+                  : "border-border"
+              }`}>
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-3">
                     <div>
@@ -322,6 +363,73 @@ export function CheckinsTab() {
               </Card>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Vergelijk paneel */}
+      {vergelijkModus && vergelijkData.length === 2 && (
+        <Card className="border-primary/30 bg-primary/[0.02]">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <ArrowLeftRight className="size-4 text-primary" />
+              <CardTitle className="text-sm font-semibold">
+                Vergelijking: Week {vergelijkData[0].weekNummer} vs Week {vergelijkData[1].weekNummer}
+              </CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="text-[11px] font-semibold">Metriek</TableHead>
+                    <TableHead className="text-[11px] font-semibold text-center">Week {vergelijkData[0].weekNummer}</TableHead>
+                    <TableHead className="text-[11px] font-semibold text-center">Week {vergelijkData[1].weekNummer}</TableHead>
+                    <TableHead className="text-[11px] font-semibold text-center">Verschil</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {[
+                    { label: "Gewicht", v1: vergelijkData[0].gewicht, v2: vergelijkData[1].gewicht, eenheid: "kg", lagerIsBeter: true },
+                    { label: "Taille", v1: vergelijkData[0].taille, v2: vergelijkData[1].taille, eenheid: "cm", lagerIsBeter: true },
+                    { label: "Heupen", v1: vergelijkData[0].heupen, v2: vergelijkData[1].heupen, eenheid: "cm", lagerIsBeter: true },
+                    { label: "Armen", v1: vergelijkData[0].armen, v2: vergelijkData[1].armen, eenheid: "cm", lagerIsBeter: false },
+                    { label: "Energie", v1: vergelijkData[0].energie, v2: vergelijkData[1].energie, eenheid: "/10", lagerIsBeter: false },
+                    { label: "Slaap", v1: vergelijkData[0].slaap, v2: vergelijkData[1].slaap, eenheid: "/10", lagerIsBeter: false },
+                    { label: "Training", v1: vergelijkData[0].complianceTraining, v2: vergelijkData[1].complianceTraining, eenheid: "%", lagerIsBeter: false },
+                    { label: "Voeding", v1: vergelijkData[0].complianceVoeding, v2: vergelijkData[1].complianceVoeding, eenheid: "%", lagerIsBeter: false },
+                  ].map((rij) => {
+                    const verschil = Number((rij.v2 - rij.v1).toFixed(1))
+                    const isPositief = rij.lagerIsBeter ? verschil < 0 : verschil > 0
+                    return (
+                      <TableRow key={rij.label}>
+                        <TableCell className="text-sm font-medium text-foreground">{rij.label}</TableCell>
+                        <TableCell className="text-center text-sm text-foreground">{rij.v1} {rij.eenheid}</TableCell>
+                        <TableCell className="text-center text-sm text-foreground">{rij.v2} {rij.eenheid}</TableCell>
+                        <TableCell className="text-center">
+                          <span className={`text-sm font-semibold ${
+                            verschil === 0 ? "text-muted-foreground" : isPositief ? "text-success" : "text-destructive"
+                          }`}>
+                            {verschil > 0 ? "+" : ""}{verschil} {rij.eenheid}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {vergelijkModus && geselecteerdeWeken.length < 2 && (
+        <div className="rounded-lg border border-dashed border-primary/30 bg-primary/[0.02] p-6 text-center">
+          <ArrowLeftRight className="size-6 text-primary/40 mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">
+            Selecteer <span className="font-semibold text-foreground">{2 - geselecteerdeWeken.length}</span> {geselecteerdeWeken.length === 1 ? "week" : "weken"} om te vergelijken
+          </p>
+          <p className="text-[11px] text-muted-foreground mt-1">Klik op de weeknummers in de tijdlijn hierboven</p>
         </div>
       )}
 

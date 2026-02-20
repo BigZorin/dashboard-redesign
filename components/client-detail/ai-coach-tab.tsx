@@ -148,20 +148,38 @@ export function AiCoachTab() {
       {/* Linker paneel: Chat (60%) */}
       <div className="flex flex-1 flex-col border-r border-border lg:w-[60%]">
         {/* Chat header */}
-        <div className="flex items-center justify-between border-b border-border px-4 py-3 bg-card">
-          <div className="flex items-center gap-2">
-            <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10">
-              <Brain className="size-4 text-primary" />
+        <div className="flex flex-col border-b border-border bg-card">
+          <div className="flex items-center justify-between px-4 py-3">
+            <div className="flex items-center gap-2">
+              <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10">
+                <Brain className="size-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">AI Coach Assistent</p>
+                <p className="text-[11px] text-muted-foreground">RAG-ondersteund advies op basis van cliëntdata</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-semibold text-foreground">AI Coach Assistent</p>
-              <p className="text-[11px] text-muted-foreground">RAG-ondersteund advies op basis van cliëntdata</p>
-            </div>
+            <Badge variant="outline" className="text-[10px] gap-1">
+              <span className="size-1.5 rounded-full bg-success" />
+              Verbonden
+            </Badge>
           </div>
-          <Badge variant="outline" className="text-[10px] gap-1">
-            <span className="size-1.5 rounded-full bg-success" />
-            Verbonden
-          </Badge>
+          {/* Data context indicator — laat zien welke data de AI gebruikt */}
+          <div className="flex items-center gap-2 px-4 py-1.5 bg-secondary/30 border-t border-border text-[10px] text-muted-foreground overflow-x-auto">
+            <span className="shrink-0 font-semibold">Context:</span>
+            {[
+              { label: "6 check-ins", kleur: "bg-chart-1" },
+              { label: "Trainingshistorie", kleur: "bg-chart-2" },
+              { label: "Voedingslog", kleur: "bg-chart-3" },
+              { label: "Metingen", kleur: "bg-chart-4" },
+              { label: "RAG Kennisbank", kleur: "bg-primary" },
+            ].map((item, i) => (
+              <span key={i} className="flex items-center gap-1 shrink-0 rounded-full bg-card border border-border px-2 py-0.5">
+                <span className={`size-1.5 rounded-full ${item.kleur}`} />
+                {item.label}
+              </span>
+            ))}
+          </div>
         </div>
 
         {/* Chat berichten */}
@@ -316,6 +334,16 @@ export function AiCoachTab() {
                         <X className="size-3" />
                         <span className="sr-only">Afwijzen</span>
                       </Button>
+                    </div>
+                  )}
+                  {/* Pas toe knop voor goedgekeurde voorstellen */}
+                  {voorstel.status === "goedgekeurd" && (
+                    <div className="flex items-center gap-2 pt-2 border-t border-border">
+                      <Button size="sm" className="h-7 text-[11px] gap-1 flex-1 bg-primary hover:bg-primary/90 text-primary-foreground">
+                        <ChevronRight className="size-3" />
+                        Pas toe op schema
+                      </Button>
+                      <span className="text-[10px] text-muted-foreground italic">Goedgekeurd — klaar om toe te passen</span>
                     </div>
                   )}
                 </CardContent>

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { TrendingUp, ChevronDown, ChevronRight, Sparkles, Check, Clock, Dumbbell } from "lucide-react"
+import { TrendingUp, ChevronDown, ChevronRight, Sparkles, Check, Clock, Dumbbell, Edit3, Copy, RotateCcw } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -293,6 +293,14 @@ export function TrainingTab() {
                 <Sparkles className="size-3" />
                 2 AI suggesties
               </Badge>
+              <Button variant="outline" size="sm" className="h-7 text-[11px] gap-1 border-border">
+                <Copy className="size-3" />
+                Dupliceer schema
+              </Button>
+              <Button variant="outline" size="sm" className="h-7 text-[11px] gap-1 border-border">
+                <RotateCcw className="size-3" />
+                Vorig schema
+              </Button>
             </div>
           </div>
         </CardContent>
@@ -321,6 +329,15 @@ export function TrainingTab() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 text-[10px] gap-1 text-muted-foreground hover:text-primary"
+                  onClick={(e) => { e.stopPropagation() }}
+                >
+                  <Edit3 className="size-3" />
+                  Bewerken
+                </Button>
                 <Badge
                   variant="outline"
                   className={`text-[10px] ${
