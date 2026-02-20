@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ArrowLeft, MessageCircle, ClipboardCheck, Sparkles, MoreHorizontal, Mail, CalendarDays, Dumbbell, Apple, Activity, TrendingDown, TrendingUp, Minus, AlertTriangle, Scale } from "lucide-react"
+import { ArrowLeft, MessageCircle, ClipboardCheck, Sparkles, MoreHorizontal, Mail, CalendarDays, Dumbbell, Apple, Activity, TrendingDown, TrendingUp, Minus, Scale } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -57,19 +57,7 @@ const headerStats = {
   openVoorstellen: 2,                   // <-- Aantal onbehandelde AI voorstellen
 }
 
-/** Aandachtspunten — Automatisch gegenereerd op basis van data-analyse */
-const aandachtspunten = [
-  {
-    type: "waarschuwing" as const,       // <-- waarschuwing | info
-    tekst: "Voedingscompliance onder 80% deze week (78%)",
-    categorie: "voeding",
-  },
-  {
-    type: "info" as const,
-    tekst: "2 nieuwe AI-voorstellen wachten op beoordeling",
-    categorie: "ai",
-  },
-]
+
 
 function getStatusKleur(status: string) {
   switch (status) {
@@ -234,29 +222,7 @@ export function ClientDetailSection({ clientId, onTerug }: ClientDetailSectionPr
           )}
         </div>
 
-        {/* Aandachtspunten banner */}
-        {aandachtspunten.length > 0 && (
-          <div className="mt-3 flex flex-col gap-1.5">
-            {aandachtspunten.map((punt, i) => (
-              <button
-                key={i}
-                onClick={() => {
-                  if (punt.categorie === "voeding") setActieveTab("voeding")
-                  if (punt.categorie === "ai") setActieveTab("ai-coach")
-                  if (punt.categorie === "training") setActieveTab("training")
-                }}
-                className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-left text-xs transition-colors ${
-                  punt.type === "waarschuwing"
-                    ? "bg-warning/10 text-warning-foreground hover:bg-warning/20 border border-warning/20"
-                    : "bg-primary/5 text-primary hover:bg-primary/10 border border-primary/20"
-                }`}
-              >
-                <AlertTriangle className="size-3 shrink-0" />
-                <span>{punt.tekst}</span>
-              </button>
-            ))}
-          </div>
-        )}
+
       </div>
 
       {/* Tabs navigatie — met iconen voor snellere herkenning */}
