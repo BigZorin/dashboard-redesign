@@ -452,7 +452,7 @@ function ProgrammaKaart({ programma, onKlik }: { programma: Programma; onKlik: (
 
   return (
     <Card
-      className="border-border shadow-sm hover:border-primary/30 transition-all cursor-pointer group overflow-hidden"
+      className="border-border shadow-sm hover:border-primary/30 transition-all cursor-pointer group overflow-hidden p-0 gap-0"
       onClick={onKlik}
     >
       {/* Banner */}
