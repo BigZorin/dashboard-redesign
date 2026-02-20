@@ -137,23 +137,25 @@ export function MessagesSection() {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2">
                     <p className={cn(
                       "text-sm truncate",
                       gesprek.ongelezen > 0 ? "font-semibold text-foreground" : "font-medium text-foreground"
                     )}>{gesprek.naam}</p>
-                    <span className="text-[10px] text-muted-foreground shrink-0 ml-2">{gesprek.tijd}</span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="text-[10px] text-muted-foreground">{gesprek.tijd}</span>
+                      {gesprek.ongelezen > 0 && (
+                        <div className="flex size-4.5 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground">
+                          {gesprek.ongelezen}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <p className={cn(
-                    "text-xs truncate mt-0.5",
+                    "text-xs mt-0.5 line-clamp-2 leading-relaxed",
                     gesprek.ongelezen > 0 ? "text-foreground/70" : "text-muted-foreground"
                   )}>{gesprek.laatsteBericht}</p>
                 </div>
-                {gesprek.ongelezen > 0 && (
-                  <div className="flex size-4.5 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground shrink-0">
-                    {gesprek.ongelezen}
-                  </div>
-                )}
               </button>
             ))}
           </div>
