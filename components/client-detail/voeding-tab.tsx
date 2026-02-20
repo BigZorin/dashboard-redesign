@@ -11,6 +11,9 @@ import { cn } from "@/lib/utils"
 // ============================================================================
 // PLACEHOLDER DATA — Voeding per dag voor een individuele cliënt
 //
+// COACH-SCOPED: Coach ziet alleen voedingsdata van eigen clienten.
+// RLS: Alle data via JOIN clients WHERE coach_id = auth.uid()
+//
 // Dit is de dag-gebaseerde voedingweergave die de coach ziet bij een cliënt.
 // Het combineert het GEPLANDE maaltijdschema (template) met wat de cliënt
 // DAADWERKELIJK heeft gelogd in de app.

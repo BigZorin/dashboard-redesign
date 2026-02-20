@@ -32,14 +32,20 @@ import {
 // ============================================================================
 // PLACEHOLDER DATA — Alle programma's van de cliënt
 //
+// COACH-SCOPED: Deze tab toont training data van 1 specifieke client.
+// Server-side check: WHERE clients.coach_id = auth.uid()
+// De coach kan alleen programma's bewerken die hij/zij zelf heeft aangemaakt.
+//
 // Vervang met echte data uit Supabase tabellen:
 //   - client_programs        (toegewezen programma's per cliënt)
 //   - program_blocks         (blokken binnen programma)
 //   - block_weeks            (weken per blok)
-//   - week_workouts          (trainingen per week)
-//   - workout_exercises      (oefeningen per training)
-//   - client_exercise_logs   (progressie/logboek per oefening)
+//   - week_workouts          (workouts per week)
+//   - workout_exercises      (oefeningen per workout)
+//   - exercises              (oefening-database, gedeeld — iedereen kan lezen)
 //   - ai_suggestions         (AI-aanbevelingen per oefening/week)
+//
+// RLS: Alle data via JOIN clients WHERE coach_id = auth.uid()
 // ============================================================================
 
 /** Programma's van de cliënt — Supabase: client_programs */

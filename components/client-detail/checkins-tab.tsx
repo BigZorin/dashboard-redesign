@@ -16,8 +16,14 @@ import {
 
 // ============================================================================
 // PLACEHOLDER DATA — Wekelijkse check-ins van de cliënt
+//
+// COACH-SCOPED: Data van 1 specifieke client.
+// RLS: SELECT op client_checkins via JOIN clients WHERE coach_id = auth.uid()
+//
 // Vervang met echte data uit Supabase tabel: client_checkins
 // Elke check-in bevat: gewicht, metingen, scores, opmerkingen, foto's
+// Foto's: opgeslagen in Supabase Storage bucket "checkin-photos"
+//   pad: checkin-photos/{client_id}/{checkin_id}/{front|side|back}.jpg
 // ============================================================================
 
 /** Wekelijkse check-in data — Supabase: client_checkins */

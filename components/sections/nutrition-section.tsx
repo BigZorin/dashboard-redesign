@@ -17,13 +17,25 @@ import {
 // ============================================================================
 // PLACEHOLDER DATA — Vervang met echte voedingsplannen uit Supabase
 //
-// Supabase tabellen:
-//   - nutrition_plan_templates (id, naam, beschrijving, macro_targets, status, created_by)
+// COACH-SCOPED DATA:
+//   De coach ziet ALLEEN voedingsplannen die hij/zij zelf heeft aangemaakt.
+//   Filter: WHERE nutrition_plan_templates.created_by = auth.uid()
+//   Clienten-count per plan: alleen eigen clienten (via client_nutrition_plan JOIN)
+//
+// Supabase tabellen (gefilterd op coach_id):
+//   - nutrition_plan_templates (id, naam, beschrijving, macro_targets, status, created_by = auth.uid())
 //   - nutrition_plan_template_meals (id, template_id, naam, tijd, volgorde)
 //   - nutrition_plan_template_items (id, meal_id, product_id, hoeveelheid, eenheid)
 //   - client_nutrition_plan (koppeling cliënt <-> template + custom overrides)
 //   - client_food_logs (dagelijkse tracking via barcode scan of handmatig)
-//   - food_products (productdatabase, aangevuld via Open Food Facts API barcode scans)
+//   - food_products (gedeelde tabel, iedereen kan lezen)
+//
+// RLS Policies:
+//   nutrition_plan_templates: SELECT/INSERT/UPDATE/DELETE WHERE created_by = auth.uid()
+//   nutrition_plan_template_meals/items: via JOIN templates WHERE created_by = auth.uid()
+//   client_nutrition_plan: SELECT/INSERT WHERE client.coach_id = auth.uid()
+//   client_food_logs: SELECT WHERE client.coach_id = auth.uid() (read-only voor coach)
+//   food_products: SELECT voor iedereen (gedeelde database)
 //
 // Status: actief (beschikbaar) | concept (in ontwikkeling)
 // Naleving: berekend uit client_food_logs vs nutrition_plan_templates macro targets

@@ -29,6 +29,10 @@ import { cn } from "@/lib/utils"
 // ============================================================================
 // FACTURATIE — Volledig Stripe-geintegreerd betalingssysteem
 //
+// ADMIN-ONLY SECTIE: Dit component wordt gebruikt in /admin -> Facturatie tab.
+// Alleen admins mogen financiele data zien. Coaches hebben GEEN toegang.
+// RLS: Alle queries hier vereisen users.rol = "admin"
+//
 // ============================================================================
 // STRIPE INTEGRATIE ARCHITECTUUR
 // ============================================================================
