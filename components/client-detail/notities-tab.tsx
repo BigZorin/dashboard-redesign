@@ -8,9 +8,17 @@ import { Textarea } from "@/components/ui/textarea"
 
 // ============================================================================
 // PLACEHOLDER DATA — Notities & bestanden van de coach over deze cliënt
+//
+// COACH-SCOPED: Elke coach ziet ALLEEN zijn/haar eigen notities.
+// Notities zijn NIET zichtbaar voor andere coaches of admins.
+//
 // Vervang met echte data uit Supabase tabellen:
-//   - coach_notes (notities per cliënt)
-//   - client_files (gedeelde bestanden)
+//   - coach_notes (notities per cliënt, coach_id = auth.uid())
+//   - client_files (gedeelde bestanden — Supabase Storage bucket "client-files")
+//
+// RLS Policies:
+//   coach_notes: SELECT/INSERT/UPDATE/DELETE WHERE coach_id = auth.uid()
+//   client_files: SELECT/INSERT WHERE client.coach_id = auth.uid()
 // ============================================================================
 
 /** Coach notities — Supabase: coach_notes */

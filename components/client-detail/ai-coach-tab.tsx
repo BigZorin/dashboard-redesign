@@ -10,14 +10,20 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 
 // ============================================================================
 // PLACEHOLDER DATA — AI Coach interface
+//
+// COACH-SCOPED: AI gesprekken zijn per coach, per client.
+// RLS: ai_conversations WHERE coach_id = auth.uid() AND client_id = :clientId
+// RLS: ai_suggestions WHERE coach_id = auth.uid() AND client_id = :clientId
+//
 // Vervang met echte data uit:
 //   - AI API responses (Groq/OpenAI/etc via RAG pipeline)
-//   - ai_conversations (Supabase: chatgeschiedenis)
-//   - ai_suggestions (Supabase: voorstellen + status)
+//   - ai_conversations (Supabase: chatgeschiedenis, coach_id + client_id)
+//   - ai_suggestions (Supabase: voorstellen + status, coach_id + client_id)
 //   - RAG vectorstore (voedings/training/mindset kennis)
 //
 // De AI gebruikt de RAG om voorstellen te onderbouwen met bronvermelding.
 // De coach keurt voorstellen goed, past aan of wijst af.
+// Goedgekeurde voorstellen worden automatisch toegepast op het client profiel.
 // ============================================================================
 
 /** Chat berichten — Supabase: ai_conversations */

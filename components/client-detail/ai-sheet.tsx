@@ -15,6 +15,10 @@ import {
 
 // ============================================================================
 // PLACEHOLDER DATA — AI Sheet (compacte versie van AI Coach)
+//
+// COACH-SCOPED: Deelt dezelfde data als AI Coach tab maar in compacte slide-over.
+// RLS: ai_conversations WHERE coach_id = auth.uid() AND client_id = :clientId AND context = 'sheet'
+//
 // Vervang met echte data uit:
 //   - AI API responses (Groq/OpenAI via RAG pipeline)
 //   - ai_conversations (Supabase: chatgeschiedenis, context = "sheet")

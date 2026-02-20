@@ -17,6 +17,10 @@ import {
 
 // ============================================================================
 // PLACEHOLDER DATA — Cliënt-specifieke instellingen
+//
+// COACH-SCOPED: Coach kan alleen instellingen aanpassen van eigen clienten.
+// RLS: UPDATE op clients WHERE coach_id = auth.uid()
+//
 // Vervang met echte data uit Supabase tabellen:
 //   - clients (basisgegevens, doel, notities)
 //   - client_programs (programma toewijzing)

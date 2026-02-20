@@ -10,10 +10,14 @@ import {
 
 // ============================================================================
 // PLACEHOLDER DATA — Metingen & progressie van de cliënt
+//
+// COACH-SCOPED: Data van 1 specifieke client.
+// RLS: Alle data via JOIN clients WHERE coach_id = auth.uid()
+//
 // Vervang met echte data uit Supabase tabellen:
 //   - client_checkins (gewicht + lichaamsmaten per week)
 //   - client_exercise_logs (kracht PR's en trends)
-//   - client_photos (progressiefoto's)
+//   - client_photos (progressiefoto's — Supabase Storage bucket "client-photos")
 // ============================================================================
 
 /** Samenvatting delta's — Berekend: verschil week 1 vs huidige week */

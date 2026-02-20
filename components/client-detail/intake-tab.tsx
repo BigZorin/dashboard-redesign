@@ -17,6 +17,9 @@ import {
 // ============================================================================
 // PLACEHOLDER DATA — Intake formulier: baseline informatie per cliënt
 //
+// COACH-SCOPED: Coach kan alleen intake van eigen clienten bekijken/bewerken.
+// RLS: SELECT/UPDATE op client_intake via JOIN clients WHERE coach_id = auth.uid()
+//
 // De intake is de belangrijkste bron voor AI-gegenereerde eerste programma's
 // en voedingsplannen. Alle velden worden meegestuurd als context naar de AI.
 //

@@ -34,6 +34,12 @@ import {
 // ============================================================================
 // PLACEHOLDER DATA — Vervang met echte analytics uit Supabase
 //
+// ADMIN-ONLY SECTIE: Dit component wordt gebruikt in /admin -> Statistieken tab.
+// Alleen admins mogen dit zien. Coaches hebben GEEN toegang tot platform-brede analytics.
+// Bevat financiele data (omzet, MRR, ARR) die niet op het coach dashboard mag staan.
+//
+// RLS: Alle queries hier vereisen users.rol = "admin"
+//
 // Supabase tabellen / views:
 //   - client_subscriptions (omzet berekening, MRR, ARR, gem. cliëntwaarde, churn revenue)
 //   - clients (retentie berekening, churn rate, acquisitie bron)

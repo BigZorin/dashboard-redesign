@@ -8,6 +8,11 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 // ============================================================================
 // PLACEHOLDER DATA — Overzicht van de individuele cliënt
+//
+// COACH-SCOPED: Deze tab toont data van 1 specifieke client.
+// Server-side check: WHERE clients.id = :clientId AND clients.coach_id = auth.uid()
+// GEEN financiele data (bedragen/betalingen) op deze pagina — admin-only.
+//
 // Vervang met echte data uit Supabase tabellen:
 //   - client_programs (huidig programma + voortgang)
 //   - client_nutrition (macro targets)
