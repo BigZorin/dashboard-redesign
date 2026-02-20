@@ -13,96 +13,101 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
+// ============================================================================
+// PLACEHOLDER DATA — Vervang met echte content uit je database/CMS
+// ============================================================================
+
+/** Educatieve content items (video's, artikelen, afbeeldingen) */
 const contentItems = [
   {
-    title: "Proper Squat Form Guide",
+    titel: "Correcte squat-techniek",
     type: "video",
     icon: Video,
-    duration: "8:24",
-    views: 342,
-    category: "Exercise Guides",
-    dateAdded: "2 days ago",
-    color: "bg-chart-5/10 text-chart-5",
+    duur: "8:24",
+    weergaven: 342,
+    categorie: "Oefengidsen",
+    toegevoegd: "2 dagen geleden",
+    kleur: "bg-chart-5/10 text-chart-5",
   },
   {
-    title: "Macro Counting for Beginners",
-    type: "article",
+    titel: "Macro's tellen voor beginners",
+    type: "artikel",
     icon: FileText,
-    duration: "5 min read",
-    views: 528,
-    category: "Nutrition",
-    dateAdded: "5 days ago",
-    color: "bg-chart-4/10 text-chart-4",
+    duur: "5 min lezen",
+    weergaven: 528,
+    categorie: "Voeding",
+    toegevoegd: "5 dagen geleden",
+    kleur: "bg-chart-4/10 text-chart-4",
   },
   {
-    title: "Bench Press Progression",
+    titel: "Bench press progressie",
     type: "video",
     icon: Video,
-    duration: "12:05",
-    views: 891,
-    category: "Exercise Guides",
-    dateAdded: "1 week ago",
-    color: "bg-chart-5/10 text-chart-5",
+    duur: "12:05",
+    weergaven: 891,
+    categorie: "Oefengidsen",
+    toegevoegd: "1 week geleden",
+    kleur: "bg-chart-5/10 text-chart-5",
   },
   {
-    title: "Pre-Workout Meal Ideas",
-    type: "article",
+    titel: "Pre-workout maaltijdideeën",
+    type: "artikel",
     icon: FileText,
-    duration: "3 min read",
-    views: 267,
-    category: "Nutrition",
-    dateAdded: "1 week ago",
-    color: "bg-chart-4/10 text-chart-4",
+    duur: "3 min lezen",
+    weergaven: 267,
+    categorie: "Voeding",
+    toegevoegd: "1 week geleden",
+    kleur: "bg-chart-4/10 text-chart-4",
   },
   {
-    title: "Hip Mobility Routine",
+    titel: "Heup mobiliteitsroutine",
     type: "video",
     icon: Video,
-    duration: "15:30",
-    views: 445,
-    category: "Mobility",
-    dateAdded: "2 weeks ago",
-    color: "bg-chart-5/10 text-chart-5",
+    duur: "15:30",
+    weergaven: 445,
+    categorie: "Mobiliteit",
+    toegevoegd: "2 weken geleden",
+    kleur: "bg-chart-5/10 text-chart-5",
   },
   {
-    title: "Sleep Optimization Tips",
-    type: "article",
+    titel: "Slaapoptimalisatie tips",
+    type: "artikel",
     icon: FileText,
-    duration: "4 min read",
-    views: 612,
-    category: "Lifestyle",
-    dateAdded: "2 weeks ago",
-    color: "bg-chart-4/10 text-chart-4",
+    duur: "4 min lezen",
+    weergaven: 612,
+    categorie: "Leefstijl",
+    toegevoegd: "2 weken geleden",
+    kleur: "bg-chart-4/10 text-chart-4",
   },
   {
-    title: "Deadlift Setup Checklist",
-    type: "image",
+    titel: "Deadlift setup checklist",
+    type: "afbeelding",
     icon: Image,
-    duration: "Infographic",
-    views: 198,
-    category: "Exercise Guides",
-    dateAdded: "3 weeks ago",
-    color: "bg-chart-2/10 text-chart-2",
+    duur: "Infographic",
+    weergaven: 198,
+    categorie: "Oefengidsen",
+    toegevoegd: "3 weken geleden",
+    kleur: "bg-chart-2/10 text-chart-2",
   },
   {
-    title: "Rest Day Active Recovery",
+    titel: "Actief herstel op rustdagen",
     type: "video",
     icon: Video,
-    duration: "10:15",
-    views: 312,
-    category: "Recovery",
-    dateAdded: "3 weeks ago",
-    color: "bg-chart-5/10 text-chart-5",
+    duur: "10:15",
+    weergaven: 312,
+    categorie: "Herstel",
+    toegevoegd: "3 weken geleden",
+    kleur: "bg-chart-5/10 text-chart-5",
   },
   {
-    title: "Protein Sources Comparison",
-    type: "image",
+    titel: "Eiwitbronnen vergelijking",
+    type: "afbeelding",
     icon: Image,
-    duration: "Infographic",
-    views: 445,
-    category: "Nutrition",
-    dateAdded: "1 month ago",
-    color: "bg-chart-2/10 text-chart-2",
+    duur: "Infographic",
+    weergaven: 445,
+    categorie: "Voeding",
+    toegevoegd: "1 maand geleden",
+    kleur: "bg-chart-2/10 text-chart-2",
   },
 ]
 
@@ -111,17 +116,17 @@ export function ContentSection() {
     <div className="flex flex-col gap-6 p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-bold text-foreground">Content Library</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">Manage educational content for your clients</p>
+          <h2 className="text-xl font-bold text-foreground">Contentbibliotheek</h2>
+          <p className="text-sm text-muted-foreground mt-0.5">Beheer educatieve content voor je cliënten</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" className="gap-2 border-border">
             <Upload className="size-4" />
-            Upload
+            Uploaden
           </Button>
           <Button className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2">
             <Plus className="size-4" />
-            Create Content
+            Content aanmaken
           </Button>
         </div>
       </div>
@@ -129,7 +134,7 @@ export function ContentSection() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-          <Input placeholder="Search content..." className="pl-9 h-9 bg-card border-border" />
+          <Input placeholder="Zoek content..." className="pl-9 h-9 bg-card border-border" />
         </div>
         <Button variant="outline" size="sm" className="h-9 gap-2 border-border">
           <Filter className="size-4" />
@@ -137,25 +142,25 @@ export function ContentSection() {
         </Button>
       </div>
 
-      <Tabs defaultValue="all">
+      <Tabs defaultValue="alle">
         <TabsList>
-          <TabsTrigger value="all">All ({contentItems.length})</TabsTrigger>
-          <TabsTrigger value="videos">Videos ({contentItems.filter(c => c.type === "video").length})</TabsTrigger>
-          <TabsTrigger value="articles">Articles ({contentItems.filter(c => c.type === "article").length})</TabsTrigger>
-          <TabsTrigger value="images">Images ({contentItems.filter(c => c.type === "image").length})</TabsTrigger>
+          <TabsTrigger value="alle">Alle ({contentItems.length})</TabsTrigger>
+          <TabsTrigger value="videos">{"Video's"} ({contentItems.filter(c => c.type === "video").length})</TabsTrigger>
+          <TabsTrigger value="artikelen">Artikelen ({contentItems.filter(c => c.type === "artikel").length})</TabsTrigger>
+          <TabsTrigger value="afbeeldingen">Afbeeldingen ({contentItems.filter(c => c.type === "afbeelding").length})</TabsTrigger>
         </TabsList>
 
-        {["all", "videos", "articles", "images"].map((tab) => (
+        {["alle", "videos", "artikelen", "afbeeldingen"].map((tab) => (
           <TabsContent key={tab} value={tab} className="mt-4">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {contentItems
-                .filter((item) => tab === "all" || (tab === "videos" && item.type === "video") || (tab === "articles" && item.type === "article") || (tab === "images" && item.type === "image"))
+                .filter((item) => tab === "alle" || (tab === "videos" && item.type === "video") || (tab === "artikelen" && item.type === "artikel") || (tab === "afbeeldingen" && item.type === "afbeelding"))
                 .map((item) => (
-                  <Card key={item.title} className="border-border shadow-sm hover:border-primary/30 transition-all cursor-pointer group">
+                  <Card key={item.titel} className="border-border shadow-sm hover:border-primary/30 transition-all cursor-pointer group">
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
-                          <div className={`flex size-10 items-center justify-center rounded-lg ${item.color}`}>
+                          <div className={`flex size-10 items-center justify-center rounded-lg ${item.kleur}`}>
                             {item.type === "video" ? (
                               <Play className="size-5" />
                             ) : (
@@ -163,9 +168,9 @@ export function ContentSection() {
                             )}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors truncate">{item.title}</p>
+                            <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors truncate">{item.titel}</p>
                             <Badge variant="outline" className="text-[10px] mt-1 border-border text-muted-foreground">
-                              {item.category}
+                              {item.categorie}
                             </Badge>
                           </div>
                         </div>
@@ -173,26 +178,26 @@ export function ContentSection() {
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="size-8 text-muted-foreground shrink-0">
                               <MoreHorizontal className="size-4" />
-                              <span className="sr-only">Actions</span>
+                              <span className="sr-only">Acties</span>
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>Edit</DropdownMenuItem>
-                            <DropdownMenuItem>Share with Client</DropdownMenuItem>
-                            <DropdownMenuItem>Duplicate</DropdownMenuItem>
+                            <DropdownMenuItem>Bewerken</DropdownMenuItem>
+                            <DropdownMenuItem>Delen met cliënt</DropdownMenuItem>
+                            <DropdownMenuItem>Dupliceren</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
                       <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
                         <div className="flex items-center gap-1">
                           <Clock className="size-3" />
-                          {item.duration}
+                          {item.duur}
                         </div>
                         <div className="flex items-center gap-1">
                           <Eye className="size-3" />
-                          {item.views} views
+                          {item.weergaven} weergaven
                         </div>
-                        <span>{item.dateAdded}</span>
+                        <span>{item.toegevoegd}</span>
                       </div>
                     </CardContent>
                   </Card>

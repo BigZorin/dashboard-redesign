@@ -7,82 +7,99 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts"
 
-const revenueData = [
-  { month: "Sep", revenue: 3200 },
-  { month: "Oct", revenue: 3800 },
-  { month: "Nov", revenue: 4100 },
-  { month: "Dec", revenue: 3900 },
-  { month: "Jan", revenue: 4600 },
-  { month: "Feb", revenue: 5200 },
+// ============================================================================
+// PLACEHOLDER DATA — Vervang met echte data uit je database/API
+// ============================================================================
+
+/** Omzetdata per maand voor de omzetgrafiek */
+const omzetData = [
+  { maand: "Sep", omzet: 3200 },
+  { maand: "Okt", omzet: 3800 },
+  { maand: "Nov", omzet: 4100 },
+  { maand: "Dec", omzet: 3900 },
+  { maand: "Jan", omzet: 4600 },
+  { maand: "Feb", omzet: 5200 },
 ]
 
-const clientActivityData = [
-  { day: "Mon", checkins: 18, workouts: 22 },
-  { day: "Tue", checkins: 24, workouts: 19 },
-  { day: "Wed", checkins: 12, workouts: 26 },
-  { day: "Thu", checkins: 20, workouts: 21 },
-  { day: "Fri", checkins: 28, workouts: 18 },
-  { day: "Sat", checkins: 15, workouts: 30 },
-  { day: "Sun", checkins: 8, workouts: 14 },
+/** Cliëntactiviteit per dag (check-ins en workouts) */
+const clientActiviteitData = [
+  { dag: "Ma", checkins: 18, workouts: 22 },
+  { dag: "Di", checkins: 24, workouts: 19 },
+  { dag: "Wo", checkins: 12, workouts: 26 },
+  { dag: "Do", checkins: 20, workouts: 21 },
+  { dag: "Vr", checkins: 28, workouts: 18 },
+  { dag: "Za", checkins: 15, workouts: 30 },
+  { dag: "Zo", checkins: 8, workouts: 14 },
 ]
 
-const statCards = [
+/** KPI-kaarten bovenaan het dashboard */
+const statKaarten = [
   {
-    title: "Active Clients",
-    value: "48",
-    change: "+4",
+    titel: "Actieve cliënten",
+    waarde: "48",
+    verandering: "+4",
     trend: "up" as const,
     icon: Users,
-    description: "vs. last month",
+    beschrijving: "t.o.v. vorige maand",
   },
   {
-    title: "Monthly Revenue",
-    value: "$5,240",
-    change: "+12.5%",
+    titel: "Maandomzet",
+    waarde: "\u20AC5.240",
+    verandering: "+12,5%",
     trend: "up" as const,
     icon: TrendingUp,
-    description: "vs. last month",
+    beschrijving: "t.o.v. vorige maand",
   },
   {
-    title: "Unread Messages",
-    value: "5",
-    change: "-3",
+    titel: "Ongelezen berichten",
+    waarde: "5",
+    verandering: "-3",
     trend: "down" as const,
     icon: MessageCircle,
-    description: "vs. yesterday",
+    beschrijving: "t.o.v. gisteren",
   },
   {
-    title: "Sessions This Week",
-    value: "12",
-    change: "+2",
+    titel: "Sessies deze week",
+    waarde: "12",
+    verandering: "+2",
     trend: "up" as const,
     icon: CalendarDays,
-    description: "vs. last week",
+    beschrijving: "t.o.v. vorige week",
   },
 ]
 
-const recentCheckins = [
-  { name: "Sarah van Dijk", initials: "SD", time: "10 min ago", status: "completed", note: "Feeling strong, hit new PR" },
-  { name: "Tom Bakker", initials: "TB", time: "32 min ago", status: "needs-review", note: "Struggling with shoulder mobility" },
-  { name: "Lisa de Vries", initials: "LV", time: "1 hr ago", status: "completed", note: "Diet on track, weight dropping" },
-  { name: "James Peters", initials: "JP", time: "2 hrs ago", status: "needs-review", note: "Missed 2 workouts this week" },
-  { name: "Emma Jansen", initials: "EJ", time: "3 hrs ago", status: "completed", note: "Great progress on endurance" },
+/** Recente check-ins van cliënten */
+const recenteCheckins = [
+  { naam: "Sarah van Dijk", initialen: "SD", tijd: "10 min geleden", status: "afgerond", notitie: "Voelt zich sterk, nieuw PR behaald" },
+  { naam: "Tom Bakker", initialen: "TB", tijd: "32 min geleden", status: "review-nodig", notitie: "Moeite met schoudermobiliteit" },
+  { naam: "Lisa de Vries", initialen: "LV", tijd: "1 uur geleden", status: "afgerond", notitie: "Voeding op schema, gewicht daalt" },
+  { naam: "James Peters", initialen: "JP", tijd: "2 uur geleden", status: "review-nodig", notitie: "2 workouts gemist deze week" },
+  { naam: "Emma Jansen", initialen: "EJ", tijd: "3 uur geleden", status: "afgerond", notitie: "Goede vooruitgang op uithoudingsvermogen" },
 ]
 
-const upcomingSessions = [
-  { name: "Sarah van Dijk", initials: "SD", time: "10:00", type: "Check-in Call" },
-  { name: "Tom Bakker", initials: "TB", time: "11:30", type: "Program Review" },
-  { name: "Group Session", initials: "GS", time: "14:00", type: "HIIT Class" },
-  { name: "Lisa de Vries", initials: "LV", time: "16:00", type: "Nutrition Review" },
+/** Aankomende sessies vandaag */
+const aankomendeSessies = [
+  { naam: "Sarah van Dijk", initialen: "SD", tijd: "10:00", type: "Check-in gesprek" },
+  { naam: "Tom Bakker", initialen: "TB", tijd: "11:30", type: "Programma review" },
+  { naam: "Groepssessie", initialen: "GS", tijd: "14:00", type: "HIIT les" },
+  { naam: "Lisa de Vries", initialen: "LV", tijd: "16:00", type: "Voedingsreview" },
+]
+
+/** Voortgang snapshot per cliënt */
+const clientVoortgang = [
+  { naam: "Sarah van Dijk", initialen: "SD", voortgang: 85, programma: "Kracht Fase 2" },
+  { naam: "Tom Bakker", initialen: "TB", voortgang: 62, programma: "Afvallen 12 weken" },
+  { naam: "Lisa de Vries", initialen: "LV", voortgang: 94, programma: "Wedstrijd Prep" },
+  { naam: "James Peters", initialen: "JP", voortgang: 41, programma: "Spiermassa Basis" },
 ]
 
 export function DashboardOverview() {
   return (
     <div className="flex flex-col gap-6 p-6">
-      {/* Stat Cards */}
+      {/* KPI Kaarten */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {statCards.map((stat) => (
-          <Card key={stat.title} className="border-border shadow-sm">
+        {statKaarten.map((stat) => (
+          <Card key={stat.titel} className="border-border shadow-sm">
             <CardContent className="p-5">
               <div className="flex items-center justify-between">
                 <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
@@ -96,28 +113,28 @@ export function DashboardOverview() {
                   ) : (
                     <ArrowDownRight className="size-3" />
                   )}
-                  {stat.change}
+                  {stat.verandering}
                 </div>
               </div>
               <div className="mt-3">
-                <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{stat.description}</p>
+                <p className="text-2xl font-bold text-foreground">{stat.waarde}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{stat.beschrijving}</p>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Charts Row */}
+      {/* Grafieken */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card className="border-border shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold text-foreground">Revenue Overview</CardTitle>
-            <p className="text-xs text-muted-foreground">Monthly revenue trend</p>
+            <CardTitle className="text-sm font-semibold text-foreground">Omzet overzicht</CardTitle>
+            <p className="text-xs text-muted-foreground">Maandelijkse omzettrend</p>
           </CardHeader>
           <CardContent className="pb-4">
             <ResponsiveContainer width="100%" height={220}>
-              <AreaChart data={revenueData}>
+              <AreaChart data={omzetData}>
                 <defs>
                   <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="oklch(0.55 0.15 160)" stopOpacity={0.3} />
@@ -125,8 +142,8 @@ export function DashboardOverview() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.91 0.005 240)" />
-                <XAxis dataKey="month" tick={{ fontSize: 12, fill: "oklch(0.5 0.01 240)" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 12, fill: "oklch(0.5 0.01 240)" }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${v / 1000}k`} />
+                <XAxis dataKey="maand" tick={{ fontSize: 12, fill: "oklch(0.5 0.01 240)" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 12, fill: "oklch(0.5 0.01 240)" }} axisLine={false} tickLine={false} tickFormatter={(v) => `\u20AC${v / 1000}k`} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "oklch(1 0 0)",
@@ -134,9 +151,9 @@ export function DashboardOverview() {
                     borderRadius: "8px",
                     fontSize: "12px",
                   }}
-                  formatter={(value: number) => [`$${value.toLocaleString()}`, "Revenue"]}
+                  formatter={(value: number) => [`\u20AC${value.toLocaleString("nl-NL")}`, "Omzet"]}
                 />
-                <Area type="monotone" dataKey="revenue" stroke="oklch(0.55 0.15 160)" strokeWidth={2} fill="url(#revenueGradient)" />
+                <Area type="monotone" dataKey="omzet" stroke="oklch(0.55 0.15 160)" strokeWidth={2} fill="url(#revenueGradient)" />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>
@@ -144,14 +161,14 @@ export function DashboardOverview() {
 
         <Card className="border-border shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold text-foreground">Client Activity</CardTitle>
-            <p className="text-xs text-muted-foreground">Check-ins & workouts this week</p>
+            <CardTitle className="text-sm font-semibold text-foreground">Cliëntactiviteit</CardTitle>
+            <p className="text-xs text-muted-foreground">Check-ins & workouts deze week</p>
           </CardHeader>
           <CardContent className="pb-4">
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={clientActivityData} barGap={4}>
+              <BarChart data={clientActiviteitData} barGap={4}>
                 <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.91 0.005 240)" />
-                <XAxis dataKey="day" tick={{ fontSize: 12, fill: "oklch(0.5 0.01 240)" }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="dag" tick={{ fontSize: 12, fill: "oklch(0.5 0.01 240)" }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 12, fill: "oklch(0.5 0.01 240)" }} axisLine={false} tickLine={false} />
                 <Tooltip
                   contentStyle={{
@@ -169,47 +186,47 @@ export function DashboardOverview() {
         </Card>
       </div>
 
-      {/* Bottom Row */}
+      {/* Onderste rij */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
-        {/* Recent Check-ins */}
+        {/* Recente Check-ins */}
         <Card className="border-border shadow-sm lg:col-span-3">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-sm font-semibold text-foreground">Recent Check-ins</CardTitle>
-                <p className="text-xs text-muted-foreground mt-0.5">Latest client updates</p>
+                <CardTitle className="text-sm font-semibold text-foreground">Recente check-ins</CardTitle>
+                <p className="text-xs text-muted-foreground mt-0.5">Laatste cliëntupdates</p>
               </div>
               <Badge variant="secondary" className="text-xs font-medium bg-secondary text-secondary-foreground">
-                {recentCheckins.filter(c => c.status === "needs-review").length} need review
+                {recenteCheckins.filter(c => c.status === "review-nodig").length} review nodig
               </Badge>
             </div>
           </CardHeader>
           <CardContent className="pb-2">
             <div className="flex flex-col gap-1">
-              {recentCheckins.map((checkin) => (
+              {recenteCheckins.map((checkin) => (
                 <div
-                  key={checkin.name}
+                  key={checkin.naam}
                   className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-secondary/50 cursor-pointer"
                 >
                   <Avatar className="size-9">
                     <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
-                      {checkin.initials}
+                      {checkin.initialen}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium text-foreground truncate">{checkin.name}</p>
-                      {checkin.status === "needs-review" ? (
+                      <p className="text-sm font-medium text-foreground truncate">{checkin.naam}</p>
+                      {checkin.status === "review-nodig" ? (
                         <AlertCircle className="size-3.5 text-warning shrink-0" />
                       ) : (
                         <CheckCircle2 className="size-3.5 text-success shrink-0" />
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground truncate">{checkin.note}</p>
+                    <p className="text-xs text-muted-foreground truncate">{checkin.notitie}</p>
                   </div>
                   <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
                     <Clock className="size-3" />
-                    {checkin.time}
+                    {checkin.tijd}
                   </div>
                 </div>
               ))}
@@ -217,28 +234,28 @@ export function DashboardOverview() {
           </CardContent>
         </Card>
 
-        {/* Today's Schedule */}
+        {/* Planning vandaag */}
         <Card className="border-border shadow-sm lg:col-span-2">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold text-foreground">Today{"'"}s Schedule</CardTitle>
-            <p className="text-xs text-muted-foreground">Upcoming sessions</p>
+            <CardTitle className="text-sm font-semibold text-foreground">Planning vandaag</CardTitle>
+            <p className="text-xs text-muted-foreground">Aankomende sessies</p>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col gap-3">
-              {upcomingSessions.map((session, i) => (
+              {aankomendeSessies.map((sessie, i) => (
                 <div key={i} className="flex items-center gap-3">
                   <div className="flex flex-col items-center">
-                    <span className="text-sm font-semibold text-foreground">{session.time}</span>
+                    <span className="text-sm font-semibold text-foreground">{sessie.tijd}</span>
                   </div>
                   <div className="w-px h-10 bg-border" />
                   <Avatar className="size-8">
                     <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-semibold">
-                      {session.initials}
+                      {sessie.initialen}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{session.name}</p>
-                    <p className="text-xs text-muted-foreground">{session.type}</p>
+                    <p className="text-sm font-medium text-foreground truncate">{sessie.naam}</p>
+                    <p className="text-xs text-muted-foreground">{sessie.type}</p>
                   </div>
                 </div>
               ))}
@@ -247,38 +264,33 @@ export function DashboardOverview() {
         </Card>
       </div>
 
-      {/* Client Progress Snapshot */}
+      {/* Cliënt voortgang snapshot */}
       <Card className="border-border shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold text-foreground">Client Progress Snapshot</CardTitle>
-          <p className="text-xs text-muted-foreground">Program completion this month</p>
+          <CardTitle className="text-sm font-semibold text-foreground">Cliënt voortgang</CardTitle>
+          <p className="text-xs text-muted-foreground">Programma-afronding deze maand</p>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              { name: "Sarah van Dijk", initials: "SD", progress: 85, program: "Strength Phase 2" },
-              { name: "Tom Bakker", initials: "TB", progress: 62, program: "Fat Loss 12-Week" },
-              { name: "Lisa de Vries", initials: "LV", progress: 94, program: "Contest Prep" },
-              { name: "James Peters", initials: "JP", progress: 41, program: "Muscle Gain Basics" },
-            ].map((client) => (
-              <div key={client.name} className="flex flex-col gap-3 rounded-lg border border-border p-4 hover:border-primary/30 transition-colors cursor-pointer">
+            {clientVoortgang.map((client) => (
+              <div key={client.naam} className="flex flex-col gap-3 rounded-lg border border-border p-4 hover:border-primary/30 transition-colors cursor-pointer">
                 <div className="flex items-center gap-3">
                   <Avatar className="size-8">
                     <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
-                      {client.initials}
+                      {client.initialen}
                     </AvatarFallback>
                   </Avatar>
                   <div className="min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">{client.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">{client.program}</p>
+                    <p className="text-sm font-medium text-foreground truncate">{client.naam}</p>
+                    <p className="text-xs text-muted-foreground truncate">{client.programma}</p>
                   </div>
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">Progress</span>
-                    <span className="font-semibold text-foreground">{client.progress}%</span>
+                    <span className="text-muted-foreground">Voortgang</span>
+                    <span className="font-semibold text-foreground">{client.voortgang}%</span>
                   </div>
-                  <Progress value={client.progress} className="h-1.5" />
+                  <Progress value={client.voortgang} className="h-1.5" />
                 </div>
               </div>
             ))}

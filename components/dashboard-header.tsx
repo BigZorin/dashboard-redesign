@@ -6,6 +6,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 
+// ============================================================================
+// PLACEHOLDER — Notificatie-aantal komt uit je database/real-time systeem
+// ============================================================================
+const aantalMeldingen = 3 // <-- Aantal ongelezen meldingen
+
 interface DashboardHeaderProps {
   title: string
   subtitle?: string
@@ -24,16 +29,18 @@ export function DashboardHeader({ title, subtitle }: DashboardHeaderProps) {
         <div className="relative hidden md:block">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
-            placeholder="Search clients, programs..."
+            placeholder="Zoek cliënten, programma's..."
             className="w-64 pl-9 h-9 bg-secondary border-border"
           />
         </div>
         <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-foreground">
           <Bell className="size-4" />
-          <span className="absolute -top-0.5 -right-0.5 size-4 rounded-full bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center">
-            3
-          </span>
-          <span className="sr-only">Notifications</span>
+          {aantalMeldingen > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 size-4 rounded-full bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center">
+              {aantalMeldingen}
+            </span>
+          )}
+          <span className="sr-only">Meldingen</span>
         </Button>
       </div>
     </header>

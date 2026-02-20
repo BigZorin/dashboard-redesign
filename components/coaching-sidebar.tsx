@@ -41,59 +41,36 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
+// ============================================================================
+// PLACEHOLDER DATA — Vervang met echte data uit je database/API
+// Elke sectie heeft een duidelijk commentaar zodat Claude dit makkelijk kan invullen.
+// ============================================================================
+
+/** Navigatie-items voor de hoofdsecties (Coaching) */
 const mainNavItems = [
-  {
-    title: "Dashboard",
-    icon: LayoutDashboard,
-    isActive: true,
-    id: "dashboard",
-  },
-  {
-    title: "Clients",
-    icon: Users,
-    badge: "48",
-    id: "clients",
-  },
-  {
-    title: "Programs",
-    icon: Dumbbell,
-    id: "programs",
-  },
-  {
-    title: "Nutrition",
-    icon: Apple,
-    id: "nutrition",
-  },
-  {
-    title: "Messages",
-    icon: MessageCircle,
-    badge: "5",
-    id: "messages",
-  },
-  {
-    title: "Schedule",
-    icon: CalendarDays,
-    id: "schedule",
-  },
+  { title: "Dashboard", icon: LayoutDashboard, id: "dashboard" },
+  { title: "Cliënten", icon: Users, badge: "48" /* <-- Aantal actieve cliënten */, id: "clients" },
+  { title: "Programma's", icon: Dumbbell, id: "programs" },
+  { title: "Voeding", icon: Apple, id: "nutrition" },
+  { title: "Berichten", icon: MessageCircle, badge: "5" /* <-- Ongelezen berichten */, id: "messages" },
+  { title: "Agenda", icon: CalendarDays, id: "schedule" },
 ]
 
+/** Navigatie-items voor beheersecties */
 const manageNavItems = [
-  {
-    title: "Content Library",
-    icon: FolderOpen,
-    id: "content",
-  },
-  {
-    title: "Analytics",
-    icon: BarChart3,
-    id: "analytics",
-  },
-  {
-    title: "Billing",
-    icon: CreditCard,
-    id: "billing",
-  },
+  { title: "Contentbibliotheek", icon: FolderOpen, id: "content" },
+  { title: "Statistieken", icon: BarChart3, id: "analytics" },
+  { title: "Facturatie", icon: CreditCard, id: "billing" },
 ]
+
+/** Coach profiel — Vervang met ingelogde coach data */
+const coachProfile = {
+  naam: "Mark Jensen",          // <-- Volledige naam coach
+  initialen: "MJ",              // <-- Initialen voor avatar fallback
+  rol: "Online Coach",          // <-- Rol/titel
+  avatarUrl: "",                // <-- URL naar profielfoto (leeg = fallback)
+  planNaam: "Pro Plan",         // <-- Huidig abonnement
+}
 
 interface CoachingSidebarProps {
   activeSection: string
@@ -112,7 +89,7 @@ export function CoachingSidebar({ activeSection, onSectionChange }: CoachingSide
               </div>
               <div className="flex flex-col gap-0.5 leading-none">
                 <span className="font-semibold text-sm">CoachHub</span>
-                <span className="text-xs text-sidebar-foreground/60">Pro Plan</span>
+                <span className="text-xs text-sidebar-foreground/60">{coachProfile.planNaam}</span>
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -152,7 +129,7 @@ export function CoachingSidebar({ activeSection, onSectionChange }: CoachingSide
 
         <SidebarGroup>
           <SidebarGroupLabel className="text-[11px] uppercase tracking-wider text-sidebar-foreground/40 font-semibold">
-            Manage
+            Beheer
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -183,30 +160,26 @@ export function CoachingSidebar({ activeSection, onSectionChange }: CoachingSide
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton size="lg" className="gap-3 hover:bg-sidebar-accent/50">
                   <Avatar className="size-8 border-2 border-sidebar-primary/30">
-                    <AvatarImage src="" alt="Coach avatar" />
+                    <AvatarImage src={coachProfile.avatarUrl} alt="Coach avatar" />
                     <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-xs font-semibold">
-                      MJ
+                      {coachProfile.initialen}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col gap-0.5 leading-none">
-                    <span className="font-medium text-sm">Mark Jensen</span>
-                    <span className="text-xs text-sidebar-foreground/50">Online Coach</span>
+                    <span className="font-medium text-sm">{coachProfile.naam}</span>
+                    <span className="text-xs text-sidebar-foreground/50">{coachProfile.rol}</span>
                   </div>
                   <ChevronDown className="ml-auto size-4 text-sidebar-foreground/40" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
-              <DropdownMenuContent
-                side="top"
-                align="start"
-                className="w-56"
-              >
+              <DropdownMenuContent side="top" align="start" className="w-56">
                 <DropdownMenuItem>
                   <Settings className="mr-2 size-4" />
-                  Settings
+                  Instellingen
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <Bell className="mr-2 size-4" />
-                  Notifications
+                  Meldingen
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <HelpCircle className="mr-2 size-4" />
@@ -215,7 +188,7 @@ export function CoachingSidebar({ activeSection, onSectionChange }: CoachingSide
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="text-destructive">
                   <LogOut className="mr-2 size-4" />
-                  Log out
+                  Uitloggen
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

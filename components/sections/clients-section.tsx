@@ -15,113 +15,119 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-const clients = [
+// ============================================================================
+// PLACEHOLDER DATA — Vervang met echte cliëntdata uit je database
+// Elk veld is beschreven zodat Claude dit makkelijk kan koppelen.
+// ============================================================================
+
+/** Lijst van cliënten met hun coaching-status en voortgang */
+const clienten = [
   {
-    name: "Sarah van Dijk",
-    initials: "SD",
+    naam: "Sarah van Dijk",
+    initialen: "SD",
     email: "sarah@email.com",
-    status: "active",
-    program: "Strength Phase 2",
-    progress: 85,
-    nextSession: "Today, 10:00",
-    trend: "up" as const,
-    lastCheckin: "2 hrs ago",
+    status: "actief",                   // actief | risico | gepauzeerd
+    programma: "Kracht Fase 2",
+    voortgang: 85,                      // percentage 0-100
+    volgendeSessie: "Vandaag, 10:00",
+    trend: "up" as const,               // up | down | neutral
+    laatsteCheckin: "2 uur geleden",
     tags: ["Premium", "Online"],
   },
   {
-    name: "Tom Bakker",
-    initials: "TB",
+    naam: "Tom Bakker",
+    initialen: "TB",
     email: "tom@email.com",
-    status: "active",
-    program: "Fat Loss 12-Week",
-    progress: 62,
-    nextSession: "Today, 11:30",
+    status: "actief",
+    programma: "Afvallen 12 weken",
+    voortgang: 62,
+    volgendeSessie: "Vandaag, 11:30",
     trend: "up" as const,
-    lastCheckin: "5 hrs ago",
+    laatsteCheckin: "5 uur geleden",
     tags: ["Online"],
   },
   {
-    name: "Lisa de Vries",
-    initials: "LV",
+    naam: "Lisa de Vries",
+    initialen: "LV",
     email: "lisa@email.com",
-    status: "active",
-    program: "Contest Prep",
-    progress: 94,
-    nextSession: "Tomorrow, 16:00",
+    status: "actief",
+    programma: "Wedstrijd Prep",
+    voortgang: 94,
+    volgendeSessie: "Morgen, 16:00",
     trend: "up" as const,
-    lastCheckin: "1 day ago",
-    tags: ["Premium", "Competition"],
+    laatsteCheckin: "1 dag geleden",
+    tags: ["Premium", "Competitie"],
   },
   {
-    name: "James Peters",
-    initials: "JP",
+    naam: "James Peters",
+    initialen: "JP",
     email: "james@email.com",
-    status: "at-risk",
-    program: "Muscle Gain Basics",
-    progress: 41,
-    nextSession: "Mar 3, 09:00",
+    status: "risico",
+    programma: "Spiermassa Basis",
+    voortgang: 41,
+    volgendeSessie: "3 mrt, 09:00",
     trend: "down" as const,
-    lastCheckin: "4 days ago",
+    laatsteCheckin: "4 dagen geleden",
     tags: ["Online"],
   },
   {
-    name: "Emma Jansen",
-    initials: "EJ",
+    naam: "Emma Jansen",
+    initialen: "EJ",
     email: "emma@email.com",
-    status: "active",
-    program: "Wellness & Mobility",
-    progress: 72,
-    nextSession: "Mar 2, 14:00",
+    status: "actief",
+    programma: "Wellness & Mobiliteit",
+    voortgang: 72,
+    volgendeSessie: "2 mrt, 14:00",
     trend: "neutral" as const,
-    lastCheckin: "1 day ago",
-    tags: ["Hybrid"],
+    laatsteCheckin: "1 dag geleden",
+    tags: ["Hybride"],
   },
   {
-    name: "David Smit",
-    initials: "DS",
+    naam: "David Smit",
+    initialen: "DS",
     email: "david@email.com",
-    status: "paused",
-    program: "Strength Basics",
-    progress: 30,
-    nextSession: "Paused",
+    status: "gepauzeerd",
+    programma: "Kracht Basis",
+    voortgang: 30,
+    volgendeSessie: "Gepauzeerd",
     trend: "neutral" as const,
-    lastCheckin: "2 weeks ago",
+    laatsteCheckin: "2 weken geleden",
     tags: ["Online"],
   },
   {
-    name: "Anna Groot",
-    initials: "AG",
+    naam: "Anna Groot",
+    initialen: "AG",
     email: "anna@email.com",
-    status: "active",
-    program: "Post-natal Recovery",
-    progress: 55,
-    nextSession: "Mar 2, 11:00",
+    status: "actief",
+    programma: "Postnataal Herstel",
+    voortgang: 55,
+    volgendeSessie: "2 mrt, 11:00",
     trend: "up" as const,
-    lastCheckin: "6 hrs ago",
-    tags: ["Premium", "Hybrid"],
+    laatsteCheckin: "6 uur geleden",
+    tags: ["Premium", "Hybride"],
   },
   {
-    name: "Marco Visser",
-    initials: "MV",
+    naam: "Marco Visser",
+    initialen: "MV",
     email: "marco@email.com",
-    status: "active",
-    program: "Marathon Prep",
-    progress: 78,
-    nextSession: "Mar 3, 07:00",
+    status: "actief",
+    programma: "Marathon Prep",
+    voortgang: 78,
+    volgendeSessie: "3 mrt, 07:00",
     trend: "up" as const,
-    lastCheckin: "12 hrs ago",
+    laatsteCheckin: "12 uur geleden",
     tags: ["Online"],
   },
 ]
 
 function getStatusBadge(status: string) {
   switch (status) {
-    case "active":
-      return <Badge className="bg-success/10 text-success border-success/20 text-[11px]">Active</Badge>
-    case "at-risk":
-      return <Badge className="bg-warning/10 text-warning-foreground border-warning/20 text-[11px]">At Risk</Badge>
-    case "paused":
-      return <Badge variant="secondary" className="text-[11px]">Paused</Badge>
+    case "actief":
+      return <Badge className="bg-success/10 text-success border-success/20 text-[11px]">Actief</Badge>
+    case "risico":
+      return <Badge className="bg-warning/10 text-warning-foreground border-warning/20 text-[11px]">Risico</Badge>
+    case "gepauzeerd":
+      return <Badge variant="secondary" className="text-[11px]">Gepauzeerd</Badge>
     default:
       return null
   }
@@ -141,30 +147,30 @@ function getTrendIcon(trend: string) {
 export function ClientsSection() {
   return (
     <div className="flex flex-col gap-6 p-6">
-      {/* Header Row */}
+      {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-bold text-foreground">Clients</h2>
-          <p className="text-sm text-muted-foreground mt-0.5">Manage and track your coaching clients</p>
+          <h2 className="text-xl font-bold text-foreground">Cliënten</h2>
+          <p className="text-sm text-muted-foreground mt-0.5">Beheer en volg je coaching cliënten</p>
         </div>
         <Button className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2">
           <Plus className="size-4" />
-          Add Client
+          Cliënt toevoegen
         </Button>
       </div>
 
-      <Tabs defaultValue="all">
+      <Tabs defaultValue="alle">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <TabsList>
-            <TabsTrigger value="all">All ({clients.length})</TabsTrigger>
-            <TabsTrigger value="active">Active ({clients.filter(c => c.status === "active").length})</TabsTrigger>
-            <TabsTrigger value="at-risk">At Risk ({clients.filter(c => c.status === "at-risk").length})</TabsTrigger>
-            <TabsTrigger value="paused">Paused ({clients.filter(c => c.status === "paused").length})</TabsTrigger>
+            <TabsTrigger value="alle">Alle ({clienten.length})</TabsTrigger>
+            <TabsTrigger value="actief">Actief ({clienten.filter(c => c.status === "actief").length})</TabsTrigger>
+            <TabsTrigger value="risico">Risico ({clienten.filter(c => c.status === "risico").length})</TabsTrigger>
+            <TabsTrigger value="gepauzeerd">Gepauzeerd ({clienten.filter(c => c.status === "gepauzeerd").length})</TabsTrigger>
           </TabsList>
           <div className="flex items-center gap-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <Input placeholder="Search clients..." className="pl-9 h-9 w-64 bg-card border-border" />
+              <Input placeholder="Zoek cliënten..." className="pl-9 h-9 w-64 bg-card border-border" />
             </div>
             <Button variant="outline" size="icon" className="h-9 w-9 border-border">
               <Filter className="size-4" />
@@ -173,31 +179,31 @@ export function ClientsSection() {
           </div>
         </div>
 
-        <TabsContent value="all" className="mt-4">
+        <TabsContent value="alle" className="mt-4">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {clients.map((client) => (
-              <ClientCard key={client.name} client={client} />
+            {clienten.map((client) => (
+              <ClientKaart key={client.naam} client={client} />
             ))}
           </div>
         </TabsContent>
-        <TabsContent value="active" className="mt-4">
+        <TabsContent value="actief" className="mt-4">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {clients.filter(c => c.status === "active").map((client) => (
-              <ClientCard key={client.name} client={client} />
+            {clienten.filter(c => c.status === "actief").map((client) => (
+              <ClientKaart key={client.naam} client={client} />
             ))}
           </div>
         </TabsContent>
-        <TabsContent value="at-risk" className="mt-4">
+        <TabsContent value="risico" className="mt-4">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {clients.filter(c => c.status === "at-risk").map((client) => (
-              <ClientCard key={client.name} client={client} />
+            {clienten.filter(c => c.status === "risico").map((client) => (
+              <ClientKaart key={client.naam} client={client} />
             ))}
           </div>
         </TabsContent>
-        <TabsContent value="paused" className="mt-4">
+        <TabsContent value="gepauzeerd" className="mt-4">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {clients.filter(c => c.status === "paused").map((client) => (
-              <ClientCard key={client.name} client={client} />
+            {clienten.filter(c => c.status === "gepauzeerd").map((client) => (
+              <ClientKaart key={client.naam} client={client} />
             ))}
           </div>
         </TabsContent>
@@ -206,7 +212,7 @@ export function ClientsSection() {
   )
 }
 
-function ClientCard({ client }: { client: typeof clients[number] }) {
+function ClientKaart({ client }: { client: typeof clienten[number] }) {
   return (
     <Card className="border-border shadow-sm hover:border-primary/30 transition-all cursor-pointer group">
       <CardContent className="p-4">
@@ -214,11 +220,11 @@ function ClientCard({ client }: { client: typeof clients[number] }) {
           <div className="flex items-center gap-3">
             <Avatar className="size-10">
               <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
-                {client.initials}
+                {client.initialen}
               </AvatarFallback>
             </Avatar>
             <div>
-              <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">{client.name}</p>
+              <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">{client.naam}</p>
               <p className="text-xs text-muted-foreground">{client.email}</p>
             </div>
           </div>
@@ -226,12 +232,12 @@ function ClientCard({ client }: { client: typeof clients[number] }) {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="size-8 text-muted-foreground">
                 <MoreHorizontal className="size-4" />
-                <span className="sr-only">Actions</span>
+                <span className="sr-only">Acties</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem><Mail className="mr-2 size-4" />Send Message</DropdownMenuItem>
-              <DropdownMenuItem><Phone className="mr-2 size-4" />Schedule Call</DropdownMenuItem>
+              <DropdownMenuItem><Mail className="mr-2 size-4" />Bericht sturen</DropdownMenuItem>
+              <DropdownMenuItem><Phone className="mr-2 size-4" />Gesprek inplannen</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -241,16 +247,16 @@ function ClientCard({ client }: { client: typeof clients[number] }) {
             {getStatusBadge(client.status)}
             <div className="flex items-center gap-1.5">
               {getTrendIcon(client.trend)}
-              <span className="text-xs text-muted-foreground">Last check-in: {client.lastCheckin}</span>
+              <span className="text-xs text-muted-foreground">Laatste check-in: {client.laatsteCheckin}</span>
             </div>
           </div>
 
           <div className="flex flex-col gap-1.5">
             <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">{client.program}</span>
-              <span className="font-semibold text-foreground">{client.progress}%</span>
+              <span className="text-muted-foreground">{client.programma}</span>
+              <span className="font-semibold text-foreground">{client.voortgang}%</span>
             </div>
-            <Progress value={client.progress} className="h-1.5" />
+            <Progress value={client.voortgang} className="h-1.5" />
           </div>
 
           <div className="flex items-center justify-between">
@@ -261,7 +267,7 @@ function ClientCard({ client }: { client: typeof clients[number] }) {
                 </Badge>
               ))}
             </div>
-            <span className="text-[11px] text-muted-foreground">Next: {client.nextSession}</span>
+            <span className="text-[11px] text-muted-foreground">Volgende: {client.volgendeSessie}</span>
           </div>
         </div>
       </CardContent>

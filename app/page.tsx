@@ -15,41 +15,45 @@ import { AnalyticsSection } from "@/components/sections/analytics-section"
 import { BillingSection } from "@/components/sections/billing-section"
 import { SettingsSection } from "@/components/sections/settings-section"
 
-const sectionConfig: Record<string, { title: string; subtitle?: string }> = {
-  dashboard: { title: "Dashboard", subtitle: "Welcome back, Mark" },
-  clients: { title: "Clients", subtitle: "Manage your coaching clients" },
-  programs: { title: "Programs", subtitle: "Training programs & workouts" },
-  nutrition: { title: "Nutrition", subtitle: "Meal plans & tracking" },
-  messages: { title: "Messages", subtitle: "Client communication" },
-  schedule: { title: "Schedule", subtitle: "Sessions & availability" },
-  content: { title: "Content Library", subtitle: "Educational resources" },
-  analytics: { title: "Analytics", subtitle: "Business performance" },
-  billing: { title: "Billing", subtitle: "Payments & subscriptions" },
-  settings: { title: "Settings", subtitle: "Account preferences" },
+// ============================================================================
+// SECTIE CONFIGURATIE — Titels en subtitels per navigatie-sectie
+// Vervang "Mark" met de naam van de ingelogde coach
+// ============================================================================
+const sectieConfig: Record<string, { titel: string; subtitel?: string }> = {
+  dashboard: { titel: "Dashboard", subtitel: "Welkom terug, Mark" },
+  clients: { titel: "Cliënten", subtitel: "Beheer je coaching cliënten" },
+  programs: { titel: "Programma's", subtitel: "Trainingsprogramma's & workouts" },
+  nutrition: { titel: "Voeding", subtitel: "Voedingsplannen & tracking" },
+  messages: { titel: "Berichten", subtitel: "Cliëntcommunicatie" },
+  schedule: { titel: "Agenda", subtitel: "Sessies & beschikbaarheid" },
+  content: { titel: "Contentbibliotheek", subtitel: "Educatieve bronnen" },
+  analytics: { titel: "Statistieken", subtitel: "Bedrijfsprestaties" },
+  billing: { titel: "Facturatie", subtitel: "Betalingen & abonnementen" },
+  settings: { titel: "Instellingen", subtitel: "Accountvoorkeuren" },
 }
 
 export default function CoachingDashboard() {
-  const [activeSection, setActiveSection] = useState("dashboard")
-  const config = sectionConfig[activeSection] || sectionConfig.dashboard
+  const [activeSectie, setActiveSectie] = useState("dashboard")
+  const config = sectieConfig[activeSectie] || sectieConfig.dashboard
 
   return (
     <SidebarProvider>
-      <CoachingSidebar activeSection={activeSection} onSectionChange={setActiveSection} />
+      <CoachingSidebar activeSection={activeSectie} onSectionChange={setActiveSectie} />
       <SidebarInset>
-        {activeSection !== "messages" && (
-          <DashboardHeader title={config.title} subtitle={config.subtitle} />
+        {activeSectie !== "messages" && (
+          <DashboardHeader title={config.titel} subtitle={config.subtitel} />
         )}
         <div className="flex-1 overflow-auto">
-          {activeSection === "dashboard" && <DashboardOverview />}
-          {activeSection === "clients" && <ClientsSection />}
-          {activeSection === "programs" && <ProgramsSection />}
-          {activeSection === "nutrition" && <NutritionSection />}
-          {activeSection === "messages" && <MessagesSection />}
-          {activeSection === "schedule" && <ScheduleSection />}
-          {activeSection === "content" && <ContentSection />}
-          {activeSection === "analytics" && <AnalyticsSection />}
-          {activeSection === "billing" && <BillingSection />}
-          {activeSection === "settings" && <SettingsSection />}
+          {activeSectie === "dashboard" && <DashboardOverview />}
+          {activeSectie === "clients" && <ClientsSection />}
+          {activeSectie === "programs" && <ProgramsSection />}
+          {activeSectie === "nutrition" && <NutritionSection />}
+          {activeSectie === "messages" && <MessagesSection />}
+          {activeSectie === "schedule" && <ScheduleSection />}
+          {activeSectie === "content" && <ContentSection />}
+          {activeSectie === "analytics" && <AnalyticsSection />}
+          {activeSectie === "billing" && <BillingSection />}
+          {activeSectie === "settings" && <SettingsSection />}
         </div>
       </SidebarInset>
     </SidebarProvider>
