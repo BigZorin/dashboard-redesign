@@ -25,7 +25,7 @@ export default function ProgressDetailScreen() {
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={24} color={theme.colors.text} />
+          <Ionicons name="chevron-back" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Voortgang</Text>
         <View style={{ width: 40 }} />
@@ -56,9 +56,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: theme.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    backgroundColor: theme.colors.headerDark,
   },
   backBtn: {
     width: 40,
@@ -69,7 +67,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: theme.colors.text,
+    color: '#fff',
   },
   content: {
     flex: 1,

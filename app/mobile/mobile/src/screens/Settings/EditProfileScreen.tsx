@@ -115,7 +115,7 @@ export default function EditProfileScreen({ navigation }: any) {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={28} color={theme.colors.secondary} />
+          <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Profiel bewerken</Text>
         <View style={styles.backButton} />
@@ -198,17 +198,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: theme.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    backgroundColor: theme.colors.headerDark,
   },
   backButton: {
     width: 40,
   },
   headerTitle: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: theme.colors.text,
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#fff',
   },
   content: {
     flex: 1,
@@ -232,7 +230,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#E5F0FF',
+    backgroundColor: theme.colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
@@ -273,7 +271,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   saveButton: {
-    backgroundColor: theme.colors.secondary,
+    backgroundColor: theme.colors.primary,
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',

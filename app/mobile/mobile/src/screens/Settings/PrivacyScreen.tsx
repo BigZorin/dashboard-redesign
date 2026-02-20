@@ -2,15 +2,16 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Linking } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { theme } from '../../constants/theme';
 
 export default function PrivacyScreen({ navigation }: any) {
   const MenuItem = ({ icon, title, onPress }: any) => (
     <TouchableOpacity style={styles.menuItem} onPress={onPress}>
       <View style={styles.menuIconContainer}>
-        <Ionicons name={icon} size={24} color="#007AFF" />
+        <Ionicons name={icon} size={24} color={theme.colors.primary} />
       </View>
       <Text style={styles.menuTitle}>{title}</Text>
-      <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
+      <Ionicons name="chevron-forward" size={20} color={theme.colors.textTertiary} />
     </TouchableOpacity>
   );
 
@@ -18,7 +19,7 @@ export default function PrivacyScreen({ navigation }: any) {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={28} color="#007AFF" />
+          <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Privacy & Beveiliging</Text>
         <View style={styles.backButton} />
@@ -59,7 +60,7 @@ export default function PrivacyScreen({ navigation }: any) {
         </View>
 
         <View style={styles.infoCard}>
-          <Ionicons name="lock-closed" size={24} color="#34C759" />
+          <Ionicons name="lock-closed" size={24} color={theme.colors.success} />
           <View style={styles.infoContent}>
             <Text style={styles.infoTitle}>Jouw privacy is belangrijk</Text>
             <Text style={styles.infoText}>
@@ -75,7 +76,7 @@ export default function PrivacyScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: theme.colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -83,17 +84,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E5EA',
+    backgroundColor: theme.colors.headerDark,
   },
   backButton: {
     width: 40,
   },
   headerTitle: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#1a1a1a',
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#fff',
   },
   content: {
     flex: 1,
@@ -105,21 +104,17 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#8E8E93',
+    color: theme.colors.textTertiary,
     marginTop: 8,
     marginBottom: 12,
     letterSpacing: 0.5,
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: theme.colors.surface,
     borderRadius: 12,
     overflow: 'hidden',
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    ...theme.shadows.md,
   },
   menuItem: {
     flexDirection: 'row',
@@ -130,7 +125,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#E5F0FF',
+    backgroundColor: theme.colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -139,15 +134,15 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     fontWeight: '500',
-    color: '#1a1a1a',
+    color: theme.colors.text,
   },
   divider: {
     height: 1,
-    backgroundColor: '#F2F2F7',
+    backgroundColor: theme.colors.borderLight,
     marginLeft: 68,
   },
   infoCard: {
-    backgroundColor: '#E8F5E9',
+    backgroundColor: `${theme.colors.success}15`,
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row',
@@ -161,12 +156,12 @@ const styles = StyleSheet.create({
   infoTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1a1a1a',
+    color: theme.colors.text,
     marginBottom: 4,
   },
   infoText: {
     fontSize: 14,
-    color: '#666',
+    color: theme.colors.textSecondary,
     lineHeight: 20,
   },
 });

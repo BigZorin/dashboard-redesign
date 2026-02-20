@@ -195,11 +195,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 8,
     paddingBottom: 12,
+    backgroundColor: theme.colors.headerDark,
   },
   title: {
     fontSize: 28,
     fontWeight: '700',
-    color: theme.colors.text,
+    color: '#fff',
   },
   tabs: {
     flexDirection: 'row',

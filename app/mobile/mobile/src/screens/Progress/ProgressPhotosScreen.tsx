@@ -58,14 +58,14 @@ export default function ProgressPhotosScreen({ navigation }: any) {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
+          <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Voortgang</Text>
         <TouchableOpacity
           style={styles.addButton}
           onPress={() => navigation.navigate('PhotoUpload')}
         >
-          <Ionicons name="add" size={24} color={theme.colors.primary} />
+          <Ionicons name="add" size={24} color="#fff" />
         </TouchableOpacity>
       </View>
 
@@ -87,7 +87,7 @@ export default function ProgressPhotosScreen({ navigation }: any) {
         {/* Entries by date */}
         {entriesWithPhotos.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="images-outline" size={64} color="#ccc" />
+            <Ionicons name="images-outline" size={64} color={theme.colors.border} />
             <Text style={styles.emptyTitle}>Nog geen foto's</Text>
             <Text style={styles.emptyText}>
               Maak voortgangsfoto's om je transformatie bij te houden.

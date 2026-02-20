@@ -235,9 +235,7 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.headerDark,
   },
   headerAvatar: {
     width: 40,
@@ -259,12 +257,12 @@ const styles = StyleSheet.create({
   },
   headerName: {
     fontSize: 16,
-    fontWeight: '600',
-    color: theme.colors.text,
+    fontWeight: '700',
+    color: '#fff',
   },
   headerSubtitle: {
     fontSize: 12,
-    color: theme.colors.textSecondary,
+    color: 'rgba(255,255,255,0.6)',
     marginTop: 1,
   },
   loadingContainer: {

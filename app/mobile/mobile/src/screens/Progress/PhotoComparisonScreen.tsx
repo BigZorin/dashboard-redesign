@@ -76,7 +76,7 @@ export default function PhotoComparisonScreen({ navigation }: any) {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
+          <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Vergelijking</Text>
         <View style={{ width: 40 }} />
@@ -101,7 +101,7 @@ export default function PhotoComparisonScreen({ navigation }: any) {
         {/* Comparison slider */}
         {filteredEntries.length < 2 ? (
           <View style={styles.noData}>
-            <Ionicons name="images-outline" size={48} color="#ccc" />
+            <Ionicons name="images-outline" size={48} color={theme.colors.border} />
             <Text style={styles.noDataText}>
               Je hebt minimaal 2 foto's van de {selectedCategory === 'front' ? 'voorkant' : selectedCategory === 'side' ? 'zijkant' : 'achterkant'} nodig om te vergelijken.
             </Text>
@@ -173,9 +173,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: theme.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    backgroundColor: theme.colors.headerDark,
   },
   backButton: {
     width: 40,
@@ -185,8 +183,8 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: theme.colors.text,
+    fontWeight: '700',
+    color: '#fff',
   },
   scrollContent: {
     padding: 20,

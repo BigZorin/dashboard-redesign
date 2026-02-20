@@ -33,7 +33,7 @@ export default function MoreScreen() {
   const MenuItem = ({ icon, title, subtitle, onPress, badge }: any) => (
     <TouchableOpacity style={styles.menuItem} onPress={onPress}>
       <View style={styles.menuIconContainer}>
-        <Ionicons name={icon} size={24} color={theme.colors.secondary} />
+        <Ionicons name={icon} size={24} color={theme.colors.primary} />
       </View>
       <View style={styles.menuContent}>
         <Text style={styles.menuTitle}>{title}</Text>
@@ -44,14 +44,16 @@ export default function MoreScreen() {
           <Text style={styles.badgeText}>{badge > 99 ? '99+' : badge}</Text>
         </View>
       )}
-      <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
+      <Ionicons name="chevron-forward" size={20} color={theme.colors.textTertiary} />
     </TouchableOpacity>
   );
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <View style={styles.headerBanner}>
         <Text style={styles.title}>Meer</Text>
+      </View>
+      <ScrollView showsVerticalScrollIndicator={false}>
 
         {/* Profiel sectie */}
         <View style={styles.section}>
@@ -135,13 +137,16 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
+  headerBanner: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 16,
+    backgroundColor: theme.colors.headerDark,
+  },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
-    marginTop: 20,
-    marginBottom: 24,
-    paddingHorizontal: 20,
-    color: theme.colors.text,
+    fontWeight: '700',
+    color: '#fff',
   },
   section: {
     marginBottom: 24,
@@ -159,11 +164,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
     borderRadius: 12,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    ...theme.shadows.md,
   },
   profileHeader: {
     flexDirection: 'row',
@@ -180,7 +181,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#E5F0FF',
+    backgroundColor: theme.colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -209,7 +210,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#E5F0FF',
+    backgroundColor: theme.colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,

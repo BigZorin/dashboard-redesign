@@ -123,7 +123,7 @@ export default function PhotoUploadScreen({ navigation }: any) {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
+          <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Voortgangsfoto's</Text>
         <View style={{ width: 40 }} />
@@ -179,7 +179,7 @@ export default function PhotoUploadScreen({ navigation }: any) {
             onChangeText={setWeightInput}
             keyboardType="decimal-pad"
             placeholder="bijv. 75.5"
-            placeholderTextColor="#ccc"
+            placeholderTextColor={theme.colors.textTertiary}
           />
         </View>
 
@@ -191,7 +191,7 @@ export default function PhotoUploadScreen({ navigation }: any) {
             value={notesInput}
             onChangeText={setNotesInput}
             placeholder="Hoe voel je je?"
-            placeholderTextColor="#ccc"
+            placeholderTextColor={theme.colors.textTertiary}
             multiline
             numberOfLines={3}
           />
@@ -230,9 +230,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: theme.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    backgroundColor: theme.colors.headerDark,
   },
   backButton: {
     width: 40,
@@ -242,8 +240,8 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: theme.colors.text,
+    fontWeight: '700',
+    color: '#fff',
   },
   scrollContent: {
     padding: 20,

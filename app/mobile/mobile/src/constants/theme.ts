@@ -28,6 +28,9 @@ export const theme = {
     border: '#E5E7EB',
     borderLight: '#F3F4F6',
 
+    // Header
+    headerDark: '#1E1839',
+
     // Other
     disabled: '#E5E7EB',
     overlay: 'rgba(30, 24, 57, 0.5)',
@@ -78,7 +81,7 @@ export const theme = {
     bold: '700' as const,
   },
 
-  shadow: {
+  shadows: {
     sm: {
       shadowColor: '#1A1235',
       shadowOffset: { width: 0, height: 1 },

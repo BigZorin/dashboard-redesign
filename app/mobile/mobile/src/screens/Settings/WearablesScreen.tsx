@@ -110,7 +110,7 @@ export default function WearablesScreen({ navigation }: any) {
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={28} color={theme.colors.secondary} />
+          <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Wearables</Text>
         <View style={styles.backButton} />
@@ -236,17 +236,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: theme.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+    backgroundColor: theme.colors.headerDark,
   },
   backButton: {
     width: 40,
   },
   headerTitle: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: theme.colors.text,
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#fff',
   },
   content: {
     flex: 1,
@@ -282,7 +280,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#E5F0FF',
+    backgroundColor: theme.colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -350,7 +348,7 @@ const styles = StyleSheet.create({
     color: theme.colors.textTertiary,
   },
   infoCard: {
-    backgroundColor: '#E5F0FF',
+    backgroundColor: theme.colors.primaryLight,
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row',

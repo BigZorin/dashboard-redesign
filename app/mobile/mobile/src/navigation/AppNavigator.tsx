@@ -7,7 +7,7 @@ import { BlurView } from 'expo-blur';
 import HomeStackNavigator from './HomeStackNavigator';
 import WorkoutsStackNavigator from './WorkoutsStackNavigator';
 import NutritionStackNavigator from './NutritionStackNavigator';
-import CoursesScreen from '../screens/Courses/CoursesScreen';
+import CoursesStackNavigator from './CoursesStackNavigator';
 import MoreStackNavigator from './MoreStackNavigator';
 import { theme } from '../constants/theme';
 
@@ -34,7 +34,7 @@ export default function AppNavigator() {
           paddingBottom: insets.bottom > 0 ? insets.bottom : 8,
           paddingTop: 8,
           height: 60 + (insets.bottom > 0 ? insets.bottom : 0),
-          ...theme.shadow.md,
+          ...theme.shadows.md,
         },
         tabBarBackground: () =>
           Platform.OS === 'ios' ? (
@@ -81,7 +81,7 @@ export default function AppNavigator() {
       />
       <Tab.Screen
         name="Leren"
-        component={CoursesScreen}
+        component={CoursesStackNavigator}
         options={{
           title: 'Leren',
           tabBarLabel: 'Leren',
