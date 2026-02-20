@@ -43,8 +43,11 @@ import {
 // Supabase tabellen:
 //   - users (admin profiel via auth.users + users tabel)
 //
-// Admin profiel: alleen gebruikers met rol "admin" krijgen toegang tot dit dashboard
-// Toegangscontrole: Supabase RLS policies + middleware check op rol
+// ROLGEBASEERDE TOEGANG:
+//   - Dit component wordt alleen gerenderd op /admin (beschermd door middleware + page guard)
+//   - Admin profiel wordt opgehaald via Supabase Auth (ingelogde user met rol "admin")
+//   - users tabel kolom "rol": "admin" | "coach" | "client"
+//   - Als een niet-admin hier terechtkomt, vangt de page.tsx redirect dit op
 // ============================================================================
 
 const adminNavItems = [

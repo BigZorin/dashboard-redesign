@@ -15,10 +15,20 @@ import { BillingSection } from "@/components/sections/billing-section"
 // ============================================================================
 // ADMIN DASHBOARD — Alleen toegankelijk voor gebruikers met rol "admin"
 //
-// Toegangscontrole:
-//   - Supabase RLS policies op admin-specifieke tabellen
-//   - Middleware check: als user.rol !== "admin" -> redirect naar /
-//   - Server-side check in layout.tsx of page.tsx (met Supabase SSR)
+// ROLGEBASEERDE TOEGANGSCONTROLE (VERPLICHT):
+//   1. Server-side: In deze page.tsx (of een layout.tsx wrapper), haal de
+//      ingelogde user op via Supabase SSR (createServerClient).
+//      Check of de user.rol === "admin" in de users tabel.
+//      Als NIET admin -> redirect("/") of redirect("/login").
+//   2. Middleware: In proxy.js (Next.js middleware), check of routes die
+//      beginnen met /admin/* een geldige admin sessie hebben.
+//      Zo niet -> redirect naar coach dashboard (/).
+//   3. Supabase RLS: Alle admin-specifieke tabellen (bijv. website_analytics,
+//      platform_settings) moeten RLS policies hebben die alleen rows
+//      teruggeven als auth.uid() overeenkomt met een user met rol "admin".
+//   4. De users tabel heeft kolom "rol" met mogelijke waarden:
+//      "admin" | "coach" | "client"
+//   5. Coaches en clienten mogen NOOIT op /admin terechtkomen.
 //
 // Secties:
 //   - Overzicht: Admin KPI's (coaches, clienten, omzet, retentie)

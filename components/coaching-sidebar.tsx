@@ -117,7 +117,21 @@ export function CoachingSidebar({ activeSection, onSectionChange }: CoachingSide
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Link naar Admin Dashboard (alleen zichtbaar voor admins) */}
+        {/* ----------------------------------------------------------------
+          Admin Dashboard link — ALLEEN TONEN ALS INGELOGDE USER ROL "admin" HEEFT
+          
+          Implementatie:
+            1. Haal de ingelogde user op via Supabase Auth (useUser() of server-side)
+            2. Check user.rol === "admin" (uit users tabel, niet auth.users)
+            3. Render dit blok CONDITIONEEL: {isAdmin && ( ... )}
+            4. De users tabel heeft kolom "rol" met waarden: "admin" | "coach" | "client"
+            5. Coaches zien dit NIET — alleen admins
+          
+          Voorbeeld:
+            const { user } = useUser()
+            const isAdmin = user?.rol === "admin"
+            {isAdmin && ( <SidebarGroup>...</SidebarGroup> )}
+        ---------------------------------------------------------------- */}
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
