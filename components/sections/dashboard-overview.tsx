@@ -12,23 +12,27 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 //
 // Supabase tabellen:
 //   - clients (actieve cliënten count, status)
-//   - coach_revenue (maandomzet, berekend uit client_subscriptions)
 //   - messages (ongelezen berichten count)
 //   - client_sessions (sessies deze week)
-//   - client_checkins (recente check-ins)
+//   - client_checkins (recente check-ins, compliance)
 //   - client_programs (voortgang per cliënt)
+//
+// BELANGRIJK: GEEN financiële data op het coach dashboard!
+// Omzet, betalingen, abonnementen, facturatie zijn ADMIN-ONLY.
+// Coaches zien alleen coaching-relevante metrics.
+// Financiële data zit in: /admin -> Facturatie tab + Statistieken tab
 //
 // Alle KPI's worden server-side berekend via Supabase RPC of Edge Functions
 // ============================================================================
 
-/** Omzetdata per maand voor de omzetgrafiek */
-const omzetData = [
-  { maand: "Sep", omzet: 3200 },
-  { maand: "Okt", omzet: 3800 },
-  { maand: "Nov", omzet: 4100 },
-  { maand: "Dec", omzet: 3900 },
-  { maand: "Jan", omzet: 4600 },
-  { maand: "Feb", omzet: 5200 },
+/** Check-in compliance per week (coach-relevante metric i.p.v. omzet) */
+const complianceData = [
+  { week: "Wk 1", training: 88, voeding: 72 },
+  { week: "Wk 2", training: 91, voeding: 76 },
+  { week: "Wk 3", training: 85, voeding: 79 },
+  { week: "Wk 4", training: 93, voeding: 81 },
+  { week: "Wk 5", training: 90, voeding: 78 },
+  { week: "Wk 6", training: 95, voeding: 84 },
 ]
 
 /** Cliëntactiviteit per dag (check-ins en workouts) */
@@ -53,12 +57,12 @@ const statKaarten = [
     beschrijving: "t.o.v. vorige maand",
   },
   {
-    titel: "Maandomzet",
-    waarde: "\u20AC5.240",
-    verandering: "+12,5%",
+    titel: "Gem. compliance",
+    waarde: "87%",
+    verandering: "+3,2%",
     trend: "up" as const,
     icon: TrendingUp,
-    beschrijving: "t.o.v. vorige maand",
+    beschrijving: "training & voeding",
   },
   {
     titel: "Ongelezen berichten",
@@ -139,21 +143,25 @@ export function DashboardOverview() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card className="border-border shadow-sm">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold text-foreground">Omzet overzicht</CardTitle>
-            <p className="text-xs text-muted-foreground">Maandelijkse omzettrend</p>
+            <CardTitle className="text-sm font-semibold text-foreground">Compliance overzicht</CardTitle>
+            <p className="text-xs text-muted-foreground">Training & voeding compliance per week</p>
           </CardHeader>
           <CardContent className="pb-4">
             <ResponsiveContainer width="100%" height={220}>
-              <AreaChart data={omzetData}>
+              <AreaChart data={complianceData}>
                 <defs>
-                  <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
+                  <linearGradient id="trainingGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="oklch(0.55 0.15 160)" stopOpacity={0.3} />
                     <stop offset="95%" stopColor="oklch(0.55 0.15 160)" stopOpacity={0} />
                   </linearGradient>
+                  <linearGradient id="voedingGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="oklch(0.6 0.12 200)" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="oklch(0.6 0.12 200)" stopOpacity={0} />
+                  </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.91 0.005 240)" />
-                <XAxis dataKey="maand" tick={{ fontSize: 12, fill: "oklch(0.5 0.01 240)" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 12, fill: "oklch(0.5 0.01 240)" }} axisLine={false} tickLine={false} tickFormatter={(v) => `\u20AC${v / 1000}k`} />
+                <XAxis dataKey="week" tick={{ fontSize: 12, fill: "oklch(0.5 0.01 240)" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 12, fill: "oklch(0.5 0.01 240)" }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}%`} domain={[60, 100]} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "oklch(1 0 0)",
@@ -161,9 +169,10 @@ export function DashboardOverview() {
                     borderRadius: "8px",
                     fontSize: "12px",
                   }}
-                  formatter={(value: number) => [`\u20AC${value.toLocaleString("nl-NL")}`, "Omzet"]}
+                  formatter={(value: number, name: string) => [`${value}%`, name === "training" ? "Training" : "Voeding"]}
                 />
-                <Area type="monotone" dataKey="omzet" stroke="oklch(0.55 0.15 160)" strokeWidth={2} fill="url(#revenueGradient)" />
+                <Area type="monotone" dataKey="training" stroke="oklch(0.55 0.15 160)" strokeWidth={2} fill="url(#trainingGradient)" />
+                <Area type="monotone" dataKey="voeding" stroke="oklch(0.6 0.12 200)" strokeWidth={2} fill="url(#voedingGradient)" />
               </AreaChart>
             </ResponsiveContainer>
           </CardContent>

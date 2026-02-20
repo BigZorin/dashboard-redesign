@@ -20,8 +20,8 @@ import {
 // Vervang met echte data uit Supabase tabellen:
 //   - clients (basisgegevens, doel, notities)
 //   - client_programs (programma toewijzing)
-//   - client_subscriptions (facturatie)
 //   - client_notifications (communicatie voorkeuren)
+//   - GEEN client_subscriptions / facturatie data — dat is admin-only (/admin)
 // ============================================================================
 
 /** Programma toewijzing — Supabase: client_programs + programs */
@@ -41,15 +41,11 @@ const programmaToewijzing = {
   verwachteEinddatum: "17 apr 2026",       // <-- Verwachte einddatum
 }
 
-/** Facturatie status — Supabase: client_subscriptions */
-const facturatie = {
-  abonnement: "Premium Coaching",           // <-- Naam abonnement
-  bedrag: "199",                             // <-- Bedrag per maand in euro
-  frequentie: "Maandelijks",                // <-- Betalingsfrequentie
-  status: "actief" as const,                // <-- actief | achterstallig | geannuleerd
-  volgendeBetaling: "1 apr 2026",          // <-- Datum volgende betaling
-  lidSinds: "15 sep 2025",                // <-- Eerste betaling
-}
+// FACTURATIE DATA IS VERWIJDERD VAN COACH DASHBOARD
+// Betalingen, abonnementen, bedragen en Stripe data zijn ADMIN-ONLY.
+// Coaches mogen GEEN financiële informatie van clienten zien.
+// Facturatie wordt beheerd in: /admin -> Facturatie tab
+// Alleen admins kunnen betalingsstatus, bedragen en abonnementen inzien.
 
 /** Cliëntdoel — Supabase: clients */
 const clientDoel = {
@@ -161,35 +157,26 @@ export function InstellingenTab() {
         </CardContent>
       </Card>
 
-      {/* Facturatie */}
+      {/* Facturatie — ADMIN-ONLY, niet zichtbaar voor coaches */}
+      {/* Toon alleen het pakket dat de client heeft, zonder bedragen */}
       <Card className="border-border">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-semibold flex items-center gap-2">
             <CreditCard className="size-4 text-primary" />
-            Facturatie
+            Pakket
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="flex items-center justify-between rounded-lg bg-secondary/40 p-3">
             <div className="flex flex-col gap-0.5">
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Abonnement</span>
-              <span className="text-sm font-semibold text-foreground">{facturatie.abonnement}</span>
+              <span className="text-sm font-semibold text-foreground">Premium Coaching</span>
+              <span className="text-[11px] text-muted-foreground">Lid sinds 15 sep 2025</span>
             </div>
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Bedrag</span>
-              <span className="text-sm font-semibold text-foreground">{"€"}{facturatie.bedrag}/maand</span>
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Status</span>
-              <Badge className="bg-success/10 text-success border-success/20 text-[10px] w-fit">
-                {facturatie.status === "actief" ? "Actief" : facturatie.status}
-              </Badge>
-            </div>
-            <div className="flex flex-col gap-0.5">
-              <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Volgende betaling</span>
-              <span className="text-sm font-semibold text-foreground">{facturatie.volgendeBetaling}</span>
-            </div>
+            <Badge className="bg-success/10 text-success border-success/20 text-[10px]">
+              Actief
+            </Badge>
           </div>
+          <p className="text-[10px] text-muted-foreground mt-2">Betalingsgegevens zijn beschikbaar in het admin dashboard.</p>
         </CardContent>
       </Card>
 
