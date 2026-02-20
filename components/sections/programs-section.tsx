@@ -13,7 +13,15 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 // ============================================================================
-// PLACEHOLDER DATA — Vervang met echte programma's uit je database
+// PLACEHOLDER DATA — Vervang met echte programma's uit Supabase
+//
+// Supabase tabellen:
+//   - programs (naam, beschrijving, categorie, duur, sessies/week, status)
+//   - program_blocks (blokken binnen programma)
+//   - client_programs (koppeling cliënt <-> programma, voor clienten count)
+//
+// Categorieen: kracht | afvallen | uithoudingsvermogen | wellness
+// Status: actief (beschikbaar voor toewijzing) | concept (nog in ontwikkeling)
 // ============================================================================
 
 /** Trainingsprogramma's die de coach aanbiedt */

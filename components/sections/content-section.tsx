@@ -14,7 +14,15 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 // ============================================================================
-// PLACEHOLDER DATA — Vervang met echte content uit je database/CMS
+// PLACEHOLDER DATA — Vervang met echte content uit Supabase
+//
+// Supabase tabellen:
+//   - content_items (titel, type, categorie, duur, toegevoegd)
+//   - content_views (weergaven per item, user tracking)
+//
+// Supabase Storage bucket: "content-library" (video's, afbeeldingen, PDF's)
+// Video's: opgeslagen als URL (YouTube/Vimeo embed of Supabase Storage)
+// Artikelen: opgeslagen als rich text (Markdown) in content_items.body
 // ============================================================================
 
 /** Educatieve content items (video's, artikelen, afbeeldingen) */

@@ -16,8 +16,17 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 // ============================================================================
-// PLACEHOLDER DATA — Vervang met echte cliëntdata uit je database
-// Elk veld is beschreven zodat Claude dit makkelijk kan koppelen.
+// PLACEHOLDER DATA — Vervang met echte cliëntdata uit Supabase
+//
+// Supabase tabellen:
+//   - clients (naam, email, status, tags, avatar_url, created_at)
+//   - client_programs (huidig programma, voortgang %, huidige week)
+//   - client_checkins (laatste check-in datum, gewichtstrend)
+//   - client_sessions (volgende geplande sessie)
+//
+// Status: actief | risico (>3 dagen geen activiteit) | gepauzeerd
+// Tags: opgeslagen als text[] array in clients tabel
+// Trend: berekend uit laatste 2 check-ins (gewicht verschil)
 // ============================================================================
 
 /** Lijst van cliënten met hun coaching-status en voortgang — Supabase tabel: clients */

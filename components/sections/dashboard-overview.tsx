@@ -8,7 +8,17 @@ import { Progress } from "@/components/ui/progress"
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts"
 
 // ============================================================================
-// PLACEHOLDER DATA — Vervang met echte data uit je database/API
+// PLACEHOLDER DATA — Vervang met echte data uit Supabase
+//
+// Supabase tabellen:
+//   - clients (actieve cliënten count, status)
+//   - coach_revenue (maandomzet, berekend uit client_subscriptions)
+//   - messages (ongelezen berichten count)
+//   - client_sessions (sessies deze week)
+//   - client_checkins (recente check-ins)
+//   - client_programs (voortgang per cliënt)
+//
+// Alle KPI's worden server-side berekend via Supabase RPC of Edge Functions
 // ============================================================================
 
 /** Omzetdata per maand voor de omzetgrafiek */

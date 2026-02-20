@@ -8,7 +8,19 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 // ============================================================================
-// PLACEHOLDER DATA — Vervang met echte betalingsdata uit je betalingsprovider (bijv. Stripe)
+// PLACEHOLDER DATA — Vervang met echte betalingsdata uit Stripe + Supabase
+//
+// Stripe integratie:
+//   - Stripe Checkout voor betalingen
+//   - Stripe Billing voor abonnementen (recurring)
+//   - Stripe Webhooks -> Supabase Edge Function voor sync
+//
+// Supabase tabellen:
+//   - client_subscriptions (abonnement status, plan, bedrag, volgende betaling)
+//   - payments (individuele betalingen, status, Stripe payment_intent_id)
+//   - subscription_plans (beschikbare plannen met features en prijzen)
+//
+// KPI's berekend via Supabase RPC: MRR, churn, gem. cliëntwaarde
 // ============================================================================
 
 /** Facturatie KPI's */

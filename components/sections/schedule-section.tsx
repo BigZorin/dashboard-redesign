@@ -6,7 +6,15 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 
 // ============================================================================
-// PLACEHOLDER DATA — Vervang met echte agenda-data uit je database/kalender API
+// PLACEHOLDER DATA — Vervang met echte agenda-data uit Supabase
+//
+// Supabase tabellen:
+//   - client_sessions (sessies met datum, tijd, type, cliënt, modus)
+//   - coach_availability (beschikbare tijdslots)
+//   - session_types (type sessie: check-in, review, groepsles, etc.)
+//
+// Kalender-integratie: Google Calendar API (optioneel, sync via webhook)
+// Sessie-modus: "video" (in-app videogesprek) of "locatie" (fysiek op locatie)
 // ============================================================================
 
 const dagen = ["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"]

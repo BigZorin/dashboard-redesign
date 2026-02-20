@@ -20,7 +20,17 @@ import {
 } from "recharts"
 
 // ============================================================================
-// PLACEHOLDER DATA — Vervang met echte analytics uit je database
+// PLACEHOLDER DATA — Vervang met echte analytics uit Supabase
+//
+// Supabase tabellen / views:
+//   - client_subscriptions (omzet berekening, gem. cliëntwaarde)
+//   - clients (retentie berekening, churn rate)
+//   - client_programs (programmaverdeling, afronding %)
+//   - client_checkins (betrokkenheid: check-in frequentie)
+//   - messages (betrokkenheid: berichtenvolume)
+//   - client_feedback (tevredenheidsscores per programma)
+//
+// Berekeningen via Supabase Edge Functions of server-side aggregatie
 // ============================================================================
 
 /** Maandelijkse omzet en cliëntaantallen */

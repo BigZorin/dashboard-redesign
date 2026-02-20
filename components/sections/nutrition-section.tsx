@@ -15,7 +15,15 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 // ============================================================================
-// PLACEHOLDER DATA — Vervang met echte voedingsplannen uit je database
+// PLACEHOLDER DATA — Vervang met echte voedingsplannen uit Supabase
+//
+// Supabase tabellen:
+//   - nutrition_plans (naam, beschrijving, macro targets, status)
+//   - client_nutrition (koppeling cliënt <-> plan, voor clienten count)
+//   - client_nutrition_logs (dagelijkse tracking: calorieën, naleving %)
+//
+// Status: actief (beschikbaar) | concept (in ontwikkeling)
+// Naleving: berekend uit client_nutrition_logs vs nutrition_plans targets
 // ============================================================================
 
 /** Voedingsschema's / maaltijdplannen */
