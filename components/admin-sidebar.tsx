@@ -2,19 +2,19 @@
 
 import {
   LayoutDashboard,
+  Globe,
+  UserCog,
   Users,
-  Dumbbell,
-  Apple,
-  MessageCircle,
-  CalendarDays,
+  FolderOpen,
   BarChart3,
-  Settings,
-  Bell,
+  CreditCard,
   ChevronDown,
-  Search,
+  Settings,
   LogOut,
   HelpCircle,
   Zap,
+  ArrowLeft,
+  Crown,
 } from "lucide-react"
 import {
   Sidebar,
@@ -25,7 +25,6 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
@@ -39,37 +38,42 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 // ============================================================================
-// PLACEHOLDER DATA — Vervang met echte data uit je database/API
-// Elke sectie heeft een duidelijk commentaar zodat Claude dit makkelijk kan invullen.
+// PLACEHOLDER DATA — Vervang met echte data uit Supabase
+//
+// Supabase tabellen:
+//   - users (admin profiel via auth.users + users tabel)
+//
+// Admin profiel: alleen gebruikers met rol "admin" krijgen toegang tot dit dashboard
+// Toegangscontrole: Supabase RLS policies + middleware check op rol
 // ============================================================================
 
-/** Navigatie-items voor de hoofdsecties (Coaching) */
-const mainNavItems = [
-  { title: "Dashboard", icon: LayoutDashboard, id: "dashboard" },
-  { title: "Cliënten", icon: Users, badge: "48" /* <-- Aantal actieve cliënten */, id: "clients" },
-  { title: "Programma's", icon: Dumbbell, id: "programs" },
-  { title: "Voeding", icon: Apple, id: "nutrition" },
-  { title: "Berichten", icon: MessageCircle, badge: "5" /* <-- Ongelezen berichten */, id: "messages" },
-  { title: "Agenda", icon: CalendarDays, id: "schedule" },
+const adminNavItems = [
+  { title: "Overzicht", icon: LayoutDashboard, id: "overview" },
+  { title: "Website Analytics", icon: Globe, id: "analytics" },
+  { title: "Gebruikers", icon: UserCog, id: "gebruikers" },
+  { title: "Clients", icon: Users, id: "clients" },
 ]
 
-// Beheer secties (Content, Statistieken, Facturatie) zijn verplaatst naar /admin
+const beheerNavItems = [
+  { title: "Contentbibliotheek", icon: FolderOpen, id: "content" },
+  { title: "Statistieken", icon: BarChart3, id: "statistieken" },
+  { title: "Facturatie", icon: CreditCard, id: "facturatie" },
+]
 
-/** Coach profiel — Vervang met ingelogde coach data */
-const coachProfile = {
-  naam: "Mark Jensen",          // <-- Volledige naam coach
-  initialen: "MJ",              // <-- Initialen voor avatar fallback
-  rol: "Online Coach",          // <-- Rol/titel
-  avatarUrl: "",                // <-- URL naar profielfoto (leeg = fallback)
-  planNaam: "Pro Plan",         // <-- Huidig abonnement
+/** Admin profiel — Vervang met ingelogde admin data */
+const adminProfile = {
+  naam: "Zorin Wijnands",
+  initialen: "ZW",
+  rol: "Admin",
+  avatarUrl: "",
 }
 
-interface CoachingSidebarProps {
+interface AdminSidebarProps {
   activeSection: string
   onSectionChange: (section: string) => void
 }
 
-export function CoachingSidebar({ activeSection, onSectionChange }: CoachingSidebarProps) {
+export function AdminSidebar({ activeSection, onSectionChange }: AdminSidebarProps) {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="px-3 py-4">
@@ -81,7 +85,7 @@ export function CoachingSidebar({ activeSection, onSectionChange }: CoachingSide
               </div>
               <div className="flex flex-col gap-0.5 leading-none">
                 <span className="font-semibold text-sm">CoachHub</span>
-                <span className="text-xs text-sidebar-foreground/60">{coachProfile.planNaam}</span>
+                <span className="text-xs text-sidebar-foreground/60">Admin Panel</span>
               </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -91,11 +95,11 @@ export function CoachingSidebar({ activeSection, onSectionChange }: CoachingSide
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="text-[11px] uppercase tracking-wider text-sidebar-foreground/40 font-semibold">
-            Coaching
+            Admin
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainNavItems.map((item) => (
+              {adminNavItems.map((item) => (
                 <SidebarMenuItem key={item.id}>
                   <SidebarMenuButton
                     isActive={activeSection === item.id}
@@ -106,30 +110,48 @@ export function CoachingSidebar({ activeSection, onSectionChange }: CoachingSide
                     <item.icon className="size-4" />
                     <span>{item.title}</span>
                   </SidebarMenuButton>
-                  {item.badge && (
-                    <SidebarMenuBadge className="bg-sidebar-primary/20 text-sidebar-primary text-[10px] font-semibold rounded-full px-1.5 min-w-5 h-5 flex items-center justify-center">
-                      {item.badge}
-                    </SidebarMenuBadge>
-                  )}
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {/* Link naar Admin Dashboard (alleen zichtbaar voor admins) */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-[11px] uppercase tracking-wider text-sidebar-foreground/40 font-semibold">
+            Beheer
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {beheerNavItems.map((item) => (
+                <SidebarMenuItem key={item.id}>
+                  <SidebarMenuButton
+                    isActive={activeSection === item.id}
+                    onClick={() => onSectionChange(item.id)}
+                    tooltip={item.title}
+                    className="gap-3"
+                  >
+                    <item.icon className="size-4" />
+                    <span>{item.title}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        {/* Link terug naar Coach Dashboard */}
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
-                  tooltip="Admin Dashboard"
+                  tooltip="Coach Dashboard"
                   className="gap-3 text-sidebar-foreground/60 hover:text-sidebar-foreground"
                 >
-                  <a href="/admin">
-                    <BarChart3 className="size-4" />
-                    <span>Admin Dashboard</span>
+                  <a href="/">
+                    <ArrowLeft className="size-4" />
+                    <span>Coach Dashboard</span>
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -144,15 +166,18 @@ export function CoachingSidebar({ activeSection, onSectionChange }: CoachingSide
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton size="lg" className="gap-3 hover:bg-sidebar-accent/50">
-                  <Avatar className="size-8 border-2 border-sidebar-primary/30">
-                    <AvatarImage src={coachProfile.avatarUrl} alt="Coach avatar" />
-                    <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-xs font-semibold">
-                      {coachProfile.initialen}
+                  <Avatar className="size-8 border-2 border-chart-5/30">
+                    <AvatarImage src={adminProfile.avatarUrl} alt="Admin avatar" />
+                    <AvatarFallback className="bg-chart-5/10 text-chart-5 text-xs font-semibold">
+                      {adminProfile.initialen}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col gap-0.5 leading-none">
-                    <span className="font-medium text-sm">{coachProfile.naam}</span>
-                    <span className="text-xs text-sidebar-foreground/50">{coachProfile.rol}</span>
+                    <span className="font-medium text-sm">{adminProfile.naam}</span>
+                    <span className="text-xs text-sidebar-foreground/50 flex items-center gap-1">
+                      <Crown className="size-2.5" />
+                      {adminProfile.rol}
+                    </span>
                   </div>
                   <ChevronDown className="ml-auto size-4 text-sidebar-foreground/40" />
                 </SidebarMenuButton>
@@ -161,10 +186,6 @@ export function CoachingSidebar({ activeSection, onSectionChange }: CoachingSide
                 <DropdownMenuItem>
                   <Settings className="mr-2 size-4" />
                   Instellingen
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Bell className="mr-2 size-4" />
-                  Meldingen
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <HelpCircle className="mr-2 size-4" />
