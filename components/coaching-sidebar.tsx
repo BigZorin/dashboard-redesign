@@ -96,7 +96,7 @@ export function CoachingSidebar({ activeSection, onSectionChange }: CoachingSide
         </SidebarMenu>
       </SidebarHeader>
 
-      <SidebarSeparator />
+      <SidebarSeparator className="mx-3 opacity-40" />
 
       <SidebarContent>
         <SidebarGroup>
@@ -151,7 +151,7 @@ export function CoachingSidebar({ activeSection, onSectionChange }: CoachingSide
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarSeparator />
+      <SidebarSeparator className="mx-3 opacity-40" />
 
       <SidebarFooter className="px-3 py-3">
         <SidebarMenu>
