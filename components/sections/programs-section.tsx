@@ -81,8 +81,11 @@ import { cn } from "@/lib/utils"
 //   - ai_generated_programs (prompt, result_json, coach_id — AI programma generatie)
 //
 // Supabase Storage buckets:
-//   - "program-banners" (banner afbeeldingen)
-//   - "exercise-videos" (oefening video's)
+//   - "program-banners" (banner afbeeldingen per programma, path: program-banners/{program_id}.jpg)
+//     Banner upload flow: coach selecteert afbeelding -> upload naar Supabase Storage -> update programs.banner_url
+//     Banners worden ook getoond in de client-app bij het trainingsoverzicht.
+//   - "exercise-videos" (oefening instructie-video's, path: exercise-videos/{exercise_id}.mp4)
+//     Video's worden gelinkt aan exercises.video_url en getoond bij oefeningen in de app.
 //
 // Intensiteit-types per oefening:
 //   - RPE (Rate of Perceived Exertion, 1-10) — autoregulatie, gevorderden
@@ -509,217 +512,214 @@ function ProgrammaKaart({ programma, onKlik }: { programma: Programma; onKlik: (
 
 // ============================================================================
 // LAAG 2: PROGRAMMA DETAIL & BEWERKEN
+// Twee-koloms layout: links programma info (banner, naam, beschrijving, stats),
+// rechts blokken/fases met workouts. Banner is een echte afbeelding (Supabase Storage).
 // ============================================================================
 
 function ProgrammaDetail({ programma, onTerug }: { programma: Programma; onTerug: () => void }) {
-  const [geselecteerdBlokId, setGeselecteerdBlokId] = useState<string | null>(
-    programma.blokken[0]?.id ?? null
-  )
-  const [geselecteerdeWeekId, setGeselecteerdeWeekId] = useState<string | null>(
-    programma.blokken[0]?.weken[0]?.id ?? null
-  )
+  // Bewerkbare velden
+  const [naam, setNaam] = useState(programma.naam)
+  const [beschrijving, setBeschrijving] = useState(programma.beschrijving)
+  const [bannerUrl, setBannerUrl] = useState(programma.bannerUrl)
+
+  // Blokken state
+  const [openBlokId, setOpenBlokId] = useState<string | null>(programma.blokken[0]?.id ?? null)
   const [openTrainingId, setOpenTrainingId] = useState<string | null>(null)
   const [oefeningDialogOpen, setOefeningDialogOpen] = useState(false)
   const [zoekOefening, setZoekOefening] = useState("")
 
-  const geselecteerdBlok = programma.blokken.find(b => b.id === geselecteerdBlokId)
-  const geselecteerdeWeek = geselecteerdBlok?.weken.find(w => w.id === geselecteerdeWeekId)
-  const Icon = categorieIcons[programma.categorie] || Dumbbell
-
-  // Selecteer eerste week van een blok
-  function selecteerBlok(blokId: string) {
-    const blok = programma.blokken.find(b => b.id === blokId)
-    setGeselecteerdBlokId(blokId)
-    setGeselecteerdeWeekId(blok?.weken[0]?.id ?? null)
-    setOpenTrainingId(null)
-  }
+  const totaalWorkouts = programma.blokken.reduce(
+    (sum, blok) => sum + blok.weken.reduce((wSum, w) => wSum + w.trainingen.length, 0), 0
+  )
 
   return (
     <div className="flex flex-col gap-5 p-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div className="flex items-start gap-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
           <Button
             variant="ghost"
-            size="icon"
-            className="size-8 mt-0.5 text-muted-foreground hover:text-foreground"
+            size="sm"
+            className="gap-1.5 text-muted-foreground hover:text-foreground"
             onClick={onTerug}
           >
             <ArrowLeft className="size-4" />
-            <span className="sr-only">Terug</span>
+            Terug
           </Button>
           <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-lg font-bold text-foreground">{programma.naam}</h2>
-              <Badge variant="outline" className="text-[10px]">{programma.categorie}</Badge>
-              <Badge className={cn(
-                "text-[10px] border",
-                programma.status === "actief"
-                  ? "bg-success/10 text-success border-success/20"
-                  : "bg-secondary text-muted-foreground border-border"
-              )}>
-                {programma.status === "actief" ? "Actief" : "Concept"}
-              </Badge>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1 max-w-lg">{programma.beschrijving}</p>
-            <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1"><Clock className="size-3" />{programma.duurWeken > 0 ? `${programma.duurWeken} weken` : "Doorlopend"}</span>
-              <span className="flex items-center gap-1"><Dumbbell className="size-3" />{programma.sessiesPerWeek}x/week</span>
-              <span className="flex items-center gap-1"><Users className="size-3" />{programma.clienten} clienten</span>
-            </div>
+            <h2 className="text-lg font-bold text-foreground">{naam}</h2>
+            <p className="text-xs text-muted-foreground">Programma bewerken</p>
           </div>
         </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-1.5 text-xs">
-              <MoreHorizontal className="size-3.5" />
-              Acties
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem><Copy className="mr-2 size-3.5" />Programma dupliceren</DropdownMenuItem>
-            <DropdownMenuItem><Users className="mr-2 size-3.5" />Toewijzen aan client</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive"><Trash2 className="mr-2 size-3.5" />Verwijderen</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+            <Users className="size-3.5" />
+            Toewijzen
+          </Button>
+          <Button size="sm" className="gap-1.5 text-xs bg-primary text-primary-foreground hover:bg-primary/90">
+            <Check className="size-3.5" />
+            Opslaan
+          </Button>
+        </div>
       </div>
 
-      {/* Blokken navigatie */}
-      {programma.blokken.length > 0 ? (
-        <>
-          <Card className="border-border">
-            <CardContent className="p-4">
-              {/* Blok tabs */}
-              <div className="flex gap-2 mb-3">
-                {programma.blokken.map((blok) => (
-                  <button
-                    key={blok.id}
-                    onClick={() => selecteerBlok(blok.id)}
-                    className={cn(
-                      "px-3 py-1.5 rounded-md text-xs font-medium transition-all",
-                      geselecteerdBlokId === blok.id
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-secondary text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    {blok.naam}
-                    <span className="ml-1.5 opacity-70">({blok.weken.length}w)</span>
-                  </button>
-                ))}
-                <button className="px-2.5 py-1.5 rounded-md text-xs text-muted-foreground hover:bg-secondary transition-colors border border-dashed border-border">
-                  <Plus className="size-3 inline mr-1" />
-                  Blok
-                </button>
-              </div>
+      {/* Twee-koloms layout */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[340px_1fr]">
+        {/* LINKER KOLOM: Programma Info */}
+        <div className="flex flex-col gap-5">
+          <Card className="border-border p-0 gap-0 overflow-hidden">
+            <CardContent className="p-5 flex flex-col gap-4">
+              <h3 className="text-sm font-semibold text-foreground">Programma Info</h3>
 
-              {/* Week selector */}
-              {geselecteerdBlok && (
-                <div className="flex gap-1.5">
-                  {geselecteerdBlok.weken.map((week) => (
-                    <button
-                      key={week.id}
-                      onClick={() => { setGeselecteerdeWeekId(week.id); setOpenTrainingId(null) }}
-                      className={cn(
-                        "flex-1 h-9 rounded-md text-xs font-medium transition-all flex items-center justify-center",
-                        geselecteerdeWeekId === week.id
-                          ? "bg-primary text-primary-foreground ring-2 ring-primary/30"
-                          : "bg-secondary text-muted-foreground hover:bg-secondary/80"
-                      )}
-                    >
-                      W{week.weekNummer}
-                    </button>
-                  ))}
+              {/* Banner afbeelding — Supabase Storage: program-banners/{program_id}.jpg */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-foreground">Banner</label>
+                <div className="relative rounded-lg overflow-hidden bg-secondary aspect-[16/9]">
+                  {bannerUrl ? (
+                    <img
+                      src={bannerUrl}
+                      alt={`Banner voor ${naam}`}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className={cn("w-full h-full bg-gradient-to-r", programma.bannerKleur)} />
+                  )}
+                  <div className="absolute inset-0 bg-black/5" />
                 </div>
-              )}
-
-              {/* Blokken kleur balk */}
-              <div className="flex gap-1 mt-2">
-                {programma.blokken.map((blok) => (
-                  <div
-                    key={blok.id}
-                    className={cn(
-                      "h-1 rounded-full transition-opacity",
-                      blok.kleur,
-                      geselecteerdBlokId === blok.id ? "opacity-100" : "opacity-30"
-                    )}
-                    style={{ flex: blok.weken.length }}
-                  />
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Week inhoud: trainingen */}
-          {geselecteerdeWeek && (
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-semibold text-foreground">
-                    Week {geselecteerdeWeek.weekNummer} — {geselecteerdBlok?.naam}
-                  </h3>
-                  <span className="text-xs text-muted-foreground">
-                    {geselecteerdeWeek.trainingen.length} {geselecteerdeWeek.trainingen.length === 1 ? "training" : "trainingen"}
-                  </span>
-                </div>
-                <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1 border-border">
-                  <Plus className="size-3" />
-                  Training toevoegen
+                <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 border-border w-full mt-1">
+                  <Upload className="size-3.5" />
+                  Wijzig banner
                 </Button>
               </div>
 
-              {geselecteerdeWeek.trainingen.length > 0 ? (
-                geselecteerdeWeek.trainingen.map((training) => (
-                  <TrainingCard
-                    key={training.id}
-                    training={training}
-                    isOpen={openTrainingId === training.id}
-                    onToggle={() => setOpenTrainingId(openTrainingId === training.id ? null : training.id)}
-                    onOpenOefeningDialog={() => setOefeningDialogOpen(true)}
+              {/* Naam */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-foreground">Naam</label>
+                <Input
+                  value={naam}
+                  onChange={(e) => setNaam(e.target.value)}
+                  className="text-sm"
+                />
+              </div>
+
+              {/* Beschrijving */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-foreground">Beschrijving</label>
+                <Textarea
+                  value={beschrijving}
+                  onChange={(e) => setBeschrijving(e.target.value)}
+                  rows={3}
+                  className="text-sm resize-none"
+                />
+              </div>
+
+              {/* Categorie & Status */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-foreground">Categorie</label>
+                  <Select defaultValue={programma.categorie}>
+                    <SelectTrigger className="text-sm h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="kracht">Kracht</SelectItem>
+                      <SelectItem value="afvallen">Afvallen</SelectItem>
+                      <SelectItem value="uithoudingsvermogen">Uithoudingsvermogen</SelectItem>
+                      <SelectItem value="wellness">Wellness</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-foreground">Sessies/week</label>
+                  <Input
+                    type="number"
+                    defaultValue={programma.sessiesPerWeek}
+                    min={1}
+                    max={7}
+                    className="text-sm h-9"
                   />
-                ))
-              ) : (
-                <Card className="border-border border-dashed">
-                  <CardContent className="p-8 flex flex-col items-center justify-center text-center">
-                    <div className="size-12 rounded-full bg-secondary flex items-center justify-center mb-3">
-                      <Dumbbell className="size-5 text-muted-foreground" />
-                    </div>
-                    <p className="text-sm font-medium text-foreground">Nog geen trainingen</p>
-                    <p className="text-xs text-muted-foreground mt-1">Voeg trainingen toe aan deze week of kopieer vanuit een andere week</p>
-                    <div className="flex gap-2 mt-4">
-                      <Button size="sm" className="h-8 text-xs gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90">
-                        <Plus className="size-3.5" />
-                        Training toevoegen
-                      </Button>
-                      <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 border-border">
-                        <Copy className="size-3.5" />
-                        Week kopieren
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          )}
-        </>
-      ) : (
-        /* Geen blokken — lege state */
-        <Card className="border-border border-dashed">
-          <CardContent className="p-10 flex flex-col items-center justify-center text-center">
-            <div className="size-14 rounded-full bg-secondary flex items-center justify-center mb-4">
-              <Target className="size-6 text-muted-foreground" />
-            </div>
-            <p className="text-sm font-semibold text-foreground">Nog geen blokken ingesteld</p>
-            <p className="text-xs text-muted-foreground mt-1 max-w-sm">
-              Verdeel dit programma in blokken (bijv. Opbouw, Intensificatie, Peak) en voeg per blok weken en trainingen toe.
-            </p>
-            <Button size="sm" className="mt-4 h-8 text-xs gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90">
+                </div>
+              </div>
+
+              {/* Stats */}
+              <div className="border-t border-border pt-3 flex flex-col gap-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Blokken</span>
+                  <span className="font-medium text-foreground">{programma.blokken.length}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Totaal weken</span>
+                  <span className="font-medium text-foreground">{programma.duurWeken}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Totaal workouts</span>
+                  <span className="font-medium text-foreground">{totaalWorkouts}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Clienten</span>
+                  <span className="font-medium text-foreground">{programma.clienten}</span>
+                </div>
+              </div>
+
+              {/* Meer acties */}
+              <div className="border-t border-border pt-3 flex flex-col gap-1.5">
+                <Button variant="ghost" size="sm" className="justify-start h-8 text-xs gap-2 text-muted-foreground hover:text-foreground">
+                  <Copy className="size-3.5" />
+                  Programma dupliceren
+                </Button>
+                <Button variant="ghost" size="sm" className="justify-start h-8 text-xs gap-2 text-destructive hover:text-destructive hover:bg-destructive/10">
+                  <Trash2 className="size-3.5" />
+                  Programma verwijderen
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* RECHTER KOLOM: Blokken / Fases */}
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-foreground">Blokken / Fases</h3>
+            <Button size="sm" variant="outline" className="h-8 text-xs gap-1.5 border-border">
               <Plus className="size-3.5" />
-              Eerste blok toevoegen
+              Blok Toevoegen
             </Button>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+
+          {programma.blokken.length > 0 ? (
+            <div className="flex flex-col gap-4">
+              {programma.blokken.map((blok, blokIndex) => (
+                <BlokCard
+                  key={blok.id}
+                  blok={blok}
+                  blokIndex={blokIndex}
+                  isOpen={openBlokId === blok.id}
+                  onToggle={() => setOpenBlokId(openBlokId === blok.id ? null : blok.id)}
+                  openTrainingId={openTrainingId}
+                  onToggleTraining={(id) => setOpenTrainingId(openTrainingId === id ? null : id)}
+                  onOpenOefeningDialog={() => setOefeningDialogOpen(true)}
+                />
+              ))}
+            </div>
+          ) : (
+            <Card className="border-border border-dashed">
+              <CardContent className="p-10 flex flex-col items-center justify-center text-center">
+                <div className="size-14 rounded-full bg-secondary flex items-center justify-center mb-4">
+                  <Target className="size-6 text-muted-foreground" />
+                </div>
+                <p className="text-sm font-semibold text-foreground">Nog geen blokken</p>
+                <p className="text-xs text-muted-foreground mt-1 max-w-sm">
+                  Verdeel dit programma in blokken (bijv. Opbouw, Intensificatie, Peak) en voeg per blok weken en trainingen toe.
+                </p>
+                <Button size="sm" className="mt-4 h-8 text-xs gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90">
+                  <Plus className="size-3.5" />
+                  Eerste blok toevoegen
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
 
       {/* Oefening selectie dialog */}
       <OefeningSelectieDialog
@@ -729,6 +729,106 @@ function ProgrammaDetail({ programma, onTerug }: { programma: Programma; onTerug
         onZoekChange={setZoekOefening}
       />
     </div>
+  )
+}
+
+// --- Blok Card (uitklapbaar, bevat workouts) --------------------------------
+
+function BlokCard({ blok, blokIndex, isOpen, onToggle, openTrainingId, onToggleTraining, onOpenOefeningDialog }: {
+  blok: Blok
+  blokIndex: number
+  isOpen: boolean
+  onToggle: () => void
+  openTrainingId: string | null
+  onToggleTraining: (id: string) => void
+  onOpenOefeningDialog: () => void
+}) {
+  const totaalWorkouts = blok.weken.reduce((sum, w) => sum + w.trainingen.length, 0)
+
+  return (
+    <Card className={cn("border-border overflow-hidden", isOpen && "ring-1 ring-primary/20")}>
+      {/* Blok header */}
+      <button
+        onClick={onToggle}
+        className="w-full flex items-center justify-between p-4 hover:bg-secondary/30 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <GripVertical className="size-4 text-muted-foreground/50" />
+          <div className="flex size-7 items-center justify-center rounded-md bg-primary/10 text-xs font-bold text-primary">
+            {blokIndex + 1}
+          </div>
+          <div className="text-left">
+            <p className="text-sm font-semibold text-foreground">{blok.naam}</p>
+          </div>
+          <span className="text-xs text-muted-foreground">{blok.weken.length} weken &middot; {totaalWorkouts} workouts</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-7 text-muted-foreground hover:text-destructive"
+            onClick={(e) => { e.stopPropagation() }}
+          >
+            <Trash2 className="size-3.5" />
+          </Button>
+          {isOpen ? <ChevronDown className="size-4 text-muted-foreground" /> : <ChevronRight className="size-4 text-muted-foreground" />}
+        </div>
+      </button>
+
+      {/* Blok inhoud (uitklapbaar) */}
+      {isOpen && (
+        <div className="border-t border-border p-5 flex flex-col gap-5">
+          {/* Blok metadata velden */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-foreground">Bloknaam</label>
+              <Input defaultValue={blok.naam} className="text-sm" />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-foreground">Duur (weken)</label>
+              <Input type="number" defaultValue={blok.weken.length} min={1} max={12} className="text-sm" />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-foreground">Beschrijving</label>
+            <Textarea
+              placeholder="Beschrijf het doel van dit blok..."
+              rows={2}
+              className="text-sm resize-none"
+            />
+          </div>
+
+          {/* Workouts in dit blok */}
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-medium text-foreground">Workouts</label>
+              <Button size="sm" variant="outline" className="h-7 text-[11px] gap-1 border-border">
+                <Plus className="size-3" />
+                Workout toevoegen
+              </Button>
+            </div>
+
+            {blok.weken.flatMap(w => w.trainingen).length > 0 ? (
+              blok.weken.flatMap(w => w.trainingen).map((training) => (
+                <TrainingCard
+                  key={training.id}
+                  training={training}
+                  isOpen={openTrainingId === training.id}
+                  onToggle={() => onToggleTraining(training.id)}
+                  onOpenOefeningDialog={onOpenOefeningDialog}
+                />
+              ))
+            ) : (
+              <div className="flex items-center gap-3 px-3 py-3 rounded-lg border border-dashed border-border bg-secondary/20">
+                <Dumbbell className="size-4 text-muted-foreground" />
+                <p className="text-xs text-muted-foreground">Nog geen workouts. Voeg een workout toe om te beginnen.</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </Card>
   )
 }
 
@@ -1112,30 +1212,19 @@ function ProgrammaAanmaken({ tab, onTabChange, onTerug }: {
                   </div>
                 </div>
 
-                {/* Banner selectie */}
+                {/* Banner selectie — Supabase Storage: program-banners/{program_id}.jpg */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-medium text-foreground">Banner</label>
-                  <div className="flex gap-2">
-                    {[
-                      "from-primary to-primary/70",
-                      "from-chart-5 to-chart-5/70",
-                      "from-chart-2 to-chart-2/70",
-                      "from-chart-3 to-chart-3/70",
-                      "from-chart-4 to-chart-4/70",
-                    ].map((gradient) => (
-                      <button
-                        key={gradient}
-                        className={cn(
-                          "h-10 flex-1 rounded-lg bg-gradient-to-r transition-all",
-                          gradient,
-                          "ring-2 ring-transparent hover:ring-primary/30"
-                        )}
-                      />
-                    ))}
-                    <button className="h-10 flex-1 rounded-lg border-2 border-dashed border-border flex items-center justify-center text-muted-foreground hover:border-primary/30 transition-colors">
-                      <Upload className="size-4" />
-                    </button>
+                  <label className="text-xs font-medium text-foreground">Banner afbeelding</label>
+                  <div className="relative rounded-lg overflow-hidden bg-secondary aspect-[16/9] border border-border">
+                    <div className="w-full h-full bg-gradient-to-r from-primary to-primary/70" />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                      <div className="size-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                        <ImageIcon className="size-5 text-white" />
+                      </div>
+                      <p className="text-[11px] text-white font-medium drop-shadow-sm">Klik om banner te uploaden</p>
+                    </div>
                   </div>
+                  <p className="text-[10px] text-muted-foreground">Aanbevolen: 1200x400px. JPG of PNG. Wordt ook getoond in de app.</p>
                 </div>
 
                 <div className="flex justify-end mt-2">
