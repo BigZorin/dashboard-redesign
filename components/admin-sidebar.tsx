@@ -5,7 +5,7 @@ import {
   Globe,
   UserCog,
   Users,
-  FolderOpen,
+  GraduationCap,
   BarChart3,
   CreditCard,
   ChevronDown,
@@ -58,7 +58,7 @@ const adminNavItems = [
 ]
 
 const beheerNavItems = [
-  { title: "Contentbibliotheek", icon: FolderOpen, id: "content" },
+  { title: "Courses", icon: GraduationCap, id: "courses" },
   { title: "Statistieken", icon: BarChart3, id: "statistieken" },
   { title: "Facturatie", icon: CreditCard, id: "facturatie" },
 ]

@@ -7,6 +7,7 @@ import {
   Apple,
   MessageCircle,
   CalendarDays,
+  FolderOpen,
   BarChart3,
   Settings,
   Bell,
@@ -51,6 +52,7 @@ const mainNavItems = [
   { title: "Voeding", icon: Apple, id: "nutrition" },
   { title: "Berichten", icon: MessageCircle, badge: "5" /* <-- Ongelezen berichten */, id: "messages" },
   { title: "Agenda", icon: CalendarDays, id: "schedule" },
+  { title: "Content", icon: FolderOpen, id: "content" },
 ]
 
 // Beheer secties (Content, Statistieken, Facturatie) zijn verplaatst naar /admin

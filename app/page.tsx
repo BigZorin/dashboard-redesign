@@ -10,6 +10,7 @@ import { ProgramsSection } from "@/components/sections/programs-section"
 import { NutritionSection } from "@/components/sections/nutrition-section"
 import { MessagesSection } from "@/components/sections/messages-section"
 import { ScheduleSection } from "@/components/sections/schedule-section"
+import { ContentSection } from "@/components/sections/content-section"
 import { SettingsSection } from "@/components/sections/settings-section"
 import { ClientDetailSection } from "@/components/sections/client-detail-section"
 
@@ -24,6 +25,7 @@ const sectieConfig: Record<string, { titel: string; subtitel?: string }> = {
   nutrition: { titel: "Voeding", subtitel: "Voedingsplannen & tracking" },
   messages: { titel: "Berichten", subtitel: "Cliëntcommunicatie" },
   schedule: { titel: "Agenda", subtitel: "Sessies & beschikbaarheid" },
+  content: { titel: "Content", subtitel: "Bestanden & educatieve bronnen" },
   settings: { titel: "Instellingen", subtitel: "Accountvoorkeuren" },
 }
 
@@ -67,6 +69,7 @@ export default function CoachingDashboard() {
               {activeSectie === "nutrition" && <NutritionSection />}
               {activeSectie === "messages" && <MessagesSection />}
               {activeSectie === "schedule" && <ScheduleSection />}
+              {activeSectie === "content" && <ContentSection />}
               {activeSectie === "settings" && <SettingsSection />}
             </div>
           </>

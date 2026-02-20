@@ -8,7 +8,7 @@ import { AdminDashboard } from "@/components/admin/admin-dashboard"
 import { WebsiteAnalytics } from "@/components/admin/website-analytics"
 import { GebruikersSection } from "@/components/admin/gebruikers-section"
 import { ClientsBeheerSection } from "@/components/admin/clients-beheer-section"
-import { ContentSection } from "@/components/sections/content-section"
+import { CoursesSection } from "@/components/admin/courses-section"
 import { AnalyticsSection } from "@/components/sections/analytics-section"
 import { BillingSection } from "@/components/sections/billing-section"
 
@@ -35,7 +35,7 @@ import { BillingSection } from "@/components/sections/billing-section"
 //   - Website Analytics: Bezoekers, calculator stats, leads, contact
 //   - Gebruikers: Rollenbeheer (Admin/Coach/Client)
 //   - Clients: Goedkeuring, afwijzing, coach toewijzing
-//   - Content: Contentbibliotheek (hergebruikt van coach dashboard)
+//   - Courses: E-learning cursussen aanmaken en beheren (admin-only)
 //   - Statistieken: Business analytics (hergebruikt van coach dashboard)
 //   - Facturatie: Betalingen & abonnementen (hergebruikt van coach dashboard)
 // ============================================================================
@@ -45,7 +45,7 @@ const sectieConfig: Record<string, { titel: string; subtitel?: string }> = {
   analytics: { titel: "Website Analytics", subtitel: "Bezoekers & conversies" },
   gebruikers: { titel: "Gebruikers", subtitel: "Rollen & toegangsbeheer" },
   clients: { titel: "Clients", subtitel: "Goedkeuring & coach toewijzing" },
-  content: { titel: "Contentbibliotheek", subtitel: "Educatieve bronnen" },
+  courses: { titel: "Courses", subtitel: "E-learning cursussen" },
   statistieken: { titel: "Statistieken", subtitel: "Bedrijfsprestaties" },
   facturatie: { titel: "Facturatie", subtitel: "Betalingen & abonnementen" },
 }
@@ -64,7 +64,7 @@ export default function AdminPage() {
           {activeSectie === "analytics" && <WebsiteAnalytics />}
           {activeSectie === "gebruikers" && <GebruikersSection />}
           {activeSectie === "clients" && <ClientsBeheerSection />}
-          {activeSectie === "content" && <ContentSection />}
+          {activeSectie === "courses" && <CoursesSection />}
           {activeSectie === "statistieken" && <AnalyticsSection />}
           {activeSectie === "facturatie" && <BillingSection />}
         </div>

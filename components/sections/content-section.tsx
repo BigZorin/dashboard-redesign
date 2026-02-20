@@ -16,13 +16,30 @@ import {
 // ============================================================================
 // PLACEHOLDER DATA — Vervang met echte content uit Supabase
 //
+// CONTENTBIBLIOTHEEK — COACH-SPECIFIEK
+// Dit is de coach-zijde contentbibliotheek. Elke coach beheert zijn eigen content.
+//
 // Supabase tabellen:
-//   - content_items (titel, type, categorie, duur, toegevoegd)
+//   - content_items (id, titel, type, categorie, duur, body, coach_id, is_universeel, created_at)
 //   - content_views (weergaven per item, user tracking)
 //
 // Supabase Storage bucket: "content-library" (video's, afbeeldingen, PDF's)
 // Video's: opgeslagen als URL (YouTube/Vimeo embed of Supabase Storage)
 // Artikelen: opgeslagen als rich text (Markdown) in content_items.body
+//
+// CONTENT TOEWIJZING AAN CLIENTEN:
+//   - Coaches zien ALLEEN hun eigen content (content_items.coach_id = auth.uid())
+//   - Coaches zien OOK universele content (content_items.is_universeel = true)
+//     maar kunnen universele content NIET bewerken of verwijderen
+//   - Universele content wordt beheerd door admins in het Admin Dashboard
+//   - Clienten in de app zien:
+//     1. Content van hun toegewezen coach (via clients.coach_id -> content_items.coach_id)
+//     2. Universele content (is_universeel = true)
+//   - Admins kunnen universele content markeren die niet door coaches verwijderd kan worden
+//
+// RLS Policies:
+//   - SELECT: WHERE coach_id = auth.uid() OR is_universeel = true
+//   - INSERT/UPDATE/DELETE: WHERE coach_id = auth.uid() AND is_universeel = false
 // ============================================================================
 
 /** Educatieve content items (video's, artikelen, afbeeldingen) */
