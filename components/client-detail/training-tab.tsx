@@ -512,7 +512,7 @@ function ProgrammaKaart({
 
   return (
     <Card
-      className="border-border overflow-hidden cursor-pointer group hover:border-primary/30 transition-all"
+      className="border-border overflow-hidden cursor-pointer group hover:border-primary/30 transition-all p-0 gap-0"
       onClick={onKlik}
       role="button"
       tabIndex={0}
