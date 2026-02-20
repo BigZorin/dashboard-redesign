@@ -18,12 +18,15 @@ import {
 // PLACEHOLDER DATA — Vervang met echte voedingsplannen uit Supabase
 //
 // Supabase tabellen:
-//   - nutrition_plans (naam, beschrijving, macro targets, status)
-//   - client_nutrition (koppeling cliënt <-> plan, voor clienten count)
-//   - client_nutrition_logs (dagelijkse tracking: calorieën, naleving %)
+//   - nutrition_plan_templates (id, naam, beschrijving, macro_targets, status, created_by)
+//   - nutrition_plan_template_meals (id, template_id, naam, tijd, volgorde)
+//   - nutrition_plan_template_items (id, meal_id, product_id, hoeveelheid, eenheid)
+//   - client_nutrition_plan (koppeling cliënt <-> template + custom overrides)
+//   - client_food_logs (dagelijkse tracking via barcode scan of handmatig)
+//   - food_products (productdatabase, aangevuld via Open Food Facts API barcode scans)
 //
 // Status: actief (beschikbaar) | concept (in ontwikkeling)
-// Naleving: berekend uit client_nutrition_logs vs nutrition_plans targets
+// Naleving: berekend uit client_food_logs vs nutrition_plan_templates macro targets
 // ============================================================================
 
 /** Voedingsschema's / maaltijdplannen */

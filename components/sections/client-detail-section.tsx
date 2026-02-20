@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ArrowLeft, MessageCircle, ClipboardCheck, Sparkles, MoreHorizontal, Mail, CalendarDays, Dumbbell, Apple, Activity, TrendingDown, TrendingUp, Minus, Scale } from "lucide-react"
+import { ArrowLeft, MessageCircle, ClipboardCheck, Sparkles, MoreHorizontal, Mail, CalendarDays, Dumbbell, Apple, Activity, TrendingDown, TrendingUp, Minus, Scale, FileText } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { OverzichtTab } from "@/components/client-detail/overzicht-tab"
+import { IntakeTab } from "@/components/client-detail/intake-tab"
 import { TrainingTab } from "@/components/client-detail/training-tab"
 import { VoedingTab } from "@/components/client-detail/voeding-tab"
 import { CheckinsTab } from "@/components/client-detail/checkins-tab"
@@ -231,6 +232,7 @@ export function ClientDetailSection({ clientId, onTerug }: ClientDetailSectionPr
           <TabsList className="h-11 w-full justify-start bg-transparent rounded-none p-0 gap-0 overflow-x-auto">
             {[
               { value: "overzicht", label: "Overzicht", icon: Activity },
+              { value: "intake", label: "Intake", icon: FileText },
               { value: "training", label: "Training", icon: Dumbbell },
               { value: "voeding", label: "Voeding", icon: Apple },
               { value: "checkins", label: "Check-ins", icon: ClipboardCheck },
@@ -259,6 +261,9 @@ export function ClientDetailSection({ clientId, onTerug }: ClientDetailSectionPr
         <div className="flex-1 overflow-auto">
           <TabsContent value="overzicht" className="mt-0 h-full">
             <OverzichtTab />
+          </TabsContent>
+          <TabsContent value="intake" className="mt-0 h-full">
+            <IntakeTab />
           </TabsContent>
           <TabsContent value="training" className="mt-0 h-full">
             <TrainingTab />
