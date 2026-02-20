@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Search, Paperclip, Send, Image, Mic, MoreVertical, Phone, Video, Check, CheckCheck } from "lucide-react"
+import { Search, Paperclip, Send, Image, Mic, MoreVertical, Check, CheckCheck } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,7 +9,17 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 
 // ============================================================================
-// PLACEHOLDER DATA — Vervang met echte chatdata uit je database/real-time systeem
+// PLACEHOLDER DATA — Vervang met echte chatdata uit Supabase (real-time via Supabase Realtime)
+//
+// ONDERSTEUNDE BERICHTTYPEN (GEEN bel- of videofunctionaliteit):
+//   - Tekstberichten (standaard chat)
+//   - Spraakberichten (voice messages, opname via microfoon)
+//   - Bestanden (PDF, documenten, trainingsschema's — via Supabase Storage)
+//   - Afbeeldingen (foto's, voortgangsfoto's — via Supabase Storage)
+//
+// Supabase tabellen: conversations, messages, message_attachments
+// Supabase Storage bucket: "chat-attachments" (bestanden + afbeeldingen)
+// Real-time: Supabase Realtime subscription op messages tabel
 // ============================================================================
 
 /** Conversatielijst in de sidebar van berichten */
@@ -172,15 +182,8 @@ export function MessagesSection() {
               </p>
             </div>
           </div>
+          {/* GEEN bel- of videofunctie — alleen tekst, voice messages, bestanden en afbeeldingen */}
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="size-8 text-muted-foreground hover:text-foreground">
-              <Phone className="size-4" />
-              <span className="sr-only">Bellen</span>
-            </Button>
-            <Button variant="ghost" size="icon" className="size-8 text-muted-foreground hover:text-foreground">
-              <Video className="size-4" />
-              <span className="sr-only">Videogesprek</span>
-            </Button>
             <Button variant="ghost" size="icon" className="size-8 text-muted-foreground hover:text-foreground">
               <MoreVertical className="size-4" />
               <span className="sr-only">Meer opties</span>
