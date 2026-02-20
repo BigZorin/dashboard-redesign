@@ -9,8 +9,12 @@ import {
   Check,
   Clock,
   Edit3,
-  Copy,
   Dumbbell,
+  ArrowLeft,
+  Plus,
+  Play,
+  CalendarDays,
+  BarChart3,
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -26,11 +30,10 @@ import {
 } from "@/components/ui/table"
 
 // ============================================================================
-// PLACEHOLDER DATA — Trainingsschema van de cliënt
-// Hiërarchie: Programma → Blokken → Weken → Trainingen → Oefeningen
+// PLACEHOLDER DATA — Alle programma's van de cliënt
 //
 // Vervang met echte data uit Supabase tabellen:
-//   - client_programs        (huidig programma + metadata)
+//   - client_programs        (toegewezen programma's per cliënt)
 //   - program_blocks         (blokken binnen programma)
 //   - block_weeks            (weken per blok)
 //   - week_workouts          (trainingen per week)
@@ -39,43 +42,83 @@ import {
 //   - ai_suggestions         (AI-aanbevelingen per oefening/week)
 // ============================================================================
 
-/** Programma met blokken — Supabase: client_programs + program_blocks */
-const programma = {
-  id: "prog_001",                           // <-- Supabase UUID
-  naam: "Kracht Fase 2",                    // <-- Naam van het programma
-  type: "Upper/Lower Split",                // <-- Type split
-  startDatum: "3 feb 2026",                 // <-- Startdatum programma
-  totaalWeken: 12,                          // <-- Totaal aantal weken
-  huidigeWeek: 6,                           // <-- Welke week de cliënt nu zit
-  blokken: [
-    {
-      id: "blok_001",                       // <-- Supabase UUID
-      naam: "Opbouw",                       // <-- Naam van het blok
-      kleur: "bg-chart-2",                  // <-- Kleur voor visuele indicator
-      weken: [1, 2, 3, 4],                 // <-- Weeknummers in dit blok
-      status: "voltooid" as const,          // voltooid | actief | gepland
-    },
-    {
-      id: "blok_002",
-      naam: "Intensificatie",
-      kleur: "bg-primary",
-      weken: [5, 6, 7, 8],
-      status: "actief" as const,
-    },
-    {
-      id: "blok_003",
-      naam: "Piek & Taper",
-      kleur: "bg-chart-3",
-      weken: [9, 10, 11, 12],
-      status: "gepland" as const,
-    },
+/** Programma's van de cliënt — Supabase: client_programs */
+const programmas = [
+  {
+    id: "prog_001",                            // <-- Supabase UUID
+    naam: "Kracht Fase 2",                     // <-- Programmanaam
+    type: "Upper/Lower Split",                 // <-- Type split/programma
+    beschrijving: "Kracht opbouwen met periodisering. Focus op compound lifts met progressieve overload.",
+    bannerKleur: "from-emerald-600 to-teal-700", // <-- Gradient voor banner (of afbeelding-URL)
+    bannerAfbeelding: null as string | null,   // <-- Supabase Storage URL voor programma-banner
+    status: "actief" as const,                 // actief | voltooid | gepland
+    startDatum: "3 feb 2026",
+    eindDatum: "27 apr 2026",
+    totaalWeken: 12,
+    huidigeWeek: 6,
+    compliance: 88,                            // <-- Gemiddelde compliance %
+    sessiesPerWeek: 4,
+  },
+  {
+    id: "prog_002",
+    naam: "Mobiliteit & Herstel",
+    type: "Full Body",
+    beschrijving: "Aanvullend mobiliteitsprogramma voor betere bewegingskwaliteit en herstel.",
+    bannerKleur: "from-sky-600 to-blue-700",
+    bannerAfbeelding: null as string | null,
+    status: "actief" as const,
+    startDatum: "3 feb 2026",
+    eindDatum: "27 apr 2026",
+    totaalWeken: 12,
+    huidigeWeek: 6,
+    compliance: 75,
+    sessiesPerWeek: 2,
+  },
+  {
+    id: "prog_000",
+    naam: "Fundament Fase 1",
+    type: "Full Body",
+    beschrijving: "Eerste fase gericht op bewegingspatronen, core stabiliteit en basisuithoudingsvermogen.",
+    bannerKleur: "from-slate-500 to-slate-700",
+    bannerAfbeelding: null as string | null,
+    status: "voltooid" as const,
+    startDatum: "4 nov 2025",
+    eindDatum: "26 jan 2026",
+    totaalWeken: 12,
+    huidigeWeek: 12,
+    compliance: 92,
+    sessiesPerWeek: 3,
+  },
+]
+
+/** Blokken per programma — Supabase: program_blocks */
+const blokkenPerProgramma: Record<string, Array<{
+  id: string
+  naam: string
+  kleur: string
+  weken: number[]
+  status: "voltooid" | "actief" | "gepland"
+}>> = {
+  prog_001: [
+    { id: "blok_001", naam: "Opbouw", kleur: "bg-chart-2", weken: [1, 2, 3, 4], status: "voltooid" },
+    { id: "blok_002", naam: "Intensificatie", kleur: "bg-primary", weken: [5, 6, 7, 8], status: "actief" },
+    { id: "blok_003", naam: "Piek & Taper", kleur: "bg-chart-3", weken: [9, 10, 11, 12], status: "gepland" },
+  ],
+  prog_002: [
+    { id: "blok_010", naam: "Basis", kleur: "bg-chart-2", weken: [1, 2, 3, 4, 5, 6], status: "voltooid" },
+    { id: "blok_011", naam: "Verdieping", kleur: "bg-primary", weken: [7, 8, 9, 10, 11, 12], status: "actief" },
+  ],
+  prog_000: [
+    { id: "blok_020", naam: "Adaptatie", kleur: "bg-chart-2", weken: [1, 2, 3, 4], status: "voltooid" },
+    { id: "blok_021", naam: "Opbouw", kleur: "bg-chart-3", weken: [5, 6, 7, 8], status: "voltooid" },
+    { id: "blok_022", naam: "Consolidatie", kleur: "bg-primary", weken: [9, 10, 11, 12], status: "voltooid" },
   ],
 }
 
-/** Week-data voor alle weken — Supabase: block_weeks */
+/** Week-data — Supabase: block_weeks */
 const weekData: Record<number, {
-  compliance: number             // <-- Percentage compliance 0-100
-  sessies: string                // <-- "voltooide/geplande" sessies
+  compliance: number
+  sessies: string
   status: "voltooid" | "actief" | "gepland"
 }> = {
   1:  { compliance: 100, sessies: "4/4", status: "voltooid" },
@@ -94,18 +137,18 @@ const weekData: Record<number, {
 
 /** Trainingen per week — Supabase: week_workouts + workout_exercises */
 const trainingenPerWeek: Record<number, Array<{
-  id: string                               // <-- Supabase UUID
-  naam: string                             // <-- Trainingsnaam
-  dag: string                              // <-- Geplande dag
+  id: string
+  naam: string
+  dag: string
   status: "voltooid" | "gepland" | "overgeslagen"
   oefeningen: Array<{
-    naam: string                           // <-- Oefening naam
-    sets: number                           // <-- Aantal sets
-    reps: string                           // <-- Reps (kan range zijn: "8-12")
-    gewicht: string                        // <-- Huidig gewicht
-    rust: string                           // <-- Rusttijd
-    progressie: "up" | "down" | "neutral"  // <-- Trend indicator
-    aiSuggestie: string | null             // <-- AI suggestie tekst of null
+    naam: string
+    sets: number
+    reps: string
+    gewicht: string
+    rust: string
+    progressie: "up" | "down" | "neutral"
+    aiSuggestie: string | null
   }>
 }>> = {
   6: [
@@ -169,49 +212,113 @@ const trainingenPerWeek: Record<number, Array<{
 // ============================================================================
 
 export function TrainingTab() {
-  const [geselecteerdeWeek, setGeselecteerdeWeek] = useState(programma.huidigeWeek)
+  const [geselecteerdProgrammaId, setGeselecteerdProgrammaId] = useState<string | null>(null)
+  const [geselecteerdeWeek, setGeselecteerdeWeek] = useState<number | null>(null)
   const [openTraining, setOpenTraining] = useState<number>(0)
 
-  const trainingen = trainingenPerWeek[geselecteerdeWeek] || []
-  const week = weekData[geselecteerdeWeek]
+  const geselecteerdProgramma = programmas.find(p => p.id === geselecteerdProgrammaId)
+  const blokken = geselecteerdProgrammaId ? blokkenPerProgramma[geselecteerdProgrammaId] || [] : []
+  const trainingen = geselecteerdeWeek ? trainingenPerWeek[geselecteerdeWeek] || [] : []
+  const week = geselecteerdeWeek ? weekData[geselecteerdeWeek] : null
 
-  return (
-    <div className="flex flex-col gap-6 p-6">
+  // Zet standaard week als programma wordt geselecteerd
+  function selecteerProgramma(id: string) {
+    const prog = programmas.find(p => p.id === id)
+    setGeselecteerdProgrammaId(id)
+    setGeselecteerdeWeek(prog?.huidigeWeek ?? 1)
+    setOpenTraining(0)
+  }
 
-      {/* Programma header — compact */}
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-foreground">{programma.naam}</h3>
-            <Badge variant="outline" className="text-[10px]">{programma.type}</Badge>
+  // ---- PROGRAMMA-OVERZICHT ------------------------------------------------
+  if (!geselecteerdProgrammaId) {
+    const actieveProgrammas = programmas.filter(p => p.status === "actief")
+    const voltooide = programmas.filter(p => p.status === "voltooid")
+
+    return (
+      <div className="flex flex-col gap-6 p-6">
+
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-semibold text-foreground">Programma{"'"}s</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {actieveProgrammas.length} actief &middot; {voltooide.length} voltooid
+            </p>
           </div>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Week {programma.huidigeWeek} van {programma.totaalWeken} &middot; Gestart {programma.startDatum}
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="h-7 text-[11px] gap-1 border-border">
-            <Copy className="size-3" />
-            Dupliceer
-          </Button>
-          <Button variant="outline" size="sm" className="h-7 text-[11px] gap-1 border-border">
-            <Edit3 className="size-3" />
-            Bewerken
+          <Button size="sm" className="h-8 gap-1.5 text-xs bg-primary text-primary-foreground hover:bg-primary/90">
+            <Plus className="size-3.5" />
+            Programma toewijzen
           </Button>
         </div>
+
+        {/* Actieve programma's */}
+        {actieveProgrammas.length > 0 && (
+          <div className="flex flex-col gap-3">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actief</h4>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              {actieveProgrammas.map((prog) => (
+                <ProgrammaKaart key={prog.id} programma={prog} onKlik={() => selecteerProgramma(prog.id)} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Voltooide programma's */}
+        {voltooide.length > 0 && (
+          <div className="flex flex-col gap-3">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Voltooid</h4>
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              {voltooide.map((prog) => (
+                <ProgrammaKaart key={prog.id} programma={prog} onKlik={() => selecteerProgramma(prog.id)} />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // ---- PROGRAMMA-DETAIL ----------------------------------------------------
+  return (
+    <div className="flex flex-col gap-5 p-6">
+
+      {/* Terug + programma header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8 text-muted-foreground hover:text-foreground"
+            onClick={() => { setGeselecteerdProgrammaId(null); setGeselecteerdeWeek(null) }}
+          >
+            <ArrowLeft className="size-4" />
+            <span className="sr-only">Terug naar programma{"'"}s</span>
+          </Button>
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold text-foreground">{geselecteerdProgramma?.naam}</h3>
+              <Badge variant="outline" className="text-[10px]">{geselecteerdProgramma?.type}</Badge>
+              {geselecteerdProgramma?.status === "actief" && (
+                <Badge className="text-[9px] bg-primary/10 text-primary border-primary/20">Actief</Badge>
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Week {geselecteerdProgramma?.huidigeWeek} van {geselecteerdProgramma?.totaalWeken} &middot; {geselecteerdProgramma?.sessiesPerWeek}x per week
+            </p>
+          </div>
+        </div>
+        <Button variant="outline" size="sm" className="h-7 text-[11px] gap-1 border-border">
+          <Edit3 className="size-3" />
+          Bewerken
+        </Button>
       </div>
 
-      {/* Blok- en weekselector — visuele balk */}
+      {/* Blok- en weekselector */}
       <Card className="border-border">
         <CardContent className="p-4">
-          {/* Blok labels */}
           <div className="flex gap-0 mb-2">
-            {programma.blokken.map((blok) => (
-              <div
-                key={blok.id}
-                className="flex-1 text-center"
-                style={{ flex: blok.weken.length }}
-              >
+            {blokken.map((blok) => (
+              <div key={blok.id} className="flex-1 text-center" style={{ flex: blok.weken.length }}>
                 <span className={`text-[10px] font-semibold uppercase tracking-wider ${
                   blok.status === "actief" ? "text-primary" : "text-muted-foreground"
                 }`}>
@@ -220,31 +327,25 @@ export function TrainingTab() {
               </div>
             ))}
           </div>
-
-          {/* Week-blokjes */}
           <div className="flex gap-1">
-            {programma.blokken.map((blok) =>
+            {blokken.map((blok) =>
               blok.weken.map((weekNr) => {
                 const w = weekData[weekNr]
                 const isGeselecteerd = weekNr === geselecteerdeWeek
-                const isHuidig = weekNr === programma.huidigeWeek
-
+                const isHuidig = weekNr === geselecteerdProgramma?.huidigeWeek
                 return (
                   <button
                     key={weekNr}
-                    onClick={() => setGeselecteerdeWeek(weekNr)}
-                    className={`
-                      relative flex-1 h-10 rounded-md text-xs font-medium transition-all
-                      flex items-center justify-center
-                      ${isGeselecteerd
+                    onClick={() => { setGeselecteerdeWeek(weekNr); setOpenTraining(0) }}
+                    className={`relative flex-1 h-10 rounded-md text-xs font-medium transition-all flex items-center justify-center ${
+                      isGeselecteerd
                         ? "bg-primary text-primary-foreground ring-2 ring-primary/30"
-                        : w.status === "voltooid"
+                        : w?.status === "voltooid"
                           ? "bg-success/15 text-success hover:bg-success/25"
-                          : w.status === "actief"
+                          : w?.status === "actief"
                             ? "bg-primary/10 text-primary hover:bg-primary/20"
                             : "bg-secondary text-muted-foreground hover:bg-secondary/80"
-                      }
-                    `}
+                    }`}
                   >
                     {weekNr}
                     {isHuidig && !isGeselecteerd && (
@@ -255,18 +356,12 @@ export function TrainingTab() {
               })
             )}
           </div>
-
-          {/* Blok scheidingslijnen */}
           <div className="flex gap-1 mt-1">
-            {programma.blokken.map((blok, i) => (
+            {blokken.map((blok) => (
               <div
                 key={blok.id}
-                className={`h-1 rounded-full transition-all ${
-                  blok.status === "voltooid"
-                    ? "bg-success/40"
-                    : blok.status === "actief"
-                      ? "bg-primary/40"
-                      : "bg-border"
+                className={`h-1 rounded-full ${
+                  blok.status === "voltooid" ? "bg-success/40" : blok.status === "actief" ? "bg-primary/40" : "bg-border"
                 }`}
                 style={{ flex: blok.weken.length }}
               />
@@ -276,7 +371,7 @@ export function TrainingTab() {
       </Card>
 
       {/* Week info */}
-      {week && (
+      {week && geselecteerdeWeek && (
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h4 className="text-sm font-semibold text-foreground">Week {geselecteerdeWeek}</h4>
@@ -336,7 +431,6 @@ export function TrainingTab() {
                   }
                 </div>
               </button>
-
               {openTraining === trainIndex && (
                 <div className="border-t border-border">
                   <Table>
@@ -373,7 +467,7 @@ export function TrainingTab() {
                               ? <TrendingUp className="size-3.5 text-success mx-auto" />
                               : oefening.progressie === "down"
                                 ? <TrendingUp className="size-3.5 text-destructive mx-auto rotate-180" />
-                                : <span className="text-xs text-muted-foreground">—</span>
+                                : <span className="text-xs text-muted-foreground">&mdash;</span>
                             }
                           </TableCell>
                         </TableRow>
@@ -390,14 +484,104 @@ export function TrainingTab() {
           <CardContent className="p-8 text-center">
             <Dumbbell className="size-8 text-muted-foreground/30 mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">
-              Geen trainingen ingepland voor week {geselecteerdeWeek}
-            </p>
-            <p className="text-[11px] text-muted-foreground mt-1">
-              Selecteer een andere week of maak een training aan
+              {geselecteerdeWeek
+                ? `Geen trainingen ingepland voor week ${geselecteerdeWeek}`
+                : "Selecteer een week om trainingen te bekijken"
+              }
             </p>
           </CardContent>
         </Card>
       )}
     </div>
+  )
+}
+
+// ============================================================================
+// PROGRAMMA KAART — Herbruikbaar component voor programma-overzicht
+// ============================================================================
+
+function ProgrammaKaart({
+  programma: prog,
+  onKlik,
+}: {
+  programma: typeof programmas[number]
+  onKlik: () => void
+}) {
+  const isVoltooid = prog.status === "voltooid"
+  const voortgang = Math.round((prog.huidigeWeek / prog.totaalWeken) * 100)
+
+  return (
+    <Card
+      className="border-border overflow-hidden cursor-pointer group hover:border-primary/30 transition-all"
+      onClick={onKlik}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") onKlik() }}
+    >
+      {/* Banner */}
+      <div className={`relative h-28 bg-gradient-to-br ${prog.bannerKleur} flex items-end`}>
+        {/* Placeholder voor afbeelding — wordt later Supabase Storage URL */}
+        {prog.bannerAfbeelding ? (
+          <img
+            src={prog.bannerAfbeelding}
+            alt={prog.naam}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center opacity-10">
+            <Dumbbell className="size-16 text-white" />
+          </div>
+        )}
+        <div className="relative z-10 w-full px-4 pb-3 pt-8 bg-gradient-to-t from-black/60 to-transparent">
+          <h4 className="text-sm font-bold text-white">{prog.naam}</h4>
+          <p className="text-[11px] text-white/80">{prog.type}</p>
+        </div>
+        {isVoltooid && (
+          <div className="absolute top-2 right-2 z-10">
+            <Badge className="bg-white/20 text-white border-white/30 text-[9px] backdrop-blur-sm">
+              <Check className="size-2.5 mr-0.5" />
+              Voltooid
+            </Badge>
+          </div>
+        )}
+        {!isVoltooid && (
+          <div className="absolute top-2 right-2 z-10">
+            <Badge className="bg-white/20 text-white border-white/30 text-[9px] backdrop-blur-sm">
+              <Play className="size-2.5 mr-0.5" />
+              Actief
+            </Badge>
+          </div>
+        )}
+      </div>
+
+      {/* Info */}
+      <CardContent className="p-4">
+        <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2 mb-3">
+          {prog.beschrijving}
+        </p>
+
+        {/* Voortgang */}
+        <div className="flex items-center gap-2 mb-3">
+          <Progress value={voortgang} className="flex-1 h-1.5" />
+          <span className="text-[11px] font-semibold text-foreground">{voortgang}%</span>
+        </div>
+
+        {/* Meta */}
+        <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <CalendarDays className="size-3" />
+            Week {prog.huidigeWeek}/{prog.totaalWeken}
+          </span>
+          <span className="flex items-center gap-1">
+            <Dumbbell className="size-3" />
+            {prog.sessiesPerWeek}x/week
+          </span>
+          <span className="flex items-center gap-1">
+            <BarChart3 className="size-3" />
+            {prog.compliance}% compliance
+          </span>
+        </div>
+      </CardContent>
+    </Card>
   )
 }
