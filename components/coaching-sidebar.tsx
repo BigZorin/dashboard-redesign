@@ -30,7 +30,6 @@ import {
   SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarSeparator,
 } from "@/components/ui/sidebar"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -96,8 +95,6 @@ export function CoachingSidebar({ activeSection, onSectionChange }: CoachingSide
         </SidebarMenu>
       </SidebarHeader>
 
-      <SidebarSeparator className="mx-3 opacity-40" />
-
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="text-[11px] uppercase tracking-wider text-sidebar-foreground/40 font-semibold">
@@ -150,8 +147,6 @@ export function CoachingSidebar({ activeSection, onSectionChange }: CoachingSide
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-
-      <SidebarSeparator className="mx-3 opacity-40" />
 
       <SidebarFooter className="px-3 py-3">
         <SidebarMenu>
