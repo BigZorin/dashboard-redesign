@@ -17,8 +17,8 @@ export interface AuthUser {
 async function getServerSupabase() {
   const cookieStore = await cookies()
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
     {
       cookies: {
         getAll() {
@@ -37,6 +37,9 @@ async function getServerSupabase() {
 }
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
+  // Return null when Supabase is not configured (e.g. V0 preview)
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) return null
+
   const supabase = await getServerSupabase()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -69,8 +72,8 @@ export async function requireAdmin(): Promise<AuthUser> {
 
 export async function getSupabaseAdmin() {
   return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+    process.env.SUPABASE_SERVICE_ROLE_KEY || '',
     {
       auth: {
         autoRefreshToken: false,
