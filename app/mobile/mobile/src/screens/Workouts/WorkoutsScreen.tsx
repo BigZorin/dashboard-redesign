@@ -9,7 +9,7 @@ import {
   Image,
   Dimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useQueryClient } from '@tanstack/react-query';
@@ -84,6 +84,7 @@ function WorkoutsSkeletonContent() {
 // ============================================================
 export default function WorkoutsScreen({ navigation: navProp, ...props }: WorkoutsScreenProps & { navigation?: any }) {
   const navigation = navProp;
+  const insets = useSafeAreaInsets();
   const queryClient = useQueryClient();
   const { data: hookPrograms = [], isLoading: hookLoading, isRefetching, refetch } = useClientPrograms();
 
@@ -105,7 +106,7 @@ export default function WorkoutsScreen({ navigation: navProp, ...props }: Workou
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <View style={styles.container}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={
@@ -122,7 +123,7 @@ export default function WorkoutsScreen({ navigation: navProp, ...props }: Workou
           colors={theme.gradients.header}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles.headerGradient}
+          style={[styles.headerGradient, { paddingTop: insets.top + 16 }]}
         >
           {loading ? (
             <>
@@ -254,7 +255,7 @@ export default function WorkoutsScreen({ navigation: navProp, ...props }: Workou
           </View>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
