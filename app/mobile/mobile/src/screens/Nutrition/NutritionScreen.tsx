@@ -16,7 +16,51 @@ import { useFoodLogs, useDailyMacros, useNutritionTargets, useDeleteFoodLog } fr
 import { useActiveMealPlan } from '../../hooks/useMealPlan';
 import MacroRing from '../../components/MacroRing';
 import { theme } from '../../constants/theme';
+import { Skeleton, SkeletonMacroRings, SkeletonMealCard } from '../../components/Skeleton';
 import type { FoodLogRecord, MealPlanEntry } from '../../lib/nutritionApi';
+
+// ============================================================
+// TYPES
+// ============================================================
+export interface NutritionMacros {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
+export interface NutritionTargetsData {
+  dailyCalories?: number;
+  dailyProteinGrams?: number;
+  dailyCarbsGrams?: number;
+  dailyFatGrams?: number;
+}
+
+export interface NutritionScreenProps {
+  loading?: boolean;
+  macros?: NutritionMacros;
+  targets?: NutritionTargetsData;
+  foodLogs?: FoodLogRecord[];
+  onDeleteLog?: (logId: string) => void;
+}
+
+// ============================================================
+// DEFAULT MOCK DATA
+// ============================================================
+const defaultMacros: NutritionMacros = { calories: 1680, protein: 132, carbs: 190, fat: 52 };
+
+const defaultTargets: NutritionTargetsData = {
+  dailyCalories: 2400,
+  dailyProteinGrams: 180,
+  dailyCarbsGrams: 260,
+  dailyFatGrams: 75,
+};
+
+const defaultFoodLogs: FoodLogRecord[] = [
+  { id: 'mock-1', foodName: 'Havermout met banaan', mealType: 'BREAKFAST', calories: 350, proteinGrams: 12, carbsGrams: 58, fatGrams: 8, numberOfServings: 1, servingSize: 80, servingUnit: 'g' } as FoodLogRecord,
+  { id: 'mock-2', foodName: 'Kip met rijst', mealType: 'LUNCH', calories: 520, proteinGrams: 45, carbsGrams: 55, fatGrams: 12, numberOfServings: 1, servingSize: 300, servingUnit: 'g' } as FoodLogRecord,
+  { id: 'mock-3', foodName: 'Griekse yoghurt', mealType: 'SNACK', calories: 180, proteinGrams: 20, carbsGrams: 8, fatGrams: 6, numberOfServings: 1, servingSize: 200, servingUnit: 'g' } as FoodLogRecord,
+];
 
 const MEAL_TYPES = [
   { key: 'BREAKFAST', label: 'Ontbijt', icon: 'sunny-outline' as const },
@@ -50,15 +94,21 @@ function getDayOfWeek(dateStr: string): number {
   return jsDay === 0 ? 7 : jsDay; // 1=Mon..7=Sun
 }
 
-export default function NutritionScreen() {
+export default function NutritionScreen(props: NutritionScreenProps = {}) {
   const navigation = useNavigation();
   const [selectedDate, setSelectedDate] = useState(getToday());
 
-  const { data: logs = [], isLoading } = useFoodLogs(selectedDate);
-  const macros = useDailyMacros(selectedDate);
-  const { data: targets } = useNutritionTargets();
+  const { data: hookLogs = [], isLoading: hookLoading } = useFoodLogs(selectedDate);
+  const hookMacros = useDailyMacros(selectedDate);
+  const { data: hookTargets } = useNutritionTargets();
   const { data: mealPlan } = useActiveMealPlan();
   const deleteMutation = useDeleteFoodLog(selectedDate);
+
+  // Merge: props override hooks
+  const loading = props.loading ?? hookLoading;
+  const logs = props.foodLogs ?? hookLogs ?? defaultFoodLogs;
+  const macros = props.macros ?? hookMacros ?? defaultMacros;
+  const targets = props.targets ?? hookTargets ?? defaultTargets;
 
   // Targets with meal plan fallback
   const calTarget = targets?.dailyCalories || mealPlan?.dailyCalories || 0;
@@ -90,7 +140,10 @@ export default function NutritionScreen() {
   const handleDelete = (log: FoodLogRecord) => {
     Alert.alert('Verwijderen', `${log.foodName} verwijderen?`, [
       { text: 'Annuleren', style: 'cancel' },
-      { text: 'Verwijderen', style: 'destructive', onPress: () => deleteMutation.mutate(log.id) },
+      { text: 'Verwijderen', style: 'destructive', onPress: () => {
+        if (props.onDeleteLog) props.onDeleteLog(log.id);
+        else deleteMutation.mutate(log.id);
+      }},
     ]);
   };
 
@@ -177,8 +230,13 @@ export default function NutritionScreen() {
         </View>
 
         {/* Meal Sections */}
-        {isLoading ? (
-          <ActivityIndicator size="large" color={theme.colors.primary} style={{ marginTop: 32 }} />
+        {loading ? (
+          <View style={{ paddingHorizontal: 20, gap: 12, marginTop: 8 }}>
+            <SkeletonMealCard />
+            <SkeletonMealCard />
+            <SkeletonMealCard />
+            <SkeletonMealCard />
+          </View>
         ) : (
           MEAL_TYPES.map((meal) => {
             const mealLogs = getMealLogs(meal.key);

@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  ActivityIndicator,
   RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,19 +11,107 @@ import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../constants/theme';
 import { useHabits, useHabitLogs, useHabitStreaks, useToggleHabit } from '../../hooks/useHabits';
 import HabitCard from '../../components/HabitCard';
-import StreakBadge from '../../components/StreakBadge';
+import { Skeleton } from '../../components/Skeleton';
 
+// ============================================================
+// TYPES
+// ============================================================
+export interface HabitData {
+  id: string;
+  name: string;
+  description?: string;
+}
+
+export interface HabitLogData {
+  habitId: string;
+  completed: boolean;
+}
+
+export interface HabitStreakData {
+  habitId: string;
+  currentStreakDays: number;
+}
+
+export interface HabitsScreenProps {
+  loading?: boolean;
+  habits?: HabitData[];
+  logs?: HabitLogData[];
+  streaks?: HabitStreakData[];
+  onToggle?: (habitId: string, date: string, completed: boolean) => void;
+  onRefresh?: () => void;
+}
+
+// ============================================================
+// DEFAULT MOCK DATA
+// ============================================================
+const defaultHabits: HabitData[] = [
+  { id: 'h1', name: '3L water drinken', description: 'Drink minstens 3 liter water per dag' },
+  { id: 'h2', name: 'Creatine innemen', description: '5g creatine per dag' },
+  { id: 'h3', name: '10.000 stappen', description: 'Minimaal 10k stappen per dag' },
+  { id: 'h4', name: '8 uur slaap', description: 'Ga op tijd naar bed' },
+];
+
+const defaultLogs: HabitLogData[] = [
+  { habitId: 'h1', completed: true },
+  { habitId: 'h3', completed: true },
+];
+
+const defaultStreaks: HabitStreakData[] = [
+  { habitId: 'h1', currentStreakDays: 12 },
+  { habitId: 'h2', currentStreakDays: 5 },
+  { habitId: 'h3', currentStreakDays: 8 },
+  { habitId: 'h4', currentStreakDays: 3 },
+];
+
+// ============================================================
+// SKELETON STATE
+// ============================================================
+function HabitsSkeleton() {
+  return (
+    <View style={{ padding: 20, gap: 12 }}>
+      {/* Summary skeleton */}
+      <View style={[styles.summaryCard, { paddingVertical: 24 }]}>
+        <View>
+          <Skeleton height={32} width={60} style={{ marginBottom: 6 }} />
+          <Skeleton height={14} width={120} />
+        </View>
+        <Skeleton width={56} height={56} borderRadius={28} />
+      </View>
+      {/* Habit cards skeleton */}
+      {[1, 2, 3, 4].map((i) => (
+        <View key={i} style={styles.skeletonHabitCard}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+            <Skeleton width={44} height={44} borderRadius={22} />
+            <View style={{ flex: 1 }}>
+              <Skeleton height={16} width="50%" style={{ marginBottom: 6 }} />
+              <Skeleton height={12} width="75%" />
+            </View>
+          </View>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+// ============================================================
+// MAIN COMPONENT
+// ============================================================
 function getToday(): string {
   const now = new Date();
   return now.toISOString().split('T')[0];
 }
 
-export default function HabitsScreen({ navigation }: any) {
+export default function HabitsScreen({ navigation, ...props }: HabitsScreenProps & { navigation?: any }) {
   const today = getToday();
-  const { data: habits, isLoading: habitsLoading, refetch } = useHabits();
-  const { data: logs, isLoading: logsLoading } = useHabitLogs(today);
-  const { data: streaks } = useHabitStreaks();
+  const { data: hookHabits, isLoading: hookLoading, refetch } = useHabits();
+  const { data: hookLogs, isLoading: hookLogsLoading } = useHabitLogs(today);
+  const { data: hookStreaks } = useHabitStreaks();
   const toggleMutation = useToggleHabit();
+
+  const loading = props.loading ?? (hookLoading || hookLogsLoading);
+  const habits = props.habits ?? hookHabits ?? defaultHabits;
+  const logs = props.logs ?? hookLogs ?? defaultLogs;
+  const streaks = props.streaks ?? hookStreaks ?? defaultStreaks;
 
   const logsMap = useMemo(() => {
     const map = new Map<string, boolean>();
@@ -42,101 +129,106 @@ export default function HabitsScreen({ navigation }: any) {
     return map;
   }, [streaks]);
 
-  const completedCount = habits?.filter((h) => logsMap.get(h.id) === true).length || 0;
-  const totalCount = habits?.length || 0;
-
-  const isLoading = habitsLoading || logsLoading;
+  const completedCount = habits.filter((h) => logsMap.get(h.id) === true).length;
+  const totalCount = habits.length;
 
   const handleToggle = (habitId: string) => {
     const currentCompleted = logsMap.get(habitId) || false;
-    toggleMutation.mutate({
-      habitId,
-      date: today,
-      completed: !currentCompleted,
-    });
+    if (props.onToggle) {
+      props.onToggle(habitId, today, !currentCompleted);
+    } else {
+      toggleMutation.mutate({ habitId, date: today, completed: !currentCompleted });
+    }
   };
 
-  if (isLoading) {
-    return (
-      <SafeAreaView style={styles.container} edges={['top']}>
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-        </View>
-      </SafeAreaView>
-    );
-  }
+  const handleRefresh = () => {
+    if (props.onRefresh) props.onRefresh();
+    else refetch();
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Gewoontes</Text>
-        <Text style={styles.headerDate}>
-          {new Date().toLocaleDateString('nl-NL', {
-            weekday: 'long',
-            day: 'numeric',
-            month: 'long',
-          })}
-        </Text>
+        {loading ? (
+          <>
+            <Skeleton height={24} width="40%" style={{ marginBottom: 6 }} />
+            <Skeleton height={14} width="55%" />
+          </>
+        ) : (
+          <>
+            <Text style={styles.headerTitle}>Gewoontes</Text>
+            <Text style={styles.headerDate}>
+              {new Date().toLocaleDateString('nl-NL', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+              })}
+            </Text>
+          </>
+        )}
       </View>
 
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={false} onRefresh={() => refetch()} />}
-      >
-        {/* Progress summary */}
-        {totalCount > 0 && (
-          <View style={styles.summaryCard}>
-            <View style={styles.summaryLeft}>
-              <Text style={styles.summaryCount}>
-                {completedCount}/{totalCount}
-              </Text>
-              <Text style={styles.summaryLabel}>voltooid vandaag</Text>
+      {loading ? (
+        <ScrollView><HabitsSkeleton /></ScrollView>
+      ) : (
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={<RefreshControl refreshing={false} onRefresh={handleRefresh} />}
+        >
+          {/* Progress summary */}
+          {totalCount > 0 && (
+            <View style={styles.summaryCard}>
+              <View style={styles.summaryLeft}>
+                <Text style={styles.summaryCount}>
+                  {completedCount}/{totalCount}
+                </Text>
+                <Text style={styles.summaryLabel}>voltooid vandaag</Text>
+              </View>
+              <View style={styles.progressCircle}>
+                <Text style={styles.progressText}>
+                  {totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0}%
+                </Text>
+              </View>
             </View>
-            <View style={styles.progressCircle}>
-              <Text style={styles.progressText}>
-                {totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0}%
+          )}
+
+          {/* Habits list */}
+          {totalCount === 0 ? (
+            <View style={styles.emptyState}>
+              <Ionicons name="leaf-outline" size={64} color={theme.colors.textTertiary} />
+              <Text style={styles.emptyTitle}>Nog geen gewoontes</Text>
+              <Text style={styles.emptyText}>
+                Je coach kan dagelijkse gewoontes voor je instellen.
               </Text>
             </View>
-          </View>
-        )}
+          ) : (
+            <View style={styles.habitsList}>
+              {habits.map((habit) => (
+                <HabitCard
+                  key={habit.id}
+                  name={habit.name}
+                  description={habit.description}
+                  completed={logsMap.get(habit.id) === true}
+                  streak={streaksMap.get(habit.id) || 0}
+                  isToggling={
+                    toggleMutation.isPending &&
+                    (toggleMutation.variables as any)?.habitId === habit.id
+                  }
+                  onToggle={() => handleToggle(habit.id)}
+                />
+              ))}
+            </View>
+          )}
 
-        {/* Habits list */}
-        {totalCount === 0 ? (
-          <View style={styles.emptyState}>
-            <Ionicons name="leaf-outline" size={64} color="#ccc" />
-            <Text style={styles.emptyTitle}>Nog geen gewoontes</Text>
-            <Text style={styles.emptyText}>
-              Je coach kan dagelijkse gewoontes voor je instellen.
-            </Text>
-          </View>
-        ) : (
-          <View style={styles.habitsList}>
-            {habits?.map((habit) => (
-              <HabitCard
-                key={habit.id}
-                name={habit.name}
-                description={habit.description}
-                completed={logsMap.get(habit.id) === true}
-                streak={streaksMap.get(habit.id) || 0}
-                isToggling={
-                  toggleMutation.isPending &&
-                  (toggleMutation.variables as any)?.habitId === habit.id
-                }
-                onToggle={() => handleToggle(habit.id)}
-              />
-            ))}
-          </View>
-        )}
-
-        {/* Completion banner */}
-        {totalCount > 0 && completedCount === totalCount && (
-          <View style={styles.allDoneBanner}>
-            <Text style={styles.allDoneEmoji}>🎉</Text>
-            <Text style={styles.allDoneText}>Alle gewoontes voltooid!</Text>
-          </View>
-        )}
-      </ScrollView>
+          {/* Completion banner */}
+          {totalCount > 0 && completedCount === totalCount && (
+            <View style={styles.allDoneBanner}>
+              <Text style={styles.allDoneText}>Alle gewoontes voltooid!</Text>
+            </View>
+          )}
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
@@ -145,11 +237,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   header: {
     paddingHorizontal: 20,
@@ -181,11 +268,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
+    ...theme.shadows.md,
   },
   summaryLeft: {},
   summaryCount: {
@@ -212,6 +295,12 @@ const styles = StyleSheet.create({
     color: '#065f46',
   },
   habitsList: {},
+  skeletonHabitCard: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: 16,
+    padding: 16,
+    ...theme.shadows.sm,
+  },
   emptyState: {
     alignItems: 'center',
     paddingVertical: 60,
@@ -238,9 +327,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginTop: 16,
-  },
-  allDoneEmoji: {
-    fontSize: 24,
   },
   allDoneText: {
     fontSize: 16,

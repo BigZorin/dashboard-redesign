@@ -5,9 +5,44 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../lib/supabase';
 import { useUser } from '../../hooks/useUser';
 import { theme } from '../../constants/theme';
+import { Skeleton } from '../../components/Skeleton';
 
-export default function ProfileScreen() {
-  const { data: userData } = useUser();
+// ============================================================
+// TYPES
+// ============================================================
+export interface ProfileUserData {
+  profile?: {
+    first_name?: string;
+    last_name?: string;
+    avatar_url?: string;
+  };
+  email?: string;
+  role?: string;
+}
+
+export interface ProfileScreenProps {
+  loading?: boolean;
+  userData?: ProfileUserData;
+  onLogout?: () => void;
+}
+
+// ============================================================
+// DEFAULT MOCK DATA
+// ============================================================
+const defaultUserData: ProfileUserData = {
+  profile: { first_name: 'Jelle', last_name: 'de Vries', avatar_url: undefined },
+  email: 'jelle@evotion.nl',
+  role: 'client',
+};
+
+// ============================================================
+// MAIN COMPONENT
+// ============================================================
+export default function ProfileScreen(props: ProfileScreenProps) {
+  const { data: hookUserData } = useUser();
+
+  const loading = props.loading ?? false;
+  const userData = props.userData ?? hookUserData ?? defaultUserData;
 
   const handleLogout = async () => {
     Alert.alert(
@@ -19,7 +54,11 @@ export default function ProfileScreen() {
           text: 'Uitloggen',
           style: 'destructive',
           onPress: async () => {
-            await supabase.auth.signOut();
+            if (props.onLogout) {
+              props.onLogout();
+            } else {
+              await supabase.auth.signOut();
+            }
           },
         },
       ]
@@ -28,37 +67,62 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <Text style={styles.title}>Profiel</Text>
+      <View style={styles.headerBanner}>
+        <Text style={styles.title}>Profiel</Text>
+      </View>
 
-      <View style={styles.card}>
-        <View style={styles.profileHeader}>
-          {userData?.profile?.avatar_url ? (
-            <Image source={{ uri: userData.profile.avatar_url }} style={styles.avatarImage} />
+      <View style={styles.content}>
+        <View style={styles.card}>
+          {loading ? (
+            <View style={styles.profileHeader}>
+              <Skeleton width={64} height={64} borderRadius={32} />
+              <View style={{ flex: 1, marginLeft: 16 }}>
+                <Skeleton height={18} width="55%" style={{ marginBottom: 6 }} />
+                <Skeleton height={14} width="70%" style={{ marginBottom: 4 }} />
+                <Skeleton height={12} width="30%" />
+              </View>
+            </View>
           ) : (
-            <View style={styles.avatarPlaceholder}>
-              <Ionicons name="person" size={32} color={theme.colors.secondary} />
+            <View style={styles.profileHeader}>
+              {userData?.profile?.avatar_url ? (
+                <Image source={{ uri: userData.profile.avatar_url }} style={styles.avatarImage} />
+              ) : (
+                <View style={styles.avatarPlaceholder}>
+                  <Ionicons name="person" size={32} color={theme.colors.primary} />
+                </View>
+              )}
+              <View style={styles.profileInfo}>
+                <Text style={styles.profileName}>
+                  {userData?.profile?.first_name} {userData?.profile?.last_name}
+                </Text>
+                <Text style={styles.profileEmail}>{userData?.email}</Text>
+                <Text style={styles.profileRole}>{userData?.role}</Text>
+              </View>
             </View>
           )}
-          <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>
-              {userData?.profile?.first_name} {userData?.profile?.last_name}
-            </Text>
-            <Text style={styles.profileEmail}>{userData?.email}</Text>
-            <Text style={styles.profileRole}>{userData?.role}</Text>
-          </View>
         </View>
-      </View>
 
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Account instellingen</Text>
-        <Text style={styles.cardText}>
-          Profiel bewerken en instellingen komen binnenkort beschikbaar.
-        </Text>
-      </View>
+        <View style={styles.card}>
+          {loading ? (
+            <>
+              <Skeleton height={18} width="60%" style={{ marginBottom: 10 }} />
+              <Skeleton height={14} width="100%" style={{ marginBottom: 4 }} />
+              <Skeleton height={14} width="80%" />
+            </>
+          ) : (
+            <>
+              <Text style={styles.cardTitle}>Account instellingen</Text>
+              <Text style={styles.cardText}>
+                Profiel bewerken en instellingen komen binnenkort beschikbaar.
+              </Text>
+            </>
+          )}
+        </View>
 
-      <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-        <Text style={styles.logoutText}>Uitloggen</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Text style={styles.logoutText}>Uitloggen</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
@@ -67,25 +131,28 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
-    padding: 20,
+  },
+  headerBanner: {
+    paddingHorizontal: 20,
+    paddingTop: 8,
+    paddingBottom: 16,
+    backgroundColor: theme.colors.headerDark,
   },
   title: {
     fontSize: 28,
-    fontWeight: 'bold',
-    marginTop: 20,
-    marginBottom: 24,
-    color: theme.colors.text,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  content: {
+    flex: 1,
+    padding: 20,
   },
   card: {
     backgroundColor: theme.colors.surface,
     borderRadius: 12,
     padding: 20,
     marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    ...theme.shadows.md,
   },
   profileHeader: {
     flexDirection: 'row',
@@ -101,7 +168,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#E5F0FF',
+    backgroundColor: theme.colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
