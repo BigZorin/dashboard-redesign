@@ -525,10 +525,19 @@ function MacroOverview({ clients }: { clients: NutritionClient[] }) {
             <p className="text-[11px] text-muted-foreground">{selectedClient.plan}</p>
           </div>
         </div>
-        <Button variant="outline" size="sm" className="gap-1.5 text-xs border-border" onClick={() => setShowTargetDialog(true)}>
-          <Target className="size-3.5" />
-          Targets aanpassen
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            className="gap-1.5 text-xs bg-gradient-to-r from-[#6c3caf] to-[#5b2d9e] hover:from-[#7c4dbd] hover:to-[#6c3caf] text-white border-0"
+          >
+            <Sparkles className="size-3.5" />
+            AI Voedingsadvies
+          </Button>
+          <Button variant="outline" size="sm" className="gap-1.5 text-xs border-border" onClick={() => setShowTargetDialog(true)}>
+            <Target className="size-3.5" />
+            Targets aanpassen
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[280px_1fr]">
@@ -878,6 +887,7 @@ const MEALS: { key: MealPlanEntry["mealType"]; label: string }[] = [
 
 function MealPlansTab({ mealPlans, recipes, clients }: { mealPlans: MealPlan[]; recipes: Recipe[]; clients: NutritionClient[] }) {
   const [selectedPlan, setSelectedPlan] = useState<MealPlan | null>(null)
+  const [showAssignDialog, setShowAssignDialog] = useState(false)
 
   if (selectedPlan) {
     return (
@@ -896,7 +906,7 @@ function MealPlansTab({ mealPlans, recipes, clients }: { mealPlans: MealPlan[]; 
             <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 text-[11px] gap-1">
               <Users className="size-3" />{selectedPlan.clientCount} clienten
             </Badge>
-            <Button variant="outline" size="sm" className="gap-1.5 text-xs border-border">
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs border-border" onClick={() => setShowAssignDialog(true)}>
               <Users className="size-3.5" /> Toewijzen
             </Button>
           </div>
@@ -956,9 +966,64 @@ function MealPlansTab({ mealPlans, recipes, clients }: { mealPlans: MealPlan[]; 
                   })}
                 </>
               ))}
+              {/* Daily macro totals row */}
+              <div className="p-3 bg-secondary/30 border-b border-border flex items-center">
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Totaal</span>
+              </div>
+              {DAYS.map((_, dayIdx) => {
+                const dayEntries = selectedPlan.entries.filter(e => e.dayOfWeek === dayIdx + 1)
+                const dayRecipes = dayEntries.map(e => e.recipeId ? recipes.find(r => r.id === e.recipeId) : null).filter(Boolean)
+                const totalKcal = dayRecipes.reduce((s, r) => s + (r?.calories ?? 0), 0)
+                const totalP = dayRecipes.reduce((s, r) => s + (r?.proteinGrams ?? 0), 0)
+                const totalC = dayRecipes.reduce((s, r) => s + (r?.carbsGrams ?? 0), 0)
+                const totalF = dayRecipes.reduce((s, r) => s + (r?.fatGrams ?? 0), 0)
+                return (
+                  <div key={`total-${dayIdx}`} className="p-2 border-b border-l border-border bg-secondary/30">
+                    {totalKcal > 0 ? (
+                      <div className="flex flex-col gap-0.5 text-[10px]">
+                        <span className={cn("font-bold", MACRO_COLORS.calories.text)}>{totalKcal} kcal</span>
+                        <span className="text-muted-foreground">P {totalP}g / K {totalC}g / V {totalF}g</span>
+                      </div>
+                    ) : (
+                      <span className="text-[10px] text-muted-foreground">—</span>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           </div>
         </Card>
+
+        {/* Toewijzen dialog */}
+        <Dialog open={showAssignDialog} onOpenChange={setShowAssignDialog}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader><DialogTitle className="text-base">Plan toewijzen aan client</DialogTitle></DialogHeader>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-medium text-foreground">Client</label>
+                <Select>
+                  <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Selecteer client..." /></SelectTrigger>
+                  <SelectContent>
+                    {clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-foreground">Startdatum</label>
+                  <Input type="date" className="h-9 text-sm" />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-foreground">Einddatum</label>
+                  <Input type="date" className="h-9 text-sm" />
+                </div>
+              </div>
+              <Button className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 h-10" onClick={() => setShowAssignDialog(false)}>
+                <Check className="size-4" /> Toewijzen
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     )
   }
@@ -1046,9 +1111,18 @@ function SupplementsTab({ supplements, clients }: { supplements: Supplement[]; c
             </SelectContent>
           </Select>
           {selectedClientId && (
-            <Button className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2" onClick={() => setShowAddDialog(true)}>
-              <Plus className="size-4" /> Toevoegen
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                size="sm"
+                className="gap-1.5 text-xs bg-gradient-to-r from-[#6c3caf] to-[#5b2d9e] hover:from-[#7c4dbd] hover:to-[#6c3caf] text-white border-0"
+              >
+                <Sparkles className="size-3.5" />
+                AI Supplement Advies
+              </Button>
+              <Button className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2" onClick={() => setShowAddDialog(true)}>
+                <Plus className="size-4" /> Toevoegen
+              </Button>
+            </div>
           )}
         </div>
       </div>
