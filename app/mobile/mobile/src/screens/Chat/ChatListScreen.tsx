@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   FlatList,
-  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,33 +13,102 @@ import { theme } from '../../constants/theme';
 import { useClientConversation } from '../../hooks/useConversation';
 import { useUnreadCount } from '../../hooks/useMessages';
 import { useGroups } from '../../hooks/useGroupChat';
+import { Skeleton, SkeletonChatItem } from '../../components/Skeleton';
 import type { GroupConversation } from '../../lib/groupApi';
 
 type Tab = 'dm' | 'groups';
 
-export default function ChatListScreen() {
+// ============================================================
+// TYPES
+// ============================================================
+export interface ChatListGroup {
+  id: string;
+  name: string;
+  lastMessage?: string;
+  lastMessageAt?: string;
+  unreadCount?: number;
+  memberCount?: number;
+}
+
+export interface ChatListScreenProps {
+  loading?: boolean;
+  conversation?: any;
+  unreadCount?: number;
+  groups?: ChatListGroup[];
+  onOpenDM?: () => void;
+  onOpenGroup?: (group: ChatListGroup) => void;
+}
+
+// ============================================================
+// DEFAULT MOCK DATA
+// ============================================================
+const defaultGroups: ChatListGroup[] = [
+  {
+    id: 'g1',
+    name: 'Team Hypertrofie',
+    lastMessage: 'Goedemorgen! Wie gaat er vandaag trainen?',
+    lastMessageAt: new Date().toISOString(),
+    unreadCount: 3,
+    memberCount: 12,
+  },
+  {
+    id: 'g2',
+    name: 'Voeding Q&A',
+    lastMessage: 'Nieuwe recepten zijn gedeeld',
+    lastMessageAt: new Date(Date.now() - 3600000).toISOString(),
+    unreadCount: 0,
+    memberCount: 8,
+  },
+];
+
+// ============================================================
+// SKELETON STATE
+// ============================================================
+function ChatListSkeleton() {
+  return (
+    <View style={{ paddingTop: 4 }}>
+      <SkeletonChatItem />
+      <SkeletonChatItem />
+      <SkeletonChatItem />
+    </View>
+  );
+}
+
+// ============================================================
+// MAIN COMPONENT
+// ============================================================
+export default function ChatListScreen(props: ChatListScreenProps = {}) {
   const [activeTab, setActiveTab] = useState<Tab>('dm');
   const navigation = useNavigation<any>();
 
-  const { data: conversation, isLoading: convLoading } = useClientConversation();
-  const { data: unreadCount = 0 } = useUnreadCount();
-  const { data: groups = [], isLoading: groupsLoading } = useGroups();
+  const { data: hookConversation, isLoading: hookConvLoading } = useClientConversation();
+  const { data: hookUnreadCount = 0 } = useUnreadCount();
+  const { data: hookGroups = [], isLoading: hookGroupsLoading } = useGroups();
+
+  const loading = props.loading ?? false;
+  const conversation = props.conversation ?? hookConversation;
+  const unreadCount = props.unreadCount ?? hookUnreadCount ?? 2;
+  const groups = (props.groups ?? hookGroups ?? defaultGroups) as ChatListGroup[];
+  const convLoading = loading || hookConvLoading;
+  const groupsLoading = loading || hookGroupsLoading;
 
   const totalGroupUnread = groups.reduce((sum, g) => sum + (g.unreadCount || 0), 0);
 
   const handleOpenDM = useCallback(() => {
-    navigation.navigate('Chat');
-  }, [navigation]);
+    if (props.onOpenDM) props.onOpenDM();
+    else navigation.navigate('Chat');
+  }, [navigation, props.onOpenDM]);
 
   const handleOpenGroup = useCallback(
-    (group: GroupConversation) => {
-      navigation.navigate('GroupChat', { groupId: group.id, groupName: group.name });
+    (group: ChatListGroup) => {
+      if (props.onOpenGroup) props.onOpenGroup(group);
+      else navigation.navigate('GroupChat', { groupId: group.id, groupName: group.name });
     },
-    [navigation]
+    [navigation, props.onOpenGroup]
   );
 
   const renderGroupItem = useCallback(
-    ({ item }: { item: GroupConversation }) => {
+    ({ item }: { item: ChatListGroup }) => {
       const time = item.lastMessageAt
         ? new Date(item.lastMessageAt).toLocaleTimeString('nl-NL', {
             hour: '2-digit',
@@ -121,12 +189,9 @@ export default function ChatListScreen() {
       </View>
 
       {activeTab === 'dm' ? (
-        /* DM Tab — single conversation with coach */
         <View style={styles.content}>
           {convLoading ? (
-            <View style={styles.centered}>
-              <ActivityIndicator size="large" color={theme.colors.primary} />
-            </View>
+            <ChatListSkeleton />
           ) : (
             <TouchableOpacity
               style={styles.chatItem}
@@ -158,12 +223,9 @@ export default function ChatListScreen() {
           )}
         </View>
       ) : (
-        /* Groups Tab */
         <View style={styles.content}>
           {groupsLoading ? (
-            <View style={styles.centered}>
-              <ActivityIndicator size="large" color={theme.colors.primary} />
-            </View>
+            <ChatListSkeleton />
           ) : groups.length === 0 ? (
             <View style={styles.emptyState}>
               <Ionicons name="people-outline" size={48} color={theme.colors.textTertiary} />
@@ -326,11 +388,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 11,
     fontWeight: '700',
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   emptyState: {
     flex: 1,

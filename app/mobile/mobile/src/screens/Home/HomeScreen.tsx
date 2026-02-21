@@ -25,12 +25,152 @@ import { useUnreadCount } from '../../hooks/useMessages';
 import { theme } from '../../constants/theme';
 import MacroRing from '../../components/MacroRing';
 import WeightTrendCard from '../../components/charts/WeightTrendCard';
+import { Skeleton, SkeletonCard, SkeletonMacroRings, SkeletonChart } from '../../components/Skeleton';
 
 const evotionFavicon = require('../../../assets/images/evotion-favicon-wit.png');
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
+// ============================================================
+// TYPES
+// ============================================================
+export interface HomeWorkout {
+  id: string;
+  completed: boolean;
+  scheduledDate?: string;
+  scheduled_date?: string;
+  workoutTemplate?: { name: string };
+}
+
+export interface HomeHabit {
+  id: string;
+  name: string;
+  is_active?: boolean;
+}
+
+export interface HomeHabitLog {
+  habit_id?: string;
+  habitId?: string;
+}
+
+export interface HomeMealPlanEntry {
+  dayOfWeek: number;
+}
+
+export interface HomeMealPlan {
+  dailyCalories?: number;
+  proteinGrams?: number;
+  carbsGrams?: number;
+  fatGrams?: number;
+  entries?: HomeMealPlanEntry[];
+}
+
+export interface HomeNutritionTargets {
+  dailyCalories?: number;
+  dailyProteinGrams?: number;
+  dailyCarbsGrams?: number;
+  dailyFatGrams?: number;
+}
+
+export interface HomeMacros {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
+export interface HomeCheckInHistory {
+  check_in_date?: string;
+  checkInDate?: string;
+}
+
+export interface HomeUserData {
+  profile?: {
+    first_name?: string;
+    last_name?: string;
+    avatar_url?: string;
+  };
+  email?: string;
+}
+
+export interface HomeScreenProps {
+  loading?: boolean;
+  userData?: HomeUserData;
+  todayCheckIn?: any;
+  weeklyCheckIn?: any;
+  checkInSettings?: { weeklyCheckInDay?: number };
+  allWorkouts?: HomeWorkout[];
+  weightData?: any[];
+  nutritionTargets?: HomeNutritionTargets;
+  unreadCount?: number;
+  mealPlan?: HomeMealPlan;
+  macros?: HomeMacros;
+  habits?: HomeHabit[];
+  habitLogs?: HomeHabitLog[];
+  checkInHistory?: HomeCheckInHistory[];
+  onToggleHabit?: (habitId: string, date: string, completed: boolean) => void;
+}
+
+// ============================================================
+// DEFAULT MOCK DATA
+// ============================================================
+const defaultUserData: HomeUserData = {
+  profile: { first_name: 'Jelle', avatar_url: undefined },
+  email: 'jelle@evotion.nl',
+};
+
+const defaultWorkouts: HomeWorkout[] = [
+  {
+    id: 'mock-w1',
+    completed: false,
+    scheduled_date: new Date().toISOString().slice(0, 10),
+    workoutTemplate: { name: 'Upper Body - Push' },
+  },
+];
+
+const defaultNutritionTargets: HomeNutritionTargets = {
+  dailyCalories: 2400,
+  dailyProteinGrams: 180,
+  dailyCarbsGrams: 260,
+  dailyFatGrams: 75,
+};
+
+const defaultMacros: HomeMacros = { calories: 1680, protein: 132, carbs: 190, fat: 52 };
+
+const defaultHabits: HomeHabit[] = [
+  { id: 'h1', name: '3L water', is_active: true },
+  { id: 'h2', name: 'Creatine', is_active: true },
+  { id: 'h3', name: '10k stappen', is_active: true },
+  { id: 'h4', name: '8u slaap', is_active: true },
+];
+
+const defaultHabitLogs: HomeHabitLog[] = [{ habit_id: 'h1' }, { habit_id: 'h3' }];
+
+const defaultCheckInHistory: HomeCheckInHistory[] = [
+  { check_in_date: getDateOffset(-1) },
+  { check_in_date: getDateOffset(-2) },
+];
+
+const defaultWeightData = [
+  { date: getDateOffset(-6), value: 82.5 },
+  { date: getDateOffset(-5), value: 82.3 },
+  { date: getDateOffset(-4), value: 82.1 },
+  { date: getDateOffset(-3), value: 82.4 },
+  { date: getDateOffset(-2), value: 81.9 },
+  { date: getDateOffset(-1), value: 81.7 },
+  { date: getDateOffset(0), value: 81.5 },
+];
+
+// ============================================================
+// HELPERS
+// ============================================================
 function getToday() {
   const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+function getDateOffset(days: number) {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
@@ -48,26 +188,93 @@ function getGreeting() {
   return 'Goedenavond';
 }
 
-export default function HomeScreen() {
+// ============================================================
+// SKELETON STATES
+// ============================================================
+function HomeSkeletonContent() {
+  return (
+    <View style={{ paddingHorizontal: theme.spacing.xl, paddingTop: 12 }}>
+      {/* Week strip skeleton */}
+      <View style={[styles.card, styles.cardFirst]}>
+        <Skeleton height={16} width="50%" style={{ marginBottom: 14 }} />
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 8 }}>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <View key={i} style={{ flex: 1, alignItems: 'center' }}>
+              <Skeleton width={40} height={68} borderRadius={12} />
+            </View>
+          ))}
+        </View>
+      </View>
+
+      {/* Training card skeleton */}
+      <View style={styles.card}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <Skeleton width={46} height={46} borderRadius={14} />
+          <View style={{ flex: 1 }}>
+            <Skeleton height={11} width="30%" style={{ marginBottom: 6 }} />
+            <Skeleton height={17} width="60%" />
+          </View>
+          <Skeleton width={70} height={36} borderRadius={12} />
+        </View>
+      </View>
+
+      {/* Nutrition skeleton */}
+      <SkeletonMacroRings />
+
+      {/* Habits skeleton */}
+      <View style={styles.card}>
+        <Skeleton height={16} width="30%" style={{ marginBottom: 12 }} />
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} width={100} height={36} borderRadius={8} />
+          ))}
+        </View>
+      </View>
+
+      {/* Weight chart skeleton */}
+      <SkeletonChart />
+    </View>
+  );
+}
+
+// ============================================================
+// MAIN COMPONENT
+// ============================================================
+export default function HomeScreen(props: HomeScreenProps) {
   const navigation = useNavigation();
-  const { data: userData } = useUser();
-  const { data: todayCheckIn, isLoading: dailyLoading } = useTodayCheckIn();
-  const { data: weeklyCheckIn, isLoading: weeklyLoading } = useCurrentCheckIn();
-  const { data: checkInSettings } = useCheckInSettings();
-  const { data: allWorkouts = [] } = useWorkouts('all');
-  const { weightData } = useProgressChartData();
-  const { data: nutritionTargets } = useNutritionTargets();
-  const { data: unreadCount = 0 } = useUnreadCount();
-  const { data: mealPlan } = useActiveMealPlan();
 
+  // Hooks (used when no props passed)
+  const { data: hookUserData } = useUser();
+  const { data: hookTodayCheckIn, isLoading: dailyLoading } = useTodayCheckIn();
+  const { data: hookWeeklyCheckIn, isLoading: weeklyLoading } = useCurrentCheckIn();
+  const { data: hookCheckInSettings } = useCheckInSettings();
+  const { data: hookAllWorkouts = [] } = useWorkouts('all');
+  const { weightData: hookWeightData } = useProgressChartData();
+  const { data: hookNutritionTargets } = useNutritionTargets();
+  const { data: hookUnreadCount = 0 } = useUnreadCount();
+  const { data: hookMealPlan } = useActiveMealPlan();
   const today = getToday();
-  const macros = useDailyMacros(today);
+  const hookMacros = useDailyMacros(today);
+  const { data: hookHabits = [] } = useHabits();
+  const { data: hookHabitLogs = [] } = useHabitLogs(today);
+  const hookToggleHabit = useToggleHabit();
+  const { data: hookCheckInHistory = [] } = useDailyCheckInHistory(14);
 
-  const { data: habits = [] } = useHabits();
-  const { data: habitLogs = [] } = useHabitLogs(today);
-  const toggleHabit = useToggleHabit();
-
-  const { data: checkInHistory = [] } = useDailyCheckInHistory(14);
+  // Merge: props override hooks, fallback to defaults for storybook
+  const loading = props.loading ?? false;
+  const userData = props.userData ?? hookUserData ?? defaultUserData;
+  const todayCheckIn = props.todayCheckIn ?? hookTodayCheckIn;
+  const weeklyCheckIn = props.weeklyCheckIn ?? hookWeeklyCheckIn;
+  const checkInSettings = props.checkInSettings ?? hookCheckInSettings;
+  const allWorkouts = props.allWorkouts ?? hookAllWorkouts ?? defaultWorkouts;
+  const weightData = props.weightData ?? hookWeightData ?? defaultWeightData;
+  const nutritionTargets = props.nutritionTargets ?? hookNutritionTargets ?? defaultNutritionTargets;
+  const unreadCount = props.unreadCount ?? hookUnreadCount ?? 0;
+  const mealPlan = props.mealPlan ?? hookMealPlan;
+  const macros = props.macros ?? hookMacros ?? defaultMacros;
+  const habits = props.habits ?? hookHabits ?? defaultHabits;
+  const habitLogs = props.habitLogs ?? hookHabitLogs ?? defaultHabitLogs;
+  const checkInHistory = props.checkInHistory ?? hookCheckInHistory ?? defaultCheckInHistory;
 
   const firstName = userData?.profile?.first_name || 'daar';
   const hasDailyCheckIn = !dailyLoading && !!todayCheckIn;
@@ -75,10 +282,10 @@ export default function HomeScreen() {
   // Build 5-day strip
   const weekStrip = useMemo(() => {
     const completedDates = new Set(
-      checkInHistory.map((c: any) => c.check_in_date || c.checkInDate)
+      (checkInHistory as HomeCheckInHistory[]).map((c) => c.check_in_date || c.checkInDate)
     );
     if (todayCheckIn) completedDates.add(today);
-    const days = [];
+    const days: any[] = [];
     const now = new Date();
     for (let i = -4; i <= 0; i++) {
       const d = new Date(now);
@@ -98,15 +305,15 @@ export default function HomeScreen() {
 
   // Today's workout
   const { todaysWorkout, nextWorkout, nextWorkoutDay } = useMemo(() => {
-    const uncompleted = allWorkouts
-      .filter((w: any) => !w.completed)
-      .map((w: any) => ({ ...w, _date: w.scheduledDate || w.scheduled_date || '' }))
-      .sort((a: any, b: any) => a._date.localeCompare(b._date));
-    const todayW = uncompleted.find((w: any) => w._date.startsWith(today)) || null;
-    let nextW = null;
+    const uncompleted = (allWorkouts as HomeWorkout[])
+      .filter((w) => !w.completed)
+      .map((w) => ({ ...w, _date: w.scheduledDate || w.scheduled_date || '' }))
+      .sort((a, b) => a._date.localeCompare(b._date));
+    const todayW = uncompleted.find((w) => w._date.startsWith(today)) || null;
+    let nextW: any = null;
     let nextDay = '';
     if (!todayW) {
-      nextW = uncompleted.find((w: any) => w._date > today) || uncompleted[0] || null;
+      nextW = uncompleted.find((w) => w._date > today) || uncompleted[0] || null;
       if (nextW) {
         const d = new Date(nextW._date);
         if (!isNaN(d.getTime())) {
@@ -136,8 +343,16 @@ export default function HomeScreen() {
   }, [mealPlan]);
 
   // Habits
-  const completedHabitIds = new Set(habitLogs.map((l: any) => l.habit_id || l.habitId));
-  const activeHabits = habits.filter((h: any) => h.is_active !== false);
+  const completedHabitIds = new Set((habitLogs as HomeHabitLog[]).map((l) => l.habit_id || l.habitId));
+  const activeHabits = (habits as HomeHabit[]).filter((h) => h.is_active !== false);
+
+  const handleToggleHabit = (habitId: string, date: string, completed: boolean) => {
+    if (props.onToggleHabit) {
+      props.onToggleHabit(habitId, date, completed);
+    } else {
+      hookToggleHabit.mutate({ habitId, date, completed });
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -155,8 +370,17 @@ export default function HomeScreen() {
                 <Image source={evotionFavicon} style={styles.headerLogo} resizeMode="contain" />
               </View>
               <View>
-                <Text style={styles.greeting}>{getGreeting()},</Text>
-                <Text style={styles.name}>{firstName}</Text>
+                {loading ? (
+                  <>
+                    <Skeleton height={12} width={80} style={{ marginBottom: 4, opacity: 0.3 }} />
+                    <Skeleton height={20} width={120} style={{ opacity: 0.3 }} />
+                  </>
+                ) : (
+                  <>
+                    <Text style={styles.greeting}>{getGreeting()},</Text>
+                    <Text style={styles.name}>{firstName}</Text>
+                  </>
+                )}
               </View>
             </View>
 
@@ -183,237 +407,244 @@ export default function HomeScreen() {
         </SafeAreaView>
       </LinearGradient>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-        style={styles.scrollView}
-      >
-        {/* Week Strip Check-in Card */}
-        <View style={[styles.card, styles.cardFirst]}>
-          <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>Dagelijkse check-in</Text>
-            {hasDailyCheckIn && (
-              <View style={styles.doneBadge}>
-                <Ionicons name="checkmark-circle" size={14} color={theme.colors.success} />
-                <Text style={styles.doneBadgeText}>Klaar</Text>
-              </View>
-            )}
-          </View>
-          <View style={styles.weekStripRow}>
-            {weekStrip.map((day) => {
-              const isCompleted = day.completed;
-              const isMissed = day.isPast && !isCompleted;
-              return (
-                <TouchableOpacity
-                  key={day.key}
-                  style={[
-                    styles.weekStripTile,
-                    isMissed && styles.weekStripTileMissed,
-                    isCompleted && !day.isToday && styles.weekStripTilePastDone,
-                    day.isToday && (isCompleted ? styles.weekStripTileTodayDone : styles.weekStripTileToday),
-                  ]}
-                  activeOpacity={day.isToday ? 0.7 : 1}
-                  onPress={day.isToday ? () => navigation.navigate('DailyCheckIn' as never) : undefined}
-                >
-                  {isCompleted && (
-                    <Ionicons
-                      name="checkmark"
-                      size={day.isToday ? 18 : 14}
-                      color={day.isToday ? theme.colors.textOnPrimary : theme.colors.success}
-                      style={{ marginBottom: 1 }}
-                    />
-                  )}
-                  <Text style={[
-                    styles.weekStripDayName,
-                    isMissed && { color: theme.colors.textTertiary },
-                    isCompleted && !day.isToday && { color: theme.colors.success },
-                    day.isToday && { color: 'rgba(255,255,255,0.7)' },
-                  ]}>
-                    {day.dayName.toUpperCase()}
-                  </Text>
-                  <Text style={[
-                    styles.weekStripDayNum,
-                    isMissed && { color: theme.colors.textTertiary },
-                    isCompleted && !day.isToday && { color: theme.colors.success },
-                    day.isToday && { color: theme.colors.textOnPrimary, fontSize: 17 },
-                  ]}>
-                    {day.dayNum}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
-
-        {/* Weekly Check-in CTA */}
-        {weeklyCheckInDue && (
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={() => navigation.navigate('CheckIn' as never)}
-          >
-            <LinearGradient
-              colors={theme.gradients.header}
-              style={styles.weeklyCard}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-            >
-              <View style={styles.weeklyIconCircle}>
-                <Ionicons name="clipboard-outline" size={26} color={theme.colors.textOnPrimary} />
-              </View>
-              <View style={styles.weeklyText}>
-                <Text style={styles.weeklyTitle}>Tijd voor je wekelijkse check-in</Text>
-                <Text style={styles.weeklySub}>Deel je voortgang met je coach</Text>
-              </View>
-              <View style={styles.weeklyArrow}>
-                <Ionicons name="arrow-forward" size={18} color="rgba(255,255,255,0.6)" />
-              </View>
-            </LinearGradient>
-          </TouchableOpacity>
-        )}
-
-        {/* Training Card */}
-        {todaysWorkout && (
-          <TouchableOpacity
-            style={styles.card}
-            activeOpacity={0.7}
-            onPress={() => (navigation as any).navigate('WorkoutDetail', { id: todaysWorkout.id })}
-          >
-            <View style={styles.trainingRow}>
-              <View style={styles.trainingIconWrap}>
-                <Ionicons name="barbell-outline" size={22} color={theme.colors.primary} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.trainingLabel}>Training vandaag</Text>
-                <Text style={styles.trainingName} numberOfLines={1}>
-                  {todaysWorkout.workoutTemplate?.name || 'Workout'}
-                </Text>
-              </View>
-              <TouchableOpacity
-                style={styles.startBtn}
-                onPress={() => (navigation as any).navigate('ActiveWorkout', { id: todaysWorkout.id })}
-              >
-                <Ionicons name="play" size={14} color={theme.colors.textOnPrimary} />
-                <Text style={styles.startBtnText}>Start</Text>
-              </TouchableOpacity>
-            </View>
-          </TouchableOpacity>
-        )}
-
-        {!todaysWorkout && nextWorkout && (
-          <TouchableOpacity
-            style={styles.card}
-            activeOpacity={0.7}
-            onPress={() => (navigation as any).navigate('WorkoutDetail', { id: nextWorkout.id })}
-          >
-            <View style={styles.trainingRow}>
-              <View style={[styles.trainingIconWrap, { backgroundColor: theme.colors.primaryLight }]}>
-                <Ionicons name="barbell-outline" size={22} color={theme.colors.primary} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.trainingLabel, { color: theme.colors.textSecondary }]}>
-                  Volgende training{nextWorkoutDay ? ` \u00B7 ${nextWorkoutDay}` : ''}
-                </Text>
-                <Text style={styles.trainingName} numberOfLines={1}>
-                  {nextWorkout.workoutTemplate?.name || 'Workout'}
-                </Text>
-              </View>
-              <Ionicons name="chevron-forward" size={18} color={theme.colors.textTertiary} />
-            </View>
-          </TouchableOpacity>
-        )}
-
-        {/* Nutrition Card */}
-        <TouchableOpacity
-          style={styles.card}
-          activeOpacity={0.7}
-          onPress={() => (navigation as any).navigate('Voeding')}
+      {loading ? (
+        <ScrollView showsVerticalScrollIndicator={false} style={styles.scrollView}>
+          <HomeSkeletonContent />
+          <View style={{ height: 100 }} />
+        </ScrollView>
+      ) : (
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+          style={styles.scrollView}
         >
-          <View style={styles.cardHeader}>
-            <Text style={styles.cardTitle}>Voeding vandaag</Text>
-            {todayMealPlanMeals > 0 && (
-              <View style={styles.mealPlanBadge}>
-                <Ionicons name="restaurant-outline" size={11} color={theme.colors.primary} />
-                <Text style={styles.mealPlanBadgeText}>{todayMealPlanMeals} maaltijden</Text>
-              </View>
-            )}
-          </View>
-          <View style={styles.nutritionLayout}>
-            <MacroRing
-              value={macros.calories}
-              target={calTarget}
-              label="kcal"
-              color={theme.colors.accent}
-              size={120}
-            />
-            <View style={styles.macroStack}>
-              {[
-                { label: 'Eiwit', value: macros.protein, target: proteinTarget, color: '#EF4444' },
-                { label: 'Koolh.', value: macros.carbs, target: carbsTarget, color: theme.colors.primary },
-                { label: 'Vet', value: macros.fat, target: fatTarget, color: theme.colors.accent },
-              ].map((m) => (
-                <View key={m.label} style={styles.macroStackItem}>
-                  <View style={[styles.macroDot, { backgroundColor: m.color }]} />
-                  <View style={styles.macroInfo}>
-                    <Text style={styles.macroLabel}>{m.label}</Text>
-                    <Text style={styles.macroValue}>
-                      {m.value}<Text style={styles.macroUnit}>g</Text>
-                      {m.target > 0 && <Text style={styles.macroTarget}> / {m.target}</Text>}
-                    </Text>
-                  </View>
-                  {m.target > 0 && (
-                    <View style={styles.macroBar}>
-                      <View style={[styles.macroBarFill, {
-                        backgroundColor: m.color,
-                        width: `${Math.min((m.value / m.target) * 100, 100)}%`,
-                      }]} />
-                    </View>
-                  )}
+          {/* Week Strip Check-in Card */}
+          <View style={[styles.card, styles.cardFirst]}>
+            <View style={styles.cardHeader}>
+              <Text style={styles.cardTitle}>Dagelijkse check-in</Text>
+              {hasDailyCheckIn && (
+                <View style={styles.doneBadge}>
+                  <Ionicons name="checkmark-circle" size={14} color={theme.colors.success} />
+                  <Text style={styles.doneBadgeText}>Klaar</Text>
                 </View>
-              ))}
+              )}
             </View>
-          </View>
-          {!hasNutritionTargets && (
-            <View style={styles.noTargetsHint}>
-              <Ionicons name="information-circle-outline" size={14} color={theme.colors.textTertiary} />
-              <Text style={styles.noTargetsText}>Geen doelen ingesteld door coach</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-
-        {/* Habits */}
-        {activeHabits.length > 0 && (
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>Gewoontes</Text>
-            <View style={styles.habitsGrid}>
-              {activeHabits.map((habit: any) => {
-                const done = completedHabitIds.has(habit.id);
+            <View style={styles.weekStripRow}>
+              {weekStrip.map((day) => {
+                const isCompleted = day.completed;
+                const isMissed = day.isPast && !isCompleted;
                 return (
                   <TouchableOpacity
-                    key={habit.id}
-                    style={[styles.habitChip, done && styles.habitChipDone]}
-                    activeOpacity={0.7}
-                    onPress={() => toggleHabit.mutate({ habitId: habit.id, date: today, completed: !done })}
+                    key={day.key}
+                    style={[
+                      styles.weekStripTile,
+                      isMissed && styles.weekStripTileMissed,
+                      isCompleted && !day.isToday && styles.weekStripTilePastDone,
+                      day.isToday && (isCompleted ? styles.weekStripTileTodayDone : styles.weekStripTileToday),
+                    ]}
+                    activeOpacity={day.isToday ? 0.7 : 1}
+                    onPress={day.isToday ? () => navigation.navigate('DailyCheckIn' as never) : undefined}
                   >
-                    <Ionicons
-                      name={done ? 'checkmark-circle' : 'ellipse-outline'}
-                      size={18}
-                      color={done ? theme.colors.success : theme.colors.textTertiary}
-                    />
-                    <Text style={[styles.habitChipText, done && styles.habitChipTextDone]} numberOfLines={1}>
-                      {habit.name}
+                    {isCompleted && (
+                      <Ionicons
+                        name="checkmark"
+                        size={day.isToday ? 18 : 14}
+                        color={day.isToday ? theme.colors.textOnPrimary : theme.colors.success}
+                        style={{ marginBottom: 1 }}
+                      />
+                    )}
+                    <Text style={[
+                      styles.weekStripDayName,
+                      isMissed && { color: theme.colors.textTertiary },
+                      isCompleted && !day.isToday && { color: theme.colors.success },
+                      day.isToday && { color: 'rgba(255,255,255,0.7)' },
+                    ]}>
+                      {day.dayName.toUpperCase()}
+                    </Text>
+                    <Text style={[
+                      styles.weekStripDayNum,
+                      isMissed && { color: theme.colors.textTertiary },
+                      isCompleted && !day.isToday && { color: theme.colors.success },
+                      day.isToday && { color: theme.colors.textOnPrimary, fontSize: 17 },
+                    ]}>
+                      {day.dayNum}
                     </Text>
                   </TouchableOpacity>
                 );
               })}
             </View>
           </View>
-        )}
 
-        {/* Weight Trend */}
-        <WeightTrendCard data={weightData} />
+          {/* Weekly Check-in CTA */}
+          {weeklyCheckInDue && (
+            <TouchableOpacity
+              activeOpacity={0.85}
+              onPress={() => navigation.navigate('CheckIn' as never)}
+            >
+              <LinearGradient
+                colors={theme.gradients.header}
+                style={styles.weeklyCard}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <View style={styles.weeklyIconCircle}>
+                  <Ionicons name="clipboard-outline" size={26} color={theme.colors.textOnPrimary} />
+                </View>
+                <View style={styles.weeklyText}>
+                  <Text style={styles.weeklyTitle}>Tijd voor je wekelijkse check-in</Text>
+                  <Text style={styles.weeklySub}>Deel je voortgang met je coach</Text>
+                </View>
+                <View style={styles.weeklyArrow}>
+                  <Ionicons name="arrow-forward" size={18} color="rgba(255,255,255,0.6)" />
+                </View>
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
 
-        <View style={{ height: 100 }} />
-      </ScrollView>
+          {/* Training Card */}
+          {todaysWorkout && (
+            <TouchableOpacity
+              style={styles.card}
+              activeOpacity={0.7}
+              onPress={() => (navigation as any).navigate('WorkoutDetail', { id: todaysWorkout.id })}
+            >
+              <View style={styles.trainingRow}>
+                <View style={styles.trainingIconWrap}>
+                  <Ionicons name="barbell-outline" size={22} color={theme.colors.primary} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.trainingLabel}>Training vandaag</Text>
+                  <Text style={styles.trainingName} numberOfLines={1}>
+                    {todaysWorkout.workoutTemplate?.name || 'Workout'}
+                  </Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.startBtn}
+                  onPress={() => (navigation as any).navigate('ActiveWorkout', { id: todaysWorkout.id })}
+                >
+                  <Ionicons name="play" size={14} color={theme.colors.textOnPrimary} />
+                  <Text style={styles.startBtnText}>Start</Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          )}
+
+          {!todaysWorkout && nextWorkout && (
+            <TouchableOpacity
+              style={styles.card}
+              activeOpacity={0.7}
+              onPress={() => (navigation as any).navigate('WorkoutDetail', { id: nextWorkout.id })}
+            >
+              <View style={styles.trainingRow}>
+                <View style={[styles.trainingIconWrap, { backgroundColor: theme.colors.primaryLight }]}>
+                  <Ionicons name="barbell-outline" size={22} color={theme.colors.primary} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.trainingLabel, { color: theme.colors.textSecondary }]}>
+                    Volgende training{nextWorkoutDay ? ` \u00B7 ${nextWorkoutDay}` : ''}
+                  </Text>
+                  <Text style={styles.trainingName} numberOfLines={1}>
+                    {nextWorkout.workoutTemplate?.name || 'Workout'}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={theme.colors.textTertiary} />
+              </View>
+            </TouchableOpacity>
+          )}
+
+          {/* Nutrition Card */}
+          <TouchableOpacity
+            style={styles.card}
+            activeOpacity={0.7}
+            onPress={() => (navigation as any).navigate('Voeding')}
+          >
+            <View style={styles.cardHeader}>
+              <Text style={styles.cardTitle}>Voeding vandaag</Text>
+              {todayMealPlanMeals > 0 && (
+                <View style={styles.mealPlanBadge}>
+                  <Ionicons name="restaurant-outline" size={11} color={theme.colors.primary} />
+                  <Text style={styles.mealPlanBadgeText}>{todayMealPlanMeals} maaltijden</Text>
+                </View>
+              )}
+            </View>
+            <View style={styles.nutritionLayout}>
+              <MacroRing
+                value={macros.calories}
+                target={calTarget}
+                label="kcal"
+                color={theme.colors.accent}
+                size={120}
+              />
+              <View style={styles.macroStack}>
+                {[
+                  { label: 'Eiwit', value: macros.protein, target: proteinTarget, color: '#EF4444' },
+                  { label: 'Koolh.', value: macros.carbs, target: carbsTarget, color: theme.colors.primary },
+                  { label: 'Vet', value: macros.fat, target: fatTarget, color: theme.colors.accent },
+                ].map((m) => (
+                  <View key={m.label} style={styles.macroStackItem}>
+                    <View style={[styles.macroDot, { backgroundColor: m.color }]} />
+                    <View style={styles.macroInfo}>
+                      <Text style={styles.macroLabel}>{m.label}</Text>
+                      <Text style={styles.macroValue}>
+                        {m.value}<Text style={styles.macroUnit}>g</Text>
+                        {m.target > 0 && <Text style={styles.macroTarget}> / {m.target}</Text>}
+                      </Text>
+                    </View>
+                    {m.target > 0 && (
+                      <View style={styles.macroBar}>
+                        <View style={[styles.macroBarFill, {
+                          backgroundColor: m.color,
+                          width: `${Math.min((m.value / m.target) * 100, 100)}%`,
+                        }]} />
+                      </View>
+                    )}
+                  </View>
+                ))}
+              </View>
+            </View>
+            {!hasNutritionTargets && (
+              <View style={styles.noTargetsHint}>
+                <Ionicons name="information-circle-outline" size={14} color={theme.colors.textTertiary} />
+                <Text style={styles.noTargetsText}>Geen doelen ingesteld door coach</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+
+          {/* Habits */}
+          {activeHabits.length > 0 && (
+            <View style={styles.card}>
+              <Text style={styles.cardTitle}>Gewoontes</Text>
+              <View style={styles.habitsGrid}>
+                {activeHabits.map((habit) => {
+                  const done = completedHabitIds.has(habit.id);
+                  return (
+                    <TouchableOpacity
+                      key={habit.id}
+                      style={[styles.habitChip, done && styles.habitChipDone]}
+                      activeOpacity={0.7}
+                      onPress={() => handleToggleHabit(habit.id, today, !done)}
+                    >
+                      <Ionicons
+                        name={done ? 'checkmark-circle' : 'ellipse-outline'}
+                        size={18}
+                        color={done ? theme.colors.success : theme.colors.textTertiary}
+                      />
+                      <Text style={[styles.habitChipText, done && styles.habitChipTextDone]} numberOfLines={1}>
+                        {habit.name}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+          )}
+
+          {/* Weight Trend */}
+          <WeightTrendCard data={weightData} />
+
+          <View style={{ height: 100 }} />
+        </ScrollView>
+      )}
     </View>
   );
 }

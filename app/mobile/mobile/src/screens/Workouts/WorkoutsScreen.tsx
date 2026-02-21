@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
-  ActivityIndicator,
   Image,
   Dimensions,
 } from 'react-native';
@@ -17,13 +16,76 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useFocusEffect } from '@react-navigation/native';
 import { useClientPrograms, programKeys } from '../../hooks/usePrograms';
 import { theme } from '../../constants/theme';
+import { Skeleton, SkeletonWorkoutCard } from '../../components/Skeleton';
 import type { ClientProgram } from '../../lib/programApi';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-export default function WorkoutsScreen({ navigation }: any) {
+// ============================================================
+// TYPES
+// ============================================================
+export interface WorkoutsScreenProgram {
+  id: string;
+  status: 'active' | 'paused' | 'completed';
+  program: {
+    name: string;
+    bannerUrl?: string;
+  };
+}
+
+export interface WorkoutsScreenProps {
+  loading?: boolean;
+  programs?: WorkoutsScreenProgram[];
+  onRefresh?: () => void;
+  navigation?: any;
+}
+
+// ============================================================
+// DEFAULT MOCK DATA
+// ============================================================
+const defaultPrograms: WorkoutsScreenProgram[] = [
+  {
+    id: 'mock-prog-1',
+    status: 'active',
+    program: { name: 'Hypertrofie Blok A', bannerUrl: undefined },
+  },
+  {
+    id: 'mock-prog-2',
+    status: 'completed',
+    program: { name: 'Kracht Basis Programma', bannerUrl: undefined },
+  },
+];
+
+// ============================================================
+// SKELETON STATE
+// ============================================================
+function WorkoutsSkeletonContent() {
+  return (
+    <View style={styles.contentSection}>
+      <Skeleton height={11} width={50} style={{ marginBottom: 12, marginTop: 20 }} />
+      {/* Active program card skeleton */}
+      <View style={[styles.programCard, { overflow: 'hidden' }]}>
+        <Skeleton height={180} width="100%" borderRadius={0} />
+        <View style={{ padding: 16 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <Skeleton width={8} height={8} borderRadius={4} />
+            <Skeleton height={18} width="55%" />
+          </View>
+        </View>
+      </View>
+      <Skeleton height={11} width={110} style={{ marginBottom: 12, marginTop: 20 }} />
+      <SkeletonWorkoutCard />
+    </View>
+  );
+}
+
+// ============================================================
+// MAIN COMPONENT
+// ============================================================
+export default function WorkoutsScreen({ navigation: navProp, ...props }: WorkoutsScreenProps & { navigation?: any }) {
+  const navigation = navProp;
   const queryClient = useQueryClient();
-  const { data: allPrograms = [], isLoading, isRefetching, refetch } = useClientPrograms();
+  const { data: hookPrograms = [], isLoading: hookLoading, isRefetching, refetch } = useClientPrograms();
 
   useFocusEffect(
     useCallback(() => {
@@ -31,19 +93,16 @@ export default function WorkoutsScreen({ navigation }: any) {
     }, [queryClient])
   );
 
-  const activePrograms = allPrograms.filter((p: ClientProgram) => p.status === 'active');
-  const otherPrograms = allPrograms.filter((p: ClientProgram) => p.status !== 'active');
+  const loading = props.loading ?? hookLoading;
+  const allPrograms = (props.programs ?? hookPrograms ?? defaultPrograms) as any[];
 
-  if (isLoading) {
-    return (
-      <SafeAreaView style={styles.container} edges={['top']}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={styles.loadingText}>Programma's laden...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  const activePrograms = allPrograms.filter((p: any) => p.status === 'active');
+  const otherPrograms = allPrograms.filter((p: any) => p.status !== 'active');
+
+  const handleRefresh = () => {
+    if (props.onRefresh) props.onRefresh();
+    else refetch();
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -52,7 +111,7 @@ export default function WorkoutsScreen({ navigation }: any) {
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}
-            onRefresh={() => refetch()}
+            onRefresh={handleRefresh}
             tintColor={theme.colors.primary}
           />
         }
@@ -65,124 +124,135 @@ export default function WorkoutsScreen({ navigation }: any) {
           end={{ x: 1, y: 1 }}
           style={styles.headerGradient}
         >
-          <Text style={styles.headerTitle}>Trainingen</Text>
-          <Text style={styles.headerSubtitle}>
-            {activePrograms.length > 0
-              ? `${activePrograms.length} actie${activePrograms.length === 1 ? 'f' : 've'} programma${activePrograms.length === 1 ? '' : "'s"}`
-              : 'Geen actieve programma\'s'}
-          </Text>
+          {loading ? (
+            <>
+              <Skeleton height={28} width="50%" style={{ marginBottom: 8, opacity: 0.3 }} />
+              <Skeleton height={15} width="65%" style={{ opacity: 0.3 }} />
+            </>
+          ) : (
+            <>
+              <Text style={styles.headerTitle}>Trainingen</Text>
+              <Text style={styles.headerSubtitle}>
+                {activePrograms.length > 0
+                  ? `${activePrograms.length} actie${activePrograms.length === 1 ? 'f' : 've'} programma${activePrograms.length === 1 ? '' : "'s"}`
+                  : 'Geen actieve programma\'s'}
+              </Text>
+            </>
+          )}
         </LinearGradient>
 
-        {/* Active Programs */}
-        <View style={styles.contentSection}>
-          {activePrograms.length > 0 && (
-            <Text style={styles.sectionLabel}>ACTIEF</Text>
-          )}
-          {activePrograms.map((program: ClientProgram) => (
-            <TouchableOpacity
-              key={program.id}
-              style={styles.programCard}
-              activeOpacity={0.85}
-              onPress={() => navigation.navigate('ProgramDetail', { assignmentId: program.id })}
-            >
-              <View style={styles.programBannerContainer}>
-                {program.program.bannerUrl ? (
-                  <Image
-                    source={{ uri: program.program.bannerUrl }}
-                    style={styles.programBannerImg}
-                    resizeMode="cover"
-                  />
-                ) : (
+        {loading ? (
+          <WorkoutsSkeletonContent />
+        ) : (
+          <View style={styles.contentSection}>
+            {activePrograms.length > 0 && (
+              <Text style={styles.sectionLabel}>ACTIEF</Text>
+            )}
+            {activePrograms.map((program: any) => (
+              <TouchableOpacity
+                key={program.id}
+                style={styles.programCard}
+                activeOpacity={0.85}
+                onPress={() => navigation?.navigate('ProgramDetail', { assignmentId: program.id })}
+              >
+                <View style={styles.programBannerContainer}>
+                  {program.program.bannerUrl ? (
+                    <Image
+                      source={{ uri: program.program.bannerUrl }}
+                      style={styles.programBannerImg}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <LinearGradient
+                      colors={theme.gradients.primary}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.programBannerFallback}
+                    >
+                      <Ionicons name="barbell-outline" size={48} color="rgba(255,255,255,0.2)" />
+                    </LinearGradient>
+                  )}
                   <LinearGradient
-                    colors={theme.gradients.primary}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 1 }}
-                    style={styles.programBannerFallback}
-                  >
-                    <Ionicons name="barbell-outline" size={48} color="rgba(255,255,255,0.2)" />
-                  </LinearGradient>
-                )}
-                {/* Gradient overlay at bottom */}
-                <LinearGradient
-                  colors={['transparent', 'rgba(0,0,0,0.5)']}
-                  style={styles.bannerOverlay}
-                />
-              </View>
-              <View style={styles.programTitleBar}>
-                <View style={styles.programTitleLeft}>
-                  <View style={styles.activeDot} />
-                  <Text style={styles.programName} numberOfLines={1}>
-                    {program.program.name}
-                  </Text>
+                    colors={['transparent', 'rgba(0,0,0,0.5)']}
+                    style={styles.bannerOverlay}
+                  />
                 </View>
-                <View style={styles.programArrow}>
-                  <Ionicons name="chevron-forward" size={18} color={theme.colors.textTertiary} />
-                </View>
-              </View>
-            </TouchableOpacity>
-          ))}
-
-          {/* Completed / Paused */}
-          {otherPrograms.length > 0 && (
-            <View style={styles.otherSection}>
-              <Text style={styles.sectionLabel}>AFGEROND / GEPAUZEERD</Text>
-              {otherPrograms.map((program: ClientProgram) => {
-                const isPaused = program.status === 'paused';
-                return (
-                  <TouchableOpacity
-                    key={program.id}
-                    style={styles.otherCard}
-                    activeOpacity={0.85}
-                    onPress={() => navigation.navigate('ProgramDetail', { assignmentId: program.id })}
-                  >
-                    <View style={styles.otherBannerContainer}>
-                      {program.program.bannerUrl ? (
-                        <Image
-                          source={{ uri: program.program.bannerUrl }}
-                          style={[styles.programBannerImg, { opacity: 0.5 }]}
-                          resizeMode="cover"
-                        />
-                      ) : (
-                        <View style={styles.otherBannerFallback}>
-                          <Ionicons name="barbell-outline" size={32} color="rgba(108,58,237,0.15)" />
-                        </View>
-                      )}
-                    </View>
-                    <View style={styles.otherInfoCol}>
-                      <Text style={styles.otherName} numberOfLines={1}>
-                        {program.program.name}
-                      </Text>
-                      <View style={[styles.statusPill, isPaused ? styles.statusPillPaused : styles.statusPillCompleted]}>
-                        <Ionicons
-                          name={isPaused ? 'pause-circle' : 'checkmark-circle'}
-                          size={12}
-                          color={isPaused ? '#92400e' : '#065f46'}
-                        />
-                        <Text style={[styles.statusPillText, isPaused ? styles.statusTextPaused : styles.statusTextCompleted]}>
-                          {isPaused ? 'Gepauzeerd' : 'Voltooid'}
-                        </Text>
-                      </View>
-                    </View>
+                <View style={styles.programTitleBar}>
+                  <View style={styles.programTitleLeft}>
+                    <View style={styles.activeDot} />
+                    <Text style={styles.programName} numberOfLines={1}>
+                      {program.program.name}
+                    </Text>
+                  </View>
+                  <View style={styles.programArrow}>
                     <Ionicons name="chevron-forward" size={18} color={theme.colors.textTertiary} />
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          )}
+                  </View>
+                </View>
+              </TouchableOpacity>
+            ))}
 
-          {/* Empty state */}
-          {allPrograms.length === 0 && (
-            <View style={styles.emptyState}>
-              <View style={styles.emptyIconCircle}>
-                <Ionicons name="barbell-outline" size={48} color={theme.colors.primaryMuted} />
+            {/* Completed / Paused */}
+            {otherPrograms.length > 0 && (
+              <View style={styles.otherSection}>
+                <Text style={styles.sectionLabel}>AFGEROND / GEPAUZEERD</Text>
+                {otherPrograms.map((program: any) => {
+                  const isPaused = program.status === 'paused';
+                  return (
+                    <TouchableOpacity
+                      key={program.id}
+                      style={styles.otherCard}
+                      activeOpacity={0.85}
+                      onPress={() => navigation?.navigate('ProgramDetail', { assignmentId: program.id })}
+                    >
+                      <View style={styles.otherBannerContainer}>
+                        {program.program.bannerUrl ? (
+                          <Image
+                            source={{ uri: program.program.bannerUrl }}
+                            style={[styles.programBannerImg, { opacity: 0.5 }]}
+                            resizeMode="cover"
+                          />
+                        ) : (
+                          <View style={styles.otherBannerFallback}>
+                            <Ionicons name="barbell-outline" size={32} color="rgba(108,58,237,0.15)" />
+                          </View>
+                        )}
+                      </View>
+                      <View style={styles.otherInfoCol}>
+                        <Text style={styles.otherName} numberOfLines={1}>
+                          {program.program.name}
+                        </Text>
+                        <View style={[styles.statusPill, isPaused ? styles.statusPillPaused : styles.statusPillCompleted]}>
+                          <Ionicons
+                            name={isPaused ? 'pause-circle' : 'checkmark-circle'}
+                            size={12}
+                            color={isPaused ? '#92400e' : '#065f46'}
+                          />
+                          <Text style={[styles.statusPillText, isPaused ? styles.statusTextPaused : styles.statusTextCompleted]}>
+                            {isPaused ? 'Gepauzeerd' : 'Voltooid'}
+                          </Text>
+                        </View>
+                      </View>
+                      <Ionicons name="chevron-forward" size={18} color={theme.colors.textTertiary} />
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
-              <Text style={styles.emptyTitle}>Geen programma's</Text>
-              <Text style={styles.emptyText}>
-                Je coach heeft nog geen trainingsprogramma's{'\n'}aan je toegewezen.
-              </Text>
-            </View>
-          )}
-        </View>
+            )}
+
+            {/* Empty state */}
+            {allPrograms.length === 0 && (
+              <View style={styles.emptyState}>
+                <View style={styles.emptyIconCircle}>
+                  <Ionicons name="barbell-outline" size={48} color={theme.colors.primaryMuted} />
+                </View>
+                <Text style={styles.emptyTitle}>Geen programma's</Text>
+                <Text style={styles.emptyText}>
+                  Je coach heeft nog geen trainingsprogramma's{'\n'}aan je toegewezen.
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -195,16 +265,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 40,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: theme.spacing.md,
-    fontSize: theme.fontSize.md,
-    color: theme.colors.textSecondary,
   },
   // Gradient Header
   headerGradient: {

@@ -71,9 +71,18 @@ export async function requireAdmin(): Promise<AuthUser> {
 }
 
 export async function getSupabaseAdmin() {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    // Return a mock client that returns empty data for V0 preview
+    const chainable = { eq: () => chainable, neq: () => chainable, in: () => chainable, gte: () => chainable, lte: () => chainable, gt: () => chainable, lt: () => chainable, order: () => chainable, limit: () => chainable, maybeSingle: async () => ({ data: null, error: null }), single: async () => ({ data: null, error: null }), then: (cb: any) => cb({ data: [], error: null, count: 0 }), data: [], error: null, count: 0 }
+    return {
+      from: () => ({ select: () => chainable, insert: () => ({ select: () => chainable }), update: () => chainable, delete: () => chainable, upsert: () => chainable }),
+      auth: { getUser: async () => ({ data: { user: null }, error: null }), admin: { listUsers: async () => ({ data: { users: [] }, error: null }) } },
+      storage: { from: () => ({ upload: async () => ({ data: null, error: null }), getPublicUrl: () => ({ data: { publicUrl: '' } }) }) },
+    } as any
+  }
   return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-    process.env.SUPABASE_SERVICE_ROLE_KEY || '',
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
     {
       auth: {
         autoRefreshToken: false,

@@ -7,11 +7,47 @@ import { supabase } from '../../lib/supabase';
 import { useUser } from '../../hooks/useUser';
 import { useUnreadCount } from '../../hooks/useMessages';
 import { theme } from '../../constants/theme';
+import { Skeleton, SkeletonListItem } from '../../components/Skeleton';
 
-export default function MoreScreen() {
+// ============================================================
+// TYPES
+// ============================================================
+export interface MoreUserData {
+  profile?: {
+    first_name?: string;
+    last_name?: string;
+    avatar_url?: string;
+  };
+  email?: string;
+}
+
+export interface MoreScreenProps {
+  loading?: boolean;
+  userData?: MoreUserData;
+  unreadCount?: number;
+  onLogout?: () => void;
+}
+
+// ============================================================
+// DEFAULT MOCK DATA
+// ============================================================
+const defaultUserData: MoreUserData = {
+  profile: { first_name: 'Jelle', last_name: 'de Vries', avatar_url: undefined },
+  email: 'jelle@evotion.nl',
+};
+
+// ============================================================
+// MAIN COMPONENT
+// ============================================================
+export default function MoreScreen(props: MoreScreenProps) {
   const navigation = useNavigation();
-  const { data: userData } = useUser();
-  const { data: unreadCount } = useUnreadCount();
+
+  const { data: hookUserData } = useUser();
+  const { data: hookUnreadCount } = useUnreadCount();
+
+  const loading = props.loading ?? false;
+  const userData = props.userData ?? hookUserData ?? defaultUserData;
+  const unreadCount = props.unreadCount ?? hookUnreadCount ?? 0;
 
   const handleLogout = async () => {
     Alert.alert(
@@ -23,7 +59,11 @@ export default function MoreScreen() {
           text: 'Uitloggen',
           style: 'destructive',
           onPress: async () => {
-            await supabase.auth.signOut();
+            if (props.onLogout) {
+              props.onLogout();
+            } else {
+              await supabase.auth.signOut();
+            }
           },
         },
       ]
@@ -54,26 +94,35 @@ export default function MoreScreen() {
         <Text style={styles.title}>Meer</Text>
       </View>
       <ScrollView showsVerticalScrollIndicator={false}>
-
         {/* Profiel sectie */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Profiel</Text>
           <View style={styles.card}>
-            <View style={styles.profileHeader}>
-              {userData?.profile?.avatar_url ? (
-                <Image source={{ uri: userData.profile.avatar_url }} style={styles.avatarImage} />
-              ) : (
-                <View style={styles.avatarPlaceholder}>
-                  <Ionicons name="person" size={32} color={theme.colors.secondary} />
+            {loading ? (
+              <View style={styles.profileHeader}>
+                <Skeleton width={64} height={64} borderRadius={32} />
+                <View style={{ flex: 1, marginLeft: 16 }}>
+                  <Skeleton height={18} width="60%" style={{ marginBottom: 6 }} />
+                  <Skeleton height={14} width="80%" />
                 </View>
-              )}
-              <View style={styles.profileInfo}>
-                <Text style={styles.profileName}>
-                  {userData?.profile?.first_name} {userData?.profile?.last_name}
-                </Text>
-                <Text style={styles.profileEmail}>{userData?.email}</Text>
               </View>
-            </View>
+            ) : (
+              <View style={styles.profileHeader}>
+                {userData?.profile?.avatar_url ? (
+                  <Image source={{ uri: userData.profile.avatar_url }} style={styles.avatarImage} />
+                ) : (
+                  <View style={styles.avatarPlaceholder}>
+                    <Ionicons name="person" size={32} color={theme.colors.secondary} />
+                  </View>
+                )}
+                <View style={styles.profileInfo}>
+                  <Text style={styles.profileName}>
+                    {userData?.profile?.first_name} {userData?.profile?.last_name}
+                  </Text>
+                  <Text style={styles.profileEmail}>{userData?.email}</Text>
+                </View>
+              </View>
+            )}
           </View>
         </View>
 
@@ -81,13 +130,17 @@ export default function MoreScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Berichten</Text>
           <View style={styles.card}>
-            <MenuItem
-              icon="chatbubbles"
-              title="Berichten"
-              subtitle="Chat met je coach"
-              badge={unreadCount || 0}
-              onPress={() => (navigation as any).navigate('ChatList')}
-            />
+            {loading ? (
+              <SkeletonListItem />
+            ) : (
+              <MenuItem
+                icon="chatbubbles"
+                title="Berichten"
+                subtitle="Chat met je coach"
+                badge={unreadCount || 0}
+                onPress={() => (navigation as any).navigate('ChatList')}
+              />
+            )}
           </View>
         </View>
 
@@ -95,29 +148,40 @@ export default function MoreScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Instellingen</Text>
           <View style={styles.card}>
-            <MenuItem
-              icon="person-circle"
-              title="Profiel bewerken"
-              subtitle="Pas je gegevens aan"
-              onPress={() => (navigation as any).navigate('EditProfile')}
-            />
-            <MenuItem
-              icon="fitness"
-              title="Wearables"
-              subtitle="Koppel je smartwatch of fitness tracker"
-              onPress={() => (navigation as any).navigate('Wearables')}
-            />
-            <MenuItem
-              icon="notifications"
-              title="Notificaties"
-              subtitle="Beheer je meldingen"
-              onPress={() => (navigation as any).navigate('Notifications')}
-            />
-            <MenuItem
-              icon="lock-closed"
-              title="Privacy & Beveiliging"
-              onPress={() => (navigation as any).navigate('Privacy')}
-            />
+            {loading ? (
+              <>
+                <SkeletonListItem />
+                <SkeletonListItem />
+                <SkeletonListItem />
+                <SkeletonListItem />
+              </>
+            ) : (
+              <>
+                <MenuItem
+                  icon="person-circle"
+                  title="Profiel bewerken"
+                  subtitle="Pas je gegevens aan"
+                  onPress={() => (navigation as any).navigate('EditProfile')}
+                />
+                <MenuItem
+                  icon="fitness"
+                  title="Wearables"
+                  subtitle="Koppel je smartwatch of fitness tracker"
+                  onPress={() => (navigation as any).navigate('Wearables')}
+                />
+                <MenuItem
+                  icon="notifications"
+                  title="Notificaties"
+                  subtitle="Beheer je meldingen"
+                  onPress={() => (navigation as any).navigate('Notifications')}
+                />
+                <MenuItem
+                  icon="lock-closed"
+                  title="Privacy & Beveiliging"
+                  onPress={() => (navigation as any).navigate('Privacy')}
+                />
+              </>
+            )}
           </View>
         </View>
 

@@ -18,11 +18,37 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../constants/theme';
+import { Skeleton, SkeletonCourseCard } from '../../components/Skeleton';
 
+// ============================================================
+// TYPES
+// ============================================================
 type CourseStatus = 'all' | 'active' | 'completed';
 
-// PLACEHOLDER — Vervang met Supabase data
-const COURSES = [
+export interface CourseData {
+  id: string;
+  title: string;
+  description: string;
+  thumbnail?: string | null;
+  moduleCount: number;
+  lessonCount: number;
+  duration: string;
+  completedLessons: number;
+  totalLessons: number;
+  category: string;
+  instructor: string;
+}
+
+export interface CoursesScreenProps {
+  loading?: boolean;
+  courses?: CourseData[];
+  onSelectCourse?: (courseId: string) => void;
+}
+
+// ============================================================
+// DEFAULT MOCK DATA
+// ============================================================
+const defaultCourses: CourseData[] = [
   {
     id: '1',
     title: 'Fundamentals of Strength Training',
@@ -83,17 +109,19 @@ const FILTERS: { key: CourseStatus; label: string }[] = [
   { key: 'completed', label: 'Voltooid' },
 ];
 
-export default function CoursesScreen({ navigation }: any) {
+export default function CoursesScreen({ navigation, ...props }: CoursesScreenProps & { navigation?: any }) {
   const [filter, setFilter] = useState<CourseStatus>('all');
+  const loading = props.loading ?? false;
+  const courses = props.courses ?? defaultCourses;
 
-  const filtered = COURSES.filter((c) => {
+  const filtered = courses.filter((c) => {
     if (filter === 'active') return c.completedLessons > 0 && c.completedLessons < c.totalLessons;
     if (filter === 'completed') return c.completedLessons === c.totalLessons;
     return true;
   });
 
-  const totalCompleted = COURSES.filter((c) => c.completedLessons === c.totalLessons).length;
-  const totalActive = COURSES.filter(
+  const totalCompleted = courses.filter((c) => c.completedLessons === c.totalLessons).length;
+  const totalActive = courses.filter(
     (c) => c.completedLessons > 0 && c.completedLessons < c.totalLessons
   ).length;
 
@@ -135,7 +163,13 @@ export default function CoursesScreen({ navigation }: any) {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {filtered.length === 0 ? (
+        {loading ? (
+          <View style={{ gap: 12 }}>
+            <SkeletonCourseCard />
+            <SkeletonCourseCard />
+            <SkeletonCourseCard />
+          </View>
+        ) : filtered.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="book-outline" size={48} color={theme.colors.border} />
             <Text style={styles.emptyTitle}>Geen cursussen gevonden</Text>
@@ -158,9 +192,10 @@ export default function CoursesScreen({ navigation }: any) {
                 key={course.id}
                 style={styles.courseCard}
                 activeOpacity={0.7}
-                onPress={() =>
-                  navigation.navigate('CourseDetail', { courseId: course.id, courseTitle: course.title })
-                }
+                onPress={() => {
+                  if (props.onSelectCourse) props.onSelectCourse(course.id);
+                  else navigation?.navigate('CourseDetail', { courseId: course.id, courseTitle: course.title });
+                }}
               >
                 {/* Thumbnail placeholder */}
                 <View style={[styles.thumbnail, { backgroundColor: `${catColor}15` }]}>
