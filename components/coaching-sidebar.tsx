@@ -1,5 +1,6 @@
 "use client"
 
+import Image from "next/image"
 import {
   LayoutDashboard,
   Users,
@@ -14,7 +15,6 @@ import {
   ChevronDown,
   LogOut,
   HelpCircle,
-  Zap,
 } from "lucide-react"
 import {
   Sidebar,
@@ -62,8 +62,14 @@ export function CoachingSidebar({ activeSection, onSectionChange, profile }: Coa
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" className="gap-3 hover:bg-sidebar-accent/50">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                <Zap className="size-4" />
+              <div className="flex size-8 items-center justify-center rounded-lg bg-sidebar-primary">
+                <Image
+                  src="/images/evotion-favicon-wit.png"
+                  alt="Evotion"
+                  width={20}
+                  height={20}
+                  className="object-contain"
+                />
               </div>
               <div className="flex flex-col gap-0.5 leading-none">
                 <span className="font-semibold text-sm">Evotion</span>
