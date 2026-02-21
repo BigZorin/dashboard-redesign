@@ -445,6 +445,36 @@ export function ProgramsSection({
 
   return (
     <div className="flex flex-col gap-6 p-6">
+      {/* PROMINENTE AI GENERATOR CTA */}
+      <button
+        onClick={() => setActiveTab("ai")}
+        className={cn(
+          "relative overflow-hidden rounded-xl p-5 text-left transition-all group",
+          "bg-gradient-to-r from-[#6c3caf] via-[#7c4dbd] to-[#5b2d9e]",
+          "hover:from-[#7c4dbd] hover:via-[#8b5cc7] hover:to-[#6c3caf]",
+          "shadow-lg shadow-[#6c3caf]/20 hover:shadow-xl hover:shadow-[#6c3caf]/30",
+          activeTab === "ai" && "ring-2 ring-[#7c4dbd] ring-offset-2 ring-offset-background"
+        )}
+      >
+        <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4" />
+        <div className="absolute bottom-0 left-1/3 w-32 h-32 bg-white/5 rounded-full translate-y-1/2" />
+        <div className="relative flex items-center gap-4">
+          <div className="flex size-12 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm shrink-0">
+            <Sparkles className="size-6 text-white" />
+          </div>
+          <div className="flex-1">
+            <p className="text-base font-bold text-white">Genereer met AI</p>
+            <p className="text-sm text-white/70 mt-0.5">
+              Laat AI een compleet trainingsprogramma genereren op basis van client-doelen, ervaring en beschikbare equipment.
+            </p>
+          </div>
+          <div className="hidden sm:flex items-center gap-2 text-white/80 text-sm font-medium group-hover:text-white transition-colors">
+            <span>Start</span>
+            <ChevronRight className="size-4 group-hover:translate-x-0.5 transition-transform" />
+          </div>
+        </div>
+      </button>
+
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full max-w-2xl grid-cols-4">
           <TabsTrigger value="overzicht" className="gap-1.5 text-xs">
@@ -457,7 +487,7 @@ export function ProgramsSection({
           </TabsTrigger>
           <TabsTrigger value="builder" className="gap-1.5 text-xs">
             <Wrench className="size-3.5" />
-            Workout Builder
+            Builder
           </TabsTrigger>
           <TabsTrigger value="ai" className="gap-1.5 text-xs">
             <Sparkles className="size-3.5" />
@@ -478,12 +508,12 @@ export function ProgramsSection({
           <ExerciseLibrary exercises={exercises} />
         </TabsContent>
 
-        {/* TAB 3: WORKOUT BUILDER */}
+        {/* TAB 3: WORKOUT BUILDER (handmatige finetuning) */}
         <TabsContent value="builder" className="mt-6">
           <WorkoutBuilder exercises={exercises} />
         </TabsContent>
 
-        {/* TAB 4: AI GENERATOR */}
+        {/* TAB 4: AI GENERATOR (hoofd-workflow) */}
         <TabsContent value="ai" className="mt-6">
           <AIGenerator />
         </TabsContent>
