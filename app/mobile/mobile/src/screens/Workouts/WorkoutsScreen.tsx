@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
   },
   scrollContent: {
-    paddingBottom: 40,
+    paddingBottom: 100,
   },
   // Gradient Header
   headerGradient: {

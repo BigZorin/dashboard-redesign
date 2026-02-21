@@ -736,6 +736,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: theme.spacing.xl,
     paddingTop: 12,
+    paddingBottom: 100,
   },
 
   // -- Cards --

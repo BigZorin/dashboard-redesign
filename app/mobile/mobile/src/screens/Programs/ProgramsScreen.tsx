@@ -9,12 +9,12 @@ import {
   ActivityIndicator,
   Image,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
 import { useClientPrograms, programKeys } from '../../hooks/usePrograms';
 import { theme } from '../../constants/theme';
+import ScreenHeader from '../../components/ScreenHeader';
 import type { ClientProgram } from '../../lib/programApi';
 
 const STATUS_LABELS: Record<string, string> = {
@@ -44,12 +44,13 @@ export default function ProgramsScreen({ navigation }: any) {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <View style={styles.container}>
+        <ScreenHeader title="Mijn Programma's" onBack={() => navigation.goBack()} />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
           <Text style={styles.loadingText}>Programma's laden...</Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
@@ -135,21 +136,19 @@ export default function ProgramsScreen({ navigation }: any) {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <View style={styles.container}>
+      <ScreenHeader
+        title="Mijn Programma's"
+        subtitle={`${activePrograms.length} actief`}
+        onBack={() => navigation.goBack()}
+      />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl refreshing={isRefetching} onRefresh={() => refetch()} />
         }
+        showsVerticalScrollIndicator={false}
       >
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={24} color="#fff" />
-          </TouchableOpacity>
-          <Text style={styles.title}>Mijn Programma's</Text>
-          <View style={{ width: 24 }} />
-        </View>
-
         {programs.length === 0 ? (
           <View style={styles.emptyState}>
             <Ionicons name="layers-outline" size={64} color={theme.colors.border} />
@@ -176,7 +175,7 @@ export default function ProgramsScreen({ navigation }: any) {
           </>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -186,20 +185,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
   },
   scrollContent: {
-    paddingBottom: 40,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    backgroundColor: theme.colors.headerDark,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#fff',
+    paddingBottom: 100,
   },
   loadingContainer: {
     flex: 1,

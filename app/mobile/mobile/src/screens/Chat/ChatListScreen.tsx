@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   FlatList,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { theme } from '../../constants/theme';
@@ -14,6 +13,7 @@ import { useClientConversation } from '../../hooks/useConversation';
 import { useUnreadCount } from '../../hooks/useMessages';
 import { useGroups } from '../../hooks/useGroupChat';
 import { Skeleton, SkeletonChatItem } from '../../components/Skeleton';
+import ScreenHeader from '../../components/ScreenHeader';
 import type { GroupConversation } from '../../lib/groupApi';
 
 type Tab = 'dm' | 'groups';
@@ -153,13 +153,13 @@ export default function ChatListScreen(props: ChatListScreenProps = {}) {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Berichten</Text>
-      </View>
-
-      {/* Tab bar */}
-      <View style={styles.tabs}>
+    <View style={styles.container}>
+      <ScreenHeader
+        title="Berichten"
+        subtitle={unreadCount > 0 ? `${unreadCount} ongelezen` : 'Alles gelezen'}
+      >
+        {/* Tab bar inside header */}
+        <View style={styles.tabs}>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'dm' && styles.tabActive]}
           onPress={() => setActiveTab('dm')}
@@ -186,7 +186,8 @@ export default function ChatListScreen(props: ChatListScreenProps = {}) {
             </View>
           )}
         </TouchableOpacity>
-      </View>
+        </View>
+      </ScreenHeader>
 
       {activeTab === 'dm' ? (
         <View style={styles.content}>
@@ -244,7 +245,7 @@ export default function ChatListScreen(props: ChatListScreenProps = {}) {
           )}
         </View>
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -253,21 +254,8 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 12,
-    backgroundColor: theme.colors.headerDark,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#fff',
-  },
   tabs: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
-    marginBottom: 8,
     gap: 8,
   },
   tab: {
@@ -276,22 +264,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: theme.colors.surface,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
+    backgroundColor: 'rgba(255,255,255,0.12)',
     gap: 6,
   },
   tabActive: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
+    backgroundColor: '#fff',
   },
   tabText: {
     fontSize: 14,
     fontWeight: '600',
-    color: theme.colors.textSecondary,
+    color: 'rgba(255,255,255,0.7)',
   },
   tabTextActive: {
-    color: '#fff',
+    color: theme.colors.primary,
   },
   tabBadge: {
     backgroundColor: theme.colors.error,
@@ -311,7 +296,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   list: {
-    paddingBottom: 20,
+    paddingBottom: 100,
   },
   chatItem: {
     flexDirection: 'row',

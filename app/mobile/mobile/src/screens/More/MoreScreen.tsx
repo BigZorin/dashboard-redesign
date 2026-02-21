@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView, Image } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { supabase } from '../../lib/supabase';
@@ -8,6 +7,7 @@ import { useUser } from '../../hooks/useUser';
 import { useUnreadCount } from '../../hooks/useMessages';
 import { theme } from '../../constants/theme';
 import { Skeleton, SkeletonListItem } from '../../components/Skeleton';
+import ScreenHeader from '../../components/ScreenHeader';
 
 // ============================================================
 // TYPES
@@ -49,6 +49,10 @@ export default function MoreScreen(props: MoreScreenProps) {
   const userData = props.userData ?? hookUserData ?? defaultUserData;
   const unreadCount = props.unreadCount ?? hookUnreadCount ?? 0;
 
+  const firstName = userData?.profile?.first_name || '';
+  const lastName = userData?.profile?.last_name || '';
+  const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() || 'JD';
+
   const handleLogout = async () => {
     Alert.alert(
       'Uitloggen',
@@ -70,10 +74,10 @@ export default function MoreScreen(props: MoreScreenProps) {
     );
   };
 
-  const MenuItem = ({ icon, title, subtitle, onPress, badge }: any) => (
-    <TouchableOpacity style={styles.menuItem} onPress={onPress}>
-      <View style={styles.menuIconContainer}>
-        <Ionicons name={icon} size={24} color={theme.colors.primary} />
+  const MenuItem = ({ icon, title, subtitle, onPress, badge, iconColor }: any) => (
+    <TouchableOpacity style={styles.menuItem} onPress={onPress} activeOpacity={0.6}>
+      <View style={[styles.menuIconContainer, iconColor && { backgroundColor: iconColor + '15' }]}>
+        <Ionicons name={icon} size={22} color={iconColor || theme.colors.primary} />
       </View>
       <View style={styles.menuContent}>
         <Text style={styles.menuTitle}>{title}</Text>
@@ -84,48 +88,23 @@ export default function MoreScreen(props: MoreScreenProps) {
           <Text style={styles.badgeText}>{badge > 99 ? '99+' : badge}</Text>
         </View>
       )}
-      <Ionicons name="chevron-forward" size={20} color={theme.colors.textTertiary} />
+      <Ionicons name="chevron-forward" size={18} color={theme.colors.textTertiary} />
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.headerBanner}>
-        <Text style={styles.title}>Meer</Text>
-      </View>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Profiel sectie */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Profiel</Text>
-          <View style={styles.card}>
-            {loading ? (
-              <View style={styles.profileHeader}>
-                <Skeleton width={64} height={64} borderRadius={32} />
-                <View style={{ flex: 1, marginLeft: 16 }}>
-                  <Skeleton height={18} width="60%" style={{ marginBottom: 6 }} />
-                  <Skeleton height={14} width="80%" />
-                </View>
-              </View>
-            ) : (
-              <View style={styles.profileHeader}>
-                {userData?.profile?.avatar_url ? (
-                  <Image source={{ uri: userData.profile.avatar_url }} style={styles.avatarImage} />
-                ) : (
-                  <View style={styles.avatarPlaceholder}>
-                    <Ionicons name="person" size={32} color={theme.colors.secondary} />
-                  </View>
-                )}
-                <View style={styles.profileInfo}>
-                  <Text style={styles.profileName}>
-                    {userData?.profile?.first_name} {userData?.profile?.last_name}
-                  </Text>
-                  <Text style={styles.profileEmail}>{userData?.email}</Text>
-                </View>
-              </View>
-            )}
-          </View>
-        </View>
+    <View style={styles.container}>
+      <ScreenHeader
+        title={loading ? 'Meer' : `${firstName} ${lastName}`}
+        subtitle={loading ? '' : userData?.email}
+        avatarUrl={userData?.profile?.avatar_url}
+        avatarFallback={loading ? '' : initials}
+      />
 
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
         {/* Berichten sectie */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Berichten</Text>
@@ -138,8 +117,39 @@ export default function MoreScreen(props: MoreScreenProps) {
                 title="Berichten"
                 subtitle="Chat met je coach"
                 badge={unreadCount || 0}
+                iconColor={theme.colors.primary}
                 onPress={() => (navigation as any).navigate('ChatList')}
               />
+            )}
+          </View>
+        </View>
+
+        {/* Gezondheid sectie */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Gezondheid</Text>
+          <View style={styles.card}>
+            {loading ? (
+              <>
+                <SkeletonListItem />
+                <SkeletonListItem />
+              </>
+            ) : (
+              <>
+                <MenuItem
+                  icon="body"
+                  title="Voortgang"
+                  subtitle="Gewicht, foto's & metingen"
+                  iconColor={theme.colors.success}
+                  onPress={() => (navigation as any).navigate('ProgressDetail')}
+                />
+                <MenuItem
+                  icon="checkmark-done-circle"
+                  title="Gewoontes"
+                  subtitle="Dagelijkse habits bijhouden"
+                  iconColor={theme.colors.accent}
+                  onPress={() => (navigation as any).navigate('Habits')}
+                />
+              </>
             )}
           </View>
         </View>
@@ -161,23 +171,27 @@ export default function MoreScreen(props: MoreScreenProps) {
                   icon="person-circle"
                   title="Profiel bewerken"
                   subtitle="Pas je gegevens aan"
+                  iconColor={theme.colors.primary}
                   onPress={() => (navigation as any).navigate('EditProfile')}
                 />
                 <MenuItem
                   icon="fitness"
                   title="Wearables"
-                  subtitle="Koppel je smartwatch of fitness tracker"
+                  subtitle="Koppel je smartwatch of tracker"
+                  iconColor="#8B5CF6"
                   onPress={() => (navigation as any).navigate('Wearables')}
                 />
                 <MenuItem
                   icon="notifications"
                   title="Notificaties"
                   subtitle="Beheer je meldingen"
+                  iconColor={theme.colors.accent}
                   onPress={() => (navigation as any).navigate('Notifications')}
                 />
                 <MenuItem
                   icon="lock-closed"
                   title="Privacy & Beveiliging"
+                  iconColor={theme.colors.error}
                   onPress={() => (navigation as any).navigate('Privacy')}
                 />
               </>
@@ -186,13 +200,15 @@ export default function MoreScreen(props: MoreScreenProps) {
         </View>
 
         {/* Uitloggen */}
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.7}>
+          <Ionicons name="log-out-outline" size={20} color={theme.colors.error} />
           <Text style={styles.logoutText}>Uitloggen</Text>
         </TouchableOpacity>
 
-        <View style={styles.bottomPadding} />
+        {/* Versie info */}
+        <Text style={styles.versionText}>Evotion v1.0.0</Text>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -201,79 +217,40 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
-  headerBanner: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 16,
-    backgroundColor: theme.colors.headerDark,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#fff',
+  scrollContent: {
+    paddingBottom: 100,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 20,
     paddingHorizontal: 20,
   },
   sectionTitle: {
-    fontSize: 13,
-    fontWeight: '600',
+    fontSize: theme.fontSize.xs,
+    fontWeight: theme.fontWeight.semibold,
     color: theme.colors.textTertiary,
     textTransform: 'uppercase',
     marginBottom: 8,
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
   },
   card: {
     backgroundColor: theme.colors.surface,
-    borderRadius: 12,
+    borderRadius: theme.borderRadius.lg,
     overflow: 'hidden',
-    ...theme.shadows.md,
-  },
-  profileHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-  },
-  avatarImage: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    marginRight: 16,
-  },
-  avatarPlaceholder: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: theme.colors.primaryLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  profileInfo: {
-    flex: 1,
-  },
-  profileName: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: theme.colors.text,
-    marginBottom: 4,
-  },
-  profileEmail: {
-    fontSize: 14,
-    color: theme.colors.textSecondary,
+    borderWidth: 1,
+    borderColor: theme.colors.borderLight,
+    ...theme.shadows.sm,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 16,
+    padding: 14,
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.disabled,
+    borderBottomColor: theme.colors.borderLight,
   },
   menuIconContainer: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: theme.borderRadius.md,
     backgroundColor: theme.colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
@@ -283,13 +260,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   menuTitle: {
-    fontSize: 16,
-    fontWeight: '500',
+    fontSize: theme.fontSize.md,
+    fontWeight: theme.fontWeight.semibold,
     color: theme.colors.text,
-    marginBottom: 2,
+    marginBottom: 1,
   },
   menuSubtitle: {
-    fontSize: 13,
+    fontSize: theme.fontSize.sm,
     color: theme.colors.textTertiary,
   },
   badge: {
@@ -304,23 +281,32 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     color: '#fff',
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
   },
   logoutButton: {
-    backgroundColor: theme.colors.error,
-    borderRadius: 12,
-    padding: 16,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.error + '30',
+    borderRadius: theme.borderRadius.lg,
+    padding: 16,
     marginHorizontal: 20,
     marginTop: 8,
   },
   logoutText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    color: theme.colors.error,
+    fontSize: theme.fontSize.md,
+    fontWeight: theme.fontWeight.semibold,
   },
-  bottomPadding: {
-    height: 20,
+  versionText: {
+    textAlign: 'center',
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.textTertiary,
+    marginTop: 20,
+    marginBottom: 8,
   },
 });

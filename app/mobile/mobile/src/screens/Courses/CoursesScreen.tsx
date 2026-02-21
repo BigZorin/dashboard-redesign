@@ -1,9 +1,5 @@
 // ============================================================================
-// COURSES SCREEN — E-Learning cursussenlijst
-//
-// CLIENT-SCOPED: Toont alle cursussen waartoe de client toegang heeft.
-// Supabase: courses, course_modules, course_lessons, client_course_progress
-// RLS: SELECT op courses via enrollment of openbare cursussen
+// COURSES SCREEN -- E-Learning cursussenlijst (banner card stijl)
 // ============================================================================
 
 import React, { useState } from 'react';
@@ -14,11 +10,15 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
+  Dimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../constants/theme';
 import { Skeleton, SkeletonCourseCard } from '../../components/Skeleton';
+import ScreenHeader from '../../components/ScreenHeader';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 // ============================================================
 // TYPES
@@ -109,6 +109,20 @@ const FILTERS: { key: CourseStatus; label: string }[] = [
   { key: 'completed', label: 'Voltooid' },
 ];
 
+const CATEGORY_GRADIENTS: Record<string, readonly [string, string]> = {
+  Training: [theme.colors.primary, '#8B5CF6'] as const,
+  Voeding: ['#059669', '#10B981'] as const,
+  Mindset: ['#D97706', '#F59E0B'] as const,
+  Lifestyle: ['#7C3AED', '#A78BFA'] as const,
+};
+
+const CATEGORY_ICONS: Record<string, string> = {
+  Training: 'barbell',
+  Voeding: 'nutrition',
+  Mindset: 'bulb',
+  Lifestyle: 'moon',
+};
+
 export default function CoursesScreen({ navigation, ...props }: CoursesScreenProps & { navigation?: any }) {
   const [filter, setFilter] = useState<CourseStatus>('all');
   const loading = props.loading ?? false;
@@ -125,42 +139,27 @@ export default function CoursesScreen({ navigation, ...props }: CoursesScreenPro
     (c) => c.completedLessons > 0 && c.completedLessons < c.totalLessons
   ).length;
 
-  const getCategoryColor = (cat: string) => {
-    switch (cat) {
-      case 'Training': return theme.colors.primary;
-      case 'Voeding': return theme.colors.success;
-      case 'Mindset': return theme.colors.accent;
-      case 'Lifestyle': return '#8B5CF6';
-      default: return theme.colors.primary;
-    }
-  };
-
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>Cursussen</Text>
-          <Text style={styles.headerSub}>
-            {totalCompleted} voltooid, {totalActive} bezig
-          </Text>
+    <View style={styles.container}>
+      <ScreenHeader
+        title="Cursussen"
+        subtitle={`${totalCompleted} voltooid, ${totalActive} bezig`}
+      >
+        {/* Filter chips inside header */}
+        <View style={styles.filterRow}>
+          {FILTERS.map((f) => (
+            <TouchableOpacity
+              key={f.key}
+              style={[styles.filterChip, filter === f.key && styles.filterChipActive]}
+              onPress={() => setFilter(f.key)}
+            >
+              <Text style={[styles.filterText, filter === f.key && styles.filterTextActive]}>
+                {f.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
-      </View>
-
-      {/* Filter tabs */}
-      <View style={styles.filterRow}>
-        {FILTERS.map((f) => (
-          <TouchableOpacity
-            key={f.key}
-            style={[styles.filterChip, filter === f.key && styles.filterChipActive]}
-            onPress={() => setFilter(f.key)}
-          >
-            <Text style={[styles.filterText, filter === f.key && styles.filterTextActive]}>
-              {f.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      </ScreenHeader>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {loading ? (
@@ -171,7 +170,9 @@ export default function CoursesScreen({ navigation, ...props }: CoursesScreenPro
           </View>
         ) : filtered.length === 0 ? (
           <View style={styles.emptyState}>
-            <Ionicons name="book-outline" size={48} color={theme.colors.border} />
+            <View style={styles.emptyIconWrap}>
+              <Ionicons name="book-outline" size={48} color={theme.colors.textTertiary} />
+            </View>
             <Text style={styles.emptyTitle}>Geen cursussen gevonden</Text>
             <Text style={styles.emptyText}>
               {filter === 'completed'
@@ -185,73 +186,68 @@ export default function CoursesScreen({ navigation, ...props }: CoursesScreenPro
               ? course.completedLessons / course.totalLessons
               : 0;
             const isCompleted = progress === 1;
-            const catColor = getCategoryColor(course.category);
+            const gradientColors = CATEGORY_GRADIENTS[course.category] || CATEGORY_GRADIENTS.Training;
+            const categoryIcon = CATEGORY_ICONS[course.category] || 'book';
 
             return (
               <TouchableOpacity
                 key={course.id}
                 style={styles.courseCard}
-                activeOpacity={0.7}
+                activeOpacity={0.85}
                 onPress={() => {
                   if (props.onSelectCourse) props.onSelectCourse(course.id);
                   else navigation?.navigate('CourseDetail', { courseId: course.id, courseTitle: course.title });
                 }}
               >
-                {/* Thumbnail placeholder */}
-                <View style={[styles.thumbnail, { backgroundColor: `${catColor}15` }]}>
-                  <Ionicons
-                    name={
-                      course.category === 'Training' ? 'barbell' :
-                      course.category === 'Voeding' ? 'nutrition' :
-                      course.category === 'Mindset' ? 'bulb' : 'moon'
-                    }
-                    size={32}
-                    color={catColor}
+                {/* Banner */}
+                <View style={styles.bannerContainer}>
+                  {course.thumbnail ? (
+                    <Image source={{ uri: course.thumbnail }} style={styles.bannerImage} resizeMode="cover" />
+                  ) : (
+                    <LinearGradient
+                      colors={gradientColors as unknown as [string, string]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.bannerFallback}
+                    >
+                      <Ionicons name={categoryIcon as any} size={48} color="rgba(255,255,255,0.2)" />
+                    </LinearGradient>
+                  )}
+                  {/* Dark gradient overlay */}
+                  <LinearGradient
+                    colors={['transparent', 'rgba(0,0,0,0.65)']}
+                    style={styles.bannerOverlay}
                   />
+                  {/* Category badge on banner */}
+                  <View style={styles.bannerBadge}>
+                    <Text style={styles.bannerBadgeText}>{course.category}</Text>
+                  </View>
+                  {/* Title on banner */}
+                  <View style={styles.bannerTitleWrap}>
+                    <Text style={styles.bannerTitle} numberOfLines={2}>{course.title}</Text>
+                  </View>
+                  {/* Completed check */}
                   {isCompleted && (
                     <View style={styles.completedBadge}>
-                      <Ionicons name="checkmark-circle" size={20} color={theme.colors.success} />
+                      <Ionicons name="checkmark-circle" size={22} color="#fff" />
                     </View>
                   )}
                 </View>
 
-                <View style={styles.courseInfo}>
-                  {/* Category chip */}
-                  <View style={[styles.categoryChip, { backgroundColor: `${catColor}15` }]}>
-                    <Text style={[styles.categoryText, { color: catColor }]}>{course.category}</Text>
-                  </View>
-
-                  <Text style={styles.courseTitle} numberOfLines={2}>{course.title}</Text>
-                  <Text style={styles.courseDesc} numberOfLines={2}>{course.description}</Text>
-
-                  {/* Meta */}
-                  <View style={styles.metaRow}>
-                    <View style={styles.metaItem}>
-                      <Ionicons name="layers-outline" size={14} color={theme.colors.textTertiary} />
-                      <Text style={styles.metaText}>{course.moduleCount} modules</Text>
-                    </View>
-                    <View style={styles.metaItem}>
-                      <Ionicons name="play-circle-outline" size={14} color={theme.colors.textTertiary} />
-                      <Text style={styles.metaText}>{course.lessonCount} lessen</Text>
-                    </View>
-                    <View style={styles.metaItem}>
-                      <Ionicons name="time-outline" size={14} color={theme.colors.textTertiary} />
-                      <Text style={styles.metaText}>{course.duration}</Text>
-                    </View>
-                  </View>
-
+                {/* Card body */}
+                <View style={styles.cardBody}>
                   {/* Progress bar */}
                   {course.completedLessons > 0 && (
                     <View style={styles.progressSection}>
                       <View style={styles.progressBar}>
-                        <View
-                          style={[
-                            styles.progressFill,
-                            {
-                              width: `${progress * 100}%`,
-                              backgroundColor: isCompleted ? theme.colors.success : theme.colors.primary,
-                            },
-                          ]}
+                        <LinearGradient
+                          colors={isCompleted
+                            ? [theme.colors.success, '#34D399'] as readonly [string, string]
+                            : [theme.colors.primary, theme.colors.primaryMuted] as readonly [string, string]
+                          }
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 0 }}
+                          style={[styles.progressFill, { width: `${progress * 100}%` }]}
                         />
                       </View>
                       <Text style={styles.progressText}>
@@ -261,168 +257,191 @@ export default function CoursesScreen({ navigation, ...props }: CoursesScreenPro
                       </Text>
                     </View>
                   )}
-                </View>
 
-                <Ionicons name="chevron-forward" size={20} color={theme.colors.textTertiary} />
+                  {/* Meta row */}
+                  <View style={styles.metaRow}>
+                    <View style={styles.metaItem}>
+                      <Ionicons name="layers-outline" size={14} color={theme.colors.textTertiary} />
+                      <Text style={styles.metaText}>{course.moduleCount} modules</Text>
+                    </View>
+                    <View style={styles.metaItem}>
+                      <Ionicons name="time-outline" size={14} color={theme.colors.textTertiary} />
+                      <Text style={styles.metaText}>{course.duration}</Text>
+                    </View>
+                    <View style={styles.metaItem}>
+                      <Ionicons name="person-outline" size={14} color={theme.colors.textTertiary} />
+                      <Text style={styles.metaText}>{course.instructor}</Text>
+                    </View>
+                  </View>
+                </View>
               </TouchableOpacity>
             );
           })
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: theme.colors.headerDark,
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 16,
-    backgroundColor: theme.colors.headerDark,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: '#fff',
-  },
-  headerSub: {
-    fontSize: 14,
-    color: 'rgba(255,255,255,0.6)',
-    marginTop: 2,
+    backgroundColor: theme.colors.background,
   },
   filterRow: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingBottom: 16,
     gap: 8,
-    backgroundColor: theme.colors.headerDark,
   },
   filterChip: {
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.12)',
   },
   filterChipActive: {
     backgroundColor: '#fff',
   },
   filterText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: 'rgba(255,255,255,0.6)',
+    fontSize: theme.fontSize.sm,
+    fontWeight: theme.fontWeight.semibold,
+    color: 'rgba(255,255,255,0.7)',
   },
   filterTextActive: {
-    color: theme.colors.headerDark,
+    color: theme.colors.primaryDark,
   },
   scrollContent: {
     padding: 20,
-    paddingBottom: 40,
-    backgroundColor: theme.colors.background,
-    minHeight: '100%',
+    paddingBottom: 100,
   },
+  // Banner card
   courseCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
     backgroundColor: theme.colors.surface,
-    borderRadius: 16,
-    padding: 14,
-    marginBottom: 12,
-    gap: 14,
+    borderRadius: theme.borderRadius.lg,
+    marginBottom: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: theme.colors.borderLight,
     ...theme.shadows.md,
   },
-  thumbnail: {
-    width: 72,
-    height: 72,
-    borderRadius: 12,
+  bannerContainer: {
+    height: 150,
+    position: 'relative',
+  },
+  bannerImage: {
+    width: '100%',
+    height: '100%',
+  },
+  bannerFallback: {
+    width: '100%',
+    height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  completedBadge: {
+  bannerOverlay: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  bannerBadge: {
     position: 'absolute',
-    top: -4,
-    right: -4,
-    backgroundColor: '#fff',
-    borderRadius: 12,
+    top: 12,
+    left: 12,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
-  courseInfo: {
-    flex: 1,
-  },
-  categoryChip: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
-    marginBottom: 4,
-  },
-  categoryText: {
-    fontSize: 11,
-    fontWeight: '700',
+  bannerBadgeText: {
+    fontSize: theme.fontSize.xs,
+    fontWeight: theme.fontWeight.bold,
+    color: '#fff',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
-  courseTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: theme.colors.text,
-    marginBottom: 2,
+  bannerTitleWrap: {
+    position: 'absolute',
+    bottom: 12,
+    left: 14,
+    right: 14,
   },
-  courseDesc: {
-    fontSize: 12,
-    color: theme.colors.textSecondary,
-    lineHeight: 16,
-    marginBottom: 8,
+  bannerTitle: {
+    fontSize: theme.fontSize.lg,
+    fontWeight: theme.fontWeight.bold,
+    color: '#fff',
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 4,
   },
-  metaRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 8,
-  },
-  metaItem: {
-    flexDirection: 'row',
+  completedBadge: {
+    position: 'absolute',
+    top: 12,
+    right: 12,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: theme.colors.success,
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: 3,
   },
-  metaText: {
-    fontSize: 11,
-    color: theme.colors.textTertiary,
+  cardBody: {
+    padding: 14,
   },
   progressSection: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
+    marginBottom: 12,
   },
   progressBar: {
     flex: 1,
-    height: 4,
-    backgroundColor: theme.colors.border,
-    borderRadius: 2,
+    height: 6,
+    backgroundColor: theme.colors.borderLight,
+    borderRadius: 3,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    borderRadius: 2,
+    borderRadius: 3,
   },
   progressText: {
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: theme.fontSize.xs,
+    fontWeight: theme.fontWeight.semibold,
+    color: theme.colors.textTertiary,
+    minWidth: 80,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    gap: 16,
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  metaText: {
+    fontSize: theme.fontSize.xs,
     color: theme.colors.textTertiary,
   },
+  // Empty state
   emptyState: {
     alignItems: 'center',
     paddingVertical: 60,
     gap: 8,
   },
+  emptyIconWrap: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: theme.colors.borderLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
   emptyTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: theme.fontSize.lg,
+    fontWeight: theme.fontWeight.semibold,
     color: theme.colors.text,
   },
   emptyText: {
-    fontSize: 14,
+    fontSize: theme.fontSize.sm,
     color: theme.colors.textSecondary,
     textAlign: 'center',
     paddingHorizontal: 40,

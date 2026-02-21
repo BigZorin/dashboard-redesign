@@ -9,7 +9,6 @@ import {
   Alert,
   Image,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useFoodLogs, useDailyMacros, useNutritionTargets, useDeleteFoodLog } from '../../hooks/useNutrition';
@@ -17,6 +16,7 @@ import { useActiveMealPlan } from '../../hooks/useMealPlan';
 import MacroRing from '../../components/MacroRing';
 import { theme } from '../../constants/theme';
 import { Skeleton, SkeletonMacroRings, SkeletonMealCard } from '../../components/Skeleton';
+import ScreenHeader from '../../components/ScreenHeader';
 import type { FoodLogRecord, MealPlanEntry } from '../../lib/nutritionApi';
 
 // ============================================================
@@ -154,22 +154,21 @@ export default function NutritionScreen(props: NutritionScreenProps = {}) {
   const [expandedRecipe, setExpandedRecipe] = useState<string | null>(null);
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Voeding</Text>
-        <View style={styles.headerRight}>
+    <View style={styles.safeArea}>
+      <ScreenHeader
+        title="Voeding"
+        subtitle={`${macros.calories} / ${calTarget} kcal`}
+        rightIcon={
           <TouchableOpacity
             style={styles.headerBtn}
             onPress={() => navigation.navigate('ShoppingList' as never)}
           >
             <Ionicons name="cart-outline" size={22} color="#fff" />
           </TouchableOpacity>
-        </View>
-      </View>
+        }
+      />
 
       <ScrollView
-        style={styles.scrollArea}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
@@ -413,31 +412,14 @@ export default function NutritionScreen(props: NutritionScreenProps = {}) {
           })
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: theme.colors.headerDark,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    backgroundColor: theme.colors.headerDark,
-  },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#fff',
-  },
-  headerRight: {
-    flexDirection: 'row',
-    gap: 8,
+    backgroundColor: theme.colors.background,
   },
   headerBtn: {
     width: 38,
@@ -446,10 +428,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  scrollArea: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
   },
   scrollContent: {
     paddingBottom: 100,

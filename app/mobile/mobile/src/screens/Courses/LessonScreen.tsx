@@ -1,8 +1,5 @@
 // ============================================================================
-// LESSON SCREEN — Individuele les weergave
-//
-// CLIENT-SCOPED: Toont les content (video/artikel/quiz).
-// Supabase: course_lessons, client_lesson_progress
+// LESSON SCREEN -- Individuele les weergave met progress indicator
 // ============================================================================
 
 import React, { useState } from 'react';
@@ -14,11 +11,11 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../constants/theme';
+import ScreenHeader from '../../components/ScreenHeader';
 
-// PLACEHOLDER — Vervang met Supabase data
+// PLACEHOLDER -- Vervang met Supabase data
 const LESSON_DATA = {
   id: 'l1',
   title: 'Welkom bij de cursus',
@@ -27,6 +24,8 @@ const LESSON_DATA = {
   videoUrl: null,
   content: `Welkom bij deze cursus! In de komende modules gaan we je alles leren over krachttraining.\n\nWat je gaat leren:\n- De basis van krachttraining\n- Correcte techniek voor de grote oefeningen\n- Hoe je een effectief trainingsschema maakt\n- Progressief overbelasten en periodisering\n\nNeem de tijd om elke les goed door te nemen. Je kunt altijd terug naar eerdere lessen als je iets wilt herhalen.\n\nVeel succes!`,
   completed: false,
+  lessonNumber: 1,
+  totalLessons: 11,
 };
 
 export default function LessonScreen({ navigation, route }: any) {
@@ -35,22 +34,19 @@ export default function LessonScreen({ navigation, route }: any) {
 
   const handleComplete = () => {
     setCompleted(true);
-    // TODO: Update Supabase client_lesson_progress
     Alert.alert('Les voltooid!', 'Je voortgang is opgeslagen.', [
       { text: 'Volgende les', onPress: () => navigation.goBack() },
     ]);
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle} numberOfLines={1}>{lessonTitle || 'Les'}</Text>
-        <View style={{ width: 40 }} />
-      </View>
+    <View style={styles.container}>
+      <ScreenHeader
+        title={lessonTitle || 'Les'}
+        subtitle={`Les ${LESSON_DATA.lessonNumber} van ${LESSON_DATA.totalLessons}`}
+        onBack={() => navigation.goBack()}
+        compact
+      />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Video placeholder */}
@@ -88,7 +84,7 @@ export default function LessonScreen({ navigation, route }: any) {
 
         {/* Mark as complete */}
         {!completed ? (
-          <TouchableOpacity style={styles.completeBtn} onPress={handleComplete}>
+          <TouchableOpacity style={styles.completeBtn} onPress={handleComplete} activeOpacity={0.85}>
             <Ionicons name="checkmark-circle" size={22} color="#fff" />
             <Text style={styles.completeBtnText}>Markeer als voltooid</Text>
           </TouchableOpacity>
@@ -99,39 +95,17 @@ export default function LessonScreen({ navigation, route }: any) {
           </View>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: theme.colors.headerDark,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: theme.colors.headerDark,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#fff',
-    flex: 1,
-    textAlign: 'center',
+    backgroundColor: theme.colors.background,
   },
   scrollContent: {
-    backgroundColor: theme.colors.background,
-    minHeight: '100%',
+    paddingBottom: 100,
   },
   videoPlaceholder: {
     aspectRatio: 16 / 9,
@@ -149,7 +123,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   videoLabel: {
-    fontSize: 13,
+    fontSize: theme.fontSize.sm,
     color: 'rgba(255,255,255,0.6)',
   },
   lessonHeader: {
@@ -168,8 +142,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   typeChipText: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: theme.fontSize.xs,
+    fontWeight: theme.fontWeight.semibold,
     color: theme.colors.primary,
   },
   durationChip: {
@@ -182,12 +156,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   durationText: {
-    fontSize: 12,
+    fontSize: theme.fontSize.xs,
     color: theme.colors.textTertiary,
   },
   lessonTitle: {
-    fontSize: 22,
-    fontWeight: '700',
+    fontSize: theme.fontSize.xl,
+    fontWeight: theme.fontWeight.bold,
     color: theme.colors.text,
     paddingHorizontal: 20,
     paddingTop: 12,
@@ -195,14 +169,16 @@ const styles = StyleSheet.create({
   },
   contentCard: {
     backgroundColor: theme.colors.surface,
-    borderRadius: 14,
+    borderRadius: theme.borderRadius.lg,
     padding: 20,
     marginHorizontal: 20,
     marginBottom: 20,
+    borderWidth: 1,
+    borderColor: theme.colors.borderLight,
     ...theme.shadows.sm,
   },
   contentText: {
-    fontSize: 15,
+    fontSize: theme.fontSize.md,
     lineHeight: 24,
     color: theme.colors.text,
   },
@@ -215,29 +191,29 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     marginHorizontal: 20,
     marginBottom: 40,
-    borderRadius: 14,
+    borderRadius: theme.borderRadius.lg,
   },
   completeBtnText: {
     color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: theme.fontSize.md,
+    fontWeight: theme.fontWeight.bold,
   },
   completedBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: `${theme.colors.success}15`,
+    backgroundColor: theme.colors.success + '15',
     paddingVertical: 14,
     marginHorizontal: 20,
     marginBottom: 40,
-    borderRadius: 14,
+    borderRadius: theme.borderRadius.lg,
     borderWidth: 1,
     borderColor: theme.colors.success,
   },
   completedText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: theme.fontSize.md,
+    fontWeight: theme.fontWeight.semibold,
     color: theme.colors.success,
   },
 });

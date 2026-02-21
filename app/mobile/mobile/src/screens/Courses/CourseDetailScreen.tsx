@@ -1,8 +1,5 @@
 // ============================================================================
-// COURSE DETAIL SCREEN — Modules & lessen overzicht
-//
-// CLIENT-SCOPED: Toont modules en lessen binnen een cursus.
-// Supabase: course_modules, course_lessons, client_lesson_progress
+// COURSE DETAIL SCREEN -- Modules & lessen met hero banner
 // ============================================================================
 
 import React, { useState } from 'react';
@@ -12,10 +9,15 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Dimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../constants/theme';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const HERO_HEIGHT = 220;
 
 type Lesson = {
   id: string;
@@ -31,7 +33,7 @@ type Module = {
   lessons: Lesson[];
 };
 
-// PLACEHOLDER — Vervang met Supabase data
+// PLACEHOLDER -- Vervang met Supabase data
 const MODULES: Module[] = [
   {
     id: 'm1',
@@ -72,6 +74,7 @@ const LESSON_TYPE_ICONS: Record<string, { name: string; color: string }> = {
 
 export default function CourseDetailScreen({ navigation, route }: any) {
   const { courseTitle } = route.params;
+  const insets = useSafeAreaInsets();
   const [expandedModule, setExpandedModule] = useState<string | null>(MODULES[0]?.id || null);
 
   const totalLessons = MODULES.reduce((sum, m) => sum + m.lessons.length, 0);
@@ -80,47 +83,73 @@ export default function CourseDetailScreen({ navigation, route }: any) {
     0
   );
   const progress = totalLessons > 0 ? completedLessons / totalLessons : 0;
-
-  // Find first incomplete lesson for "Continue" button
   const nextLesson = MODULES.flatMap((m) => m.lessons).find((l) => !l.completed);
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+    <View style={styles.container}>
+      {/* Hero Banner */}
+      <View style={[styles.heroContainer, { paddingTop: insets.top }]}>
+        <LinearGradient
+          colors={theme.gradients.header}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+        {/* Back button */}
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={styles.backBtn}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+        >
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <View style={styles.headerContent}>
-          <Text style={styles.headerTitle} numberOfLines={1}>{courseTitle || 'Cursus'}</Text>
-          <Text style={styles.headerSub}>
+
+        {/* Hero content */}
+        <View style={styles.heroContent}>
+          <Text style={styles.heroTitle} numberOfLines={2}>{courseTitle || 'Cursus'}</Text>
+          <Text style={styles.heroSubtitle}>
             {completedLessons}/{totalLessons} lessen voltooid
           </Text>
+
+          {/* Progress bar on hero */}
+          <View style={styles.heroProgressBar}>
+            <LinearGradient
+              colors={[theme.colors.primary, '#A78BFA'] as readonly [string, string]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[styles.heroProgressFill, { width: `${Math.max(progress * 100, 2)}%` }]}
+            />
+          </View>
+          <Text style={styles.heroPercent}>{Math.round(progress * 100)}% voltooid</Text>
         </View>
-        <View style={{ width: 40 }} />
+
+        {/* Curved bottom */}
+        <View style={styles.heroCurve}>
+          <View style={styles.heroCurveInner} />
+        </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Progress overview */}
-        <View style={styles.progressCard}>
-          <View style={styles.progressHeader}>
-            <Text style={styles.progressLabel}>Voortgang</Text>
-            <Text style={styles.progressPercent}>{Math.round(progress * 100)}%</Text>
-          </View>
-          <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: `${progress * 100}%` }]} />
-          </View>
-
-          {nextLesson && (
-            <TouchableOpacity
-              style={styles.continueBtn}
-              onPress={() => navigation.navigate('Lesson', { lessonId: nextLesson.id, lessonTitle: nextLesson.title })}
-            >
-              <Ionicons name="play" size={18} color="#fff" />
-              <Text style={styles.continueBtnText}>Verder met: {nextLesson.title}</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Continue button */}
+        {nextLesson && (
+          <TouchableOpacity
+            style={styles.continueBtn}
+            onPress={() => navigation.navigate('Lesson', { lessonId: nextLesson.id, lessonTitle: nextLesson.title })}
+            activeOpacity={0.85}
+          >
+            <View style={styles.continueBtnIcon}>
+              <Ionicons name="play" size={20} color="#fff" />
+            </View>
+            <View style={styles.continueBtnText}>
+              <Text style={styles.continueBtnLabel}>Verder met</Text>
+              <Text style={styles.continueBtnTitle} numberOfLines={1}>{nextLesson.title}</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={theme.colors.textTertiary} />
+          </TouchableOpacity>
+        )}
 
         {/* Modules */}
         {MODULES.map((mod, modIdx) => {
@@ -202,103 +231,132 @@ export default function CourseDetailScreen({ navigation, route }: any) {
           );
         })}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: theme.colors.headerDark,
+    backgroundColor: theme.colors.background,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: theme.colors.headerDark,
+  // Hero
+  heroContainer: {
+    position: 'relative',
+    minHeight: HERO_HEIGHT,
+    paddingHorizontal: 20,
+    paddingBottom: 24,
   },
   backBtn: {
     width: 40,
     height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.12)',
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 12,
   },
-  headerContent: {
+  heroContent: {
     flex: 1,
-    alignItems: 'center',
+    justifyContent: 'flex-end',
   },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
+  heroTitle: {
+    fontSize: theme.fontSize.xxl,
+    fontWeight: theme.fontWeight.bold,
     color: '#fff',
+    marginBottom: 4,
+    letterSpacing: -0.3,
   },
-  headerSub: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.6)',
-    marginTop: 1,
+  heroSubtitle: {
+    fontSize: theme.fontSize.sm,
+    color: 'rgba(255,255,255,0.65)',
+    marginBottom: 12,
   },
-  scrollContent: {
-    padding: 20,
-    paddingBottom: 40,
-    backgroundColor: theme.colors.background,
-    minHeight: '100%',
-  },
-  progressCard: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 20,
-    ...theme.shadows.md,
-  },
-  progressHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  progressLabel: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: theme.colors.text,
-  },
-  progressPercent: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: theme.colors.primary,
-  },
-  progressBar: {
+  heroProgressBar: {
     height: 6,
-    backgroundColor: theme.colors.border,
+    backgroundColor: 'rgba(255,255,255,0.15)',
     borderRadius: 3,
     overflow: 'hidden',
-    marginBottom: 14,
+    marginBottom: 6,
   },
-  progressFill: {
+  heroProgressFill: {
     height: '100%',
-    backgroundColor: theme.colors.primary,
     borderRadius: 3,
   },
+  heroPercent: {
+    fontSize: theme.fontSize.xs,
+    color: 'rgba(255,255,255,0.5)',
+    fontWeight: theme.fontWeight.semibold,
+  },
+  heroCurve: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 16,
+    overflow: 'hidden',
+  },
+  heroCurveInner: {
+    position: 'absolute',
+    bottom: 0,
+    left: -10,
+    right: -10,
+    height: 32,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    backgroundColor: theme.colors.background,
+  },
+  // Scroll content
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 100,
+  },
+  // Continue button
   continueBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.lg,
+    padding: 14,
+    marginBottom: 20,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: theme.colors.primary + '25',
+    ...theme.shadows.md,
+  },
+  continueBtnIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 14,
     backgroundColor: theme.colors.primary,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   continueBtnText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
     flex: 1,
   },
+  continueBtnLabel: {
+    fontSize: theme.fontSize.xs,
+    fontWeight: theme.fontWeight.semibold,
+    color: theme.colors.primary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  continueBtnTitle: {
+    fontSize: theme.fontSize.md,
+    fontWeight: theme.fontWeight.bold,
+    color: theme.colors.text,
+  },
+  // Modules
   moduleCard: {
     backgroundColor: theme.colors.surface,
-    borderRadius: 14,
+    borderRadius: theme.borderRadius.lg,
     marginBottom: 12,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: theme.colors.borderLight,
     ...theme.shadows.sm,
   },
   moduleHeader: {
@@ -338,33 +396,34 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   moduleTitle: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: theme.fontSize.md,
+    fontWeight: theme.fontWeight.semibold,
     color: theme.colors.text,
   },
   moduleMeta: {
-    fontSize: 12,
+    fontSize: theme.fontSize.xs,
     color: theme.colors.textTertiary,
     marginTop: 1,
   },
+  // Lessons
   lessonList: {
     borderTopWidth: 1,
-    borderTopColor: theme.colors.border,
+    borderTopColor: theme.colors.borderLight,
   },
   lessonItem: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 16,
-    gap: 12,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.borderLight,
+    gap: 12,
   },
   lessonIcon: {
     width: 32,
     height: 32,
-    borderRadius: 8,
-    backgroundColor: theme.colors.background,
+    borderRadius: 10,
+    backgroundColor: theme.colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -375,26 +434,24 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   lessonTitle: {
-    fontSize: 14,
-    fontWeight: '500',
+    fontSize: theme.fontSize.sm,
+    fontWeight: theme.fontWeight.semibold,
     color: theme.colors.text,
+    marginBottom: 2,
   },
   lessonTitleDone: {
     color: theme.colors.textTertiary,
-    textDecorationLine: 'line-through',
   },
   lessonMeta: {
     flexDirection: 'row',
     gap: 8,
-    marginTop: 2,
   },
   lessonDuration: {
-    fontSize: 12,
+    fontSize: theme.fontSize.xs,
     color: theme.colors.textTertiary,
   },
   lessonType: {
-    fontSize: 12,
+    fontSize: theme.fontSize.xs,
     color: theme.colors.textTertiary,
-    fontWeight: '500',
   },
 });

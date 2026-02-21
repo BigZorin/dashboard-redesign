@@ -6,12 +6,12 @@ import {
   ScrollView,
   RefreshControl,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../constants/theme';
 import { useHabits, useHabitLogs, useHabitStreaks, useToggleHabit } from '../../hooks/useHabits';
 import HabitCard from '../../components/HabitCard';
 import { Skeleton } from '../../components/Skeleton';
+import ScreenHeader from '../../components/ScreenHeader';
 
 // ============================================================
 // TYPES
@@ -147,34 +147,23 @@ export default function HabitsScreen({ navigation, ...props }: HabitsScreenProps
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header */}
-      <View style={styles.header}>
-        {loading ? (
-          <>
-            <Skeleton height={24} width="40%" style={{ marginBottom: 6 }} />
-            <Skeleton height={14} width="55%" />
-          </>
-        ) : (
-          <>
-            <Text style={styles.headerTitle}>Gewoontes</Text>
-            <Text style={styles.headerDate}>
-              {new Date().toLocaleDateString('nl-NL', {
-                weekday: 'long',
-                day: 'numeric',
-                month: 'long',
-              })}
-            </Text>
-          </>
-        )}
-      </View>
+    <View style={styles.container}>
+      <ScreenHeader
+        title="Gewoontes"
+        subtitle={loading ? '' : new Date().toLocaleDateString('nl-NL', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+        })}
+      />
 
       {loading ? (
-        <ScrollView><HabitsSkeleton /></ScrollView>
+        <ScrollView contentContainerStyle={{ paddingBottom: 100 }}><HabitsSkeleton /></ScrollView>
       ) : (
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           refreshControl={<RefreshControl refreshing={false} onRefresh={handleRefresh} />}
+          showsVerticalScrollIndicator={false}
         >
           {/* Progress summary */}
           {totalCount > 0 && (
@@ -229,7 +218,7 @@ export default function HabitsScreen({ navigation, ...props }: HabitsScreenProps
           )}
         </ScrollView>
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -238,27 +227,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 16,
-    backgroundColor: theme.colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: theme.colors.text,
-  },
-  headerDate: {
-    fontSize: 14,
-    color: theme.colors.textSecondary,
-    marginTop: 4,
-  },
   scrollContent: {
     padding: 20,
-    paddingBottom: 40,
+    paddingBottom: 100,
   },
   summaryCard: {
     flexDirection: 'row',

@@ -126,20 +126,20 @@ export default function ProgramDetailScreen({ route, navigation }: any) {
 
   if (isLoading || !program) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
+      <View style={styles.container}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
           <Text style={styles.loadingText}>Programma laden...</Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   const blocks = program.program.blocks;
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+    <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Banner */}
         <View style={styles.bannerContainer}>
           {program.program.bannerUrl ? (
@@ -381,7 +381,7 @@ export default function ProgramDetailScreen({ route, navigation }: any) {
           </View>
         </Pressable>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -391,7 +391,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
   },
   scrollContent: {
-    paddingBottom: 40,
+    paddingBottom: 100,
   },
   loadingContainer: {
     flex: 1,

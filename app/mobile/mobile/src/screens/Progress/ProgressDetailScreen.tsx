@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useProgressChartData } from '../../hooks/useProgressChartData';
@@ -11,6 +10,7 @@ import MetricsOverviewCard from '../../components/charts/MetricsOverviewCard';
 import { theme } from '../../constants/theme';
 import { ScrollView } from 'react-native';
 import { SkeletonChart, SkeletonCard } from '../../components/Skeleton';
+import ScreenHeader from '../../components/ScreenHeader';
 
 // ============================================================
 // TYPES
@@ -92,17 +92,15 @@ export default function ProgressDetailScreen(props: ProgressDetailScreenProps = 
   const metrics = props.metrics ?? hookData.metrics;
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Voortgang</Text>
-        <View style={{ width: 40 }} />
-      </View>
+    <View style={styles.safeArea}>
+      <ScreenHeader
+        title="Voortgang"
+        subtitle="Gewicht, stemming & compliance"
+        onBack={() => navigation.goBack()}
+      />
 
       {loading ? (
-        <ScrollView style={styles.content}>
+        <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 100 }}>
           <ProgressSkeleton />
         </ScrollView>
       ) : (
@@ -117,7 +115,7 @@ export default function ProgressDetailScreen(props: ProgressDetailScreenProps = 
           <MetricsOverviewCard metrics={metrics} />
         </ScrollView>
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
