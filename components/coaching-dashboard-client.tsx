@@ -4,8 +4,8 @@ import { useState } from "react"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { CoachingSidebar } from "@/components/coaching-sidebar"
 import { DashboardHeader } from "@/components/dashboard-header"
-import { DashboardOverview } from "@/components/sections/dashboard-overview"
-import { ClientsSection } from "@/components/sections/clients-section"
+import { DashboardOverviewWithData } from "@/components/data/dashboard-data"
+import { ClientsSectionWithData } from "@/components/data/clients-data"
 import { ProgramsSection } from "@/components/sections/programs-section"
 import { NutritionSection } from "@/components/sections/nutrition-section"
 import { MessagesSection } from "@/components/sections/messages-section"
@@ -70,8 +70,8 @@ export function CoachingDashboardClient({ profile }: CoachingDashboardClientProp
               <DashboardHeader title={config.titel} subtitle={subtitel} />
             )}
             <div className="flex-1 overflow-auto">
-              {activeSectie === "dashboard" && <DashboardOverview />}
-              {activeSectie === "clients" && <ClientsSection onSelectClient={handleSelectClient} />}
+              {activeSectie === "dashboard" && <DashboardOverviewWithData />}
+              {activeSectie === "clients" && <ClientsSectionWithData onSelectClient={handleSelectClient} />}
               {activeSectie === "programs" && <ProgramsSection />}
               {activeSectie === "nutrition" && <NutritionSection />}
               {activeSectie === "messages" && <MessagesSection />}

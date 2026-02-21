@@ -1,6 +1,5 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { Users, TrendingUp, MessageCircle, CalendarDays, ArrowUpRight, ArrowDownRight, Clock, CheckCircle2, AlertCircle } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -8,11 +7,37 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Skeleton } from "@/components/ui/skeleton"
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts"
-import { getDashboardStats, getRecentCheckIns, getUpcomingSessions, getClientProgress } from "@/app/actions/dashboard"
-import { formatDistanceToNow } from "date-fns"
-import { nl } from "date-fns/locale"
 
-/** Compliance chart data (mock — requires complex aggregation, wired later) */
+// ============================================================================
+// PLACEHOLDER DATA — Vervang met echte data uit Supabase
+//
+// COACH-SCOPED DATA:
+//   Alle data op dit dashboard is gefilterd op de ingelogde coach.
+//   De coach ziet ALLEEN data van zijn/haar eigen toegewezen clienten.
+//   Filter: WHERE clients.coach_id = auth.uid()
+//
+// Supabase tabellen (altijd gefilterd op coach_id):
+//   - clients (actieve cliënten count WHERE coach_id = auth.uid())
+//   - messages (ongelezen berichten WHERE conversation coach_id = auth.uid())
+//   - client_sessions (sessies deze week WHERE coach_id = auth.uid())
+//   - client_checkins (recente check-ins van eigen clienten)
+//   - client_programs (voortgang van eigen clienten)
+//
+// RLS Policies (verplicht):
+//   - clients: SELECT WHERE coach_id = auth.uid()
+//   - client_sessions: SELECT WHERE coach_id = auth.uid()
+//   - client_checkins: SELECT via JOIN clients WHERE coach_id = auth.uid()
+//   - messages: SELECT via JOIN conversations WHERE coach_id = auth.uid()
+//
+// BELANGRIJK: GEEN financiële data op het coach dashboard!
+// Omzet, betalingen, abonnementen, facturatie zijn ADMIN-ONLY.
+// Coaches zien alleen coaching-relevante metrics.
+// Financiële data zit in: /admin -> Facturatie tab + Statistieken tab
+//
+// Alle KPI's worden server-side berekend via Supabase RPC of Edge Functions
+// ============================================================================
+
+/** Check-in compliance per week (coach-relevante metric i.p.v. omzet) */
 const complianceData = [
   { week: "Wk 1", training: 88, voeding: 72 },
   { week: "Wk 2", training: 91, voeding: 76 },
@@ -22,7 +47,7 @@ const complianceData = [
   { week: "Wk 6", training: 95, voeding: 84 },
 ]
 
-/** Activity chart data (mock — wired later) */
+/** Cliëntactiviteit per dag (check-ins en workouts) */
 const clientActiviteitData = [
   { dag: "Ma", checkins: 18, workouts: 22 },
   { dag: "Di", checkins: 24, workouts: 19 },
@@ -33,59 +58,86 @@ const clientActiviteitData = [
   { dag: "Zo", checkins: 8, workouts: 14 },
 ]
 
-export function DashboardOverview() {
-  const [stats, setStats] = useState<any>(null)
-  const [checkins, setCheckins] = useState<any[]>([])
-  const [sessions, setSessions] = useState<any[]>([])
-  const [progress, setProgress] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+/** KPI-kaarten bovenaan het dashboard */
+const defaultStatKaarten = [
+  {
+    titel: "Actieve cliënten",
+    waarde: "48",
+    verandering: "+4",
+    trend: "up" as const,
+    icon: Users,
+    beschrijving: "t.o.v. vorige maand",
+  },
+  {
+    titel: "Gem. compliance",
+    waarde: "87%",
+    verandering: "+3,2%",
+    trend: "up" as const,
+    icon: TrendingUp,
+    beschrijving: "training & voeding",
+  },
+  {
+    titel: "Ongelezen berichten",
+    waarde: "5",
+    verandering: "-3",
+    trend: "down" as const,
+    icon: MessageCircle,
+    beschrijving: "t.o.v. gisteren",
+  },
+  {
+    titel: "Sessies deze week",
+    waarde: "12",
+    verandering: "+2",
+    trend: "up" as const,
+    icon: CalendarDays,
+    beschrijving: "t.o.v. vorige week",
+  },
+]
 
-  useEffect(() => {
-    Promise.all([
-      getDashboardStats(),
-      getRecentCheckIns(5),
-      getUpcomingSessions(4),
-      getClientProgress(),
-    ]).then(([s, c, sess, prog]) => {
-      setStats(s)
-      setCheckins(c)
-      setSessions(sess)
-      setProgress(prog)
-      setLoading(false)
-    })
-  }, [])
+/** Recente check-ins van cliënten */
+const defaultRecenteCheckins = [
+  { id: "1", naam: "Sarah van Dijk", initialen: "SD", tijd: "10 min geleden", status: "afgerond", notitie: "Voelt zich sterk, nieuw PR behaald" },
+  { id: "2", naam: "Tom Bakker", initialen: "TB", tijd: "32 min geleden", status: "review-nodig", notitie: "Moeite met schoudermobiliteit" },
+  { id: "3", naam: "Lisa de Vries", initialen: "LV", tijd: "1 uur geleden", status: "afgerond", notitie: "Voeding op schema, gewicht daalt" },
+  { id: "4", naam: "James Peters", initialen: "JP", tijd: "2 uur geleden", status: "review-nodig", notitie: "2 workouts gemist deze week" },
+  { id: "5", naam: "Emma Jansen", initialen: "EJ", tijd: "3 uur geleden", status: "afgerond", notitie: "Goede vooruitgang op uithoudingsvermogen" },
+]
 
-  const statKaarten = [
-    {
-      titel: "Actieve cliënten",
-      waarde: loading ? "—" : String(stats?.actieveClienten || 0),
-      trend: "up" as const,
-      icon: Users,
-      beschrijving: "Toegewezen cliënten",
-    },
-    {
-      titel: "Check-ins",
-      waarde: loading ? "—" : String((stats?.weekCheckIns || 0) + (stats?.dagCheckIns || 0)),
-      trend: "up" as const,
-      icon: TrendingUp,
-      beschrijving: "Wekelijks + dagelijks",
-    },
-    {
-      titel: "Ongelezen berichten",
-      waarde: loading ? "—" : String(stats?.ongelezen || 0),
-      trend: (stats?.ongelezen || 0) > 0 ? "up" as const : "down" as const,
-      icon: MessageCircle,
-      beschrijving: "Onbeantwoord",
-    },
-    {
-      titel: "Sessies deze week",
-      waarde: loading ? "—" : String(stats?.sessiesDezWeek || 0),
-      trend: "up" as const,
-      icon: CalendarDays,
-      beschrijving: "Gepland",
-    },
-  ]
+/** Aankomende sessies vandaag */
+const defaultAankomendeSessies = [
+  { id: "1", naam: "Sarah van Dijk", initialen: "SD", tijd: "10:00", type: "Check-in gesprek" },
+  { id: "2", naam: "Tom Bakker", initialen: "TB", tijd: "11:30", type: "Programma review" },
+  { id: "3", naam: "Groepssessie", initialen: "GS", tijd: "14:00", type: "HIIT les" },
+  { id: "4", naam: "Lisa de Vries", initialen: "LV", tijd: "16:00", type: "Voedingsreview" },
+]
 
+/** Voortgang snapshot per cliënt */
+const defaultClientVoortgang = [
+  { naam: "Sarah van Dijk", initialen: "SD", voortgang: 85, programma: "Kracht Fase 2" },
+  { naam: "Tom Bakker", initialen: "TB", voortgang: 62, programma: "Afvallen 12 weken" },
+  { naam: "Lisa de Vries", initialen: "LV", voortgang: 94, programma: "Wedstrijd Prep" },
+  { naam: "James Peters", initialen: "JP", voortgang: 41, programma: "Spiermassa Basis" },
+]
+
+// ============================================================================
+// PROPS INTERFACE — Data wrapper stuurt echte data door via deze props.
+// V0 kan dit bestand blijven regenereren; voeg alleen deze interface toe.
+// ============================================================================
+export interface DashboardOverviewProps {
+  statKaarten?: typeof defaultStatKaarten
+  recenteCheckins?: typeof defaultRecenteCheckins
+  aankomendeSessies?: typeof defaultAankomendeSessies
+  clientVoortgang?: typeof defaultClientVoortgang
+  loading?: boolean
+}
+
+export function DashboardOverview({
+  statKaarten = defaultStatKaarten,
+  recenteCheckins = defaultRecenteCheckins,
+  aankomendeSessies = defaultAankomendeSessies,
+  clientVoortgang = defaultClientVoortgang,
+  loading = false,
+}: DashboardOverviewProps) {
   return (
     <div className="flex flex-col gap-6 p-6">
       {/* KPI Kaarten */}
@@ -96,6 +148,16 @@ export function DashboardOverview() {
               <div className="flex items-center justify-between">
                 <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
                   <stat.icon className="size-5 text-primary" />
+                </div>
+                <div className={`flex items-center gap-1 text-xs font-medium ${
+                  stat.trend === "up" ? "text-success" : "text-muted-foreground"
+                }`}>
+                  {stat.trend === "up" ? (
+                    <ArrowUpRight className="size-3" />
+                  ) : (
+                    <ArrowDownRight className="size-3" />
+                  )}
+                  {stat.verandering}
                 </div>
               </div>
               <div className="mt-3">
@@ -188,7 +250,7 @@ export function DashboardOverview() {
                 <p className="text-xs text-muted-foreground mt-0.5">Laatste cliëntupdates</p>
               </div>
               <Badge variant="secondary" className="text-xs font-medium bg-secondary text-secondary-foreground">
-                {checkins.filter(c => c.status === "review-nodig").length} review nodig
+                {recenteCheckins.filter(c => c.status === "review-nodig").length} review nodig
               </Badge>
             </div>
           </CardHeader>
@@ -204,10 +266,8 @@ export function DashboardOverview() {
                     </div>
                   </div>
                 ))
-              ) : checkins.length === 0 ? (
-                <p className="text-sm text-muted-foreground px-3 py-4">Nog geen check-ins ontvangen</p>
               ) : (
-                checkins.map((checkin) => (
+                recenteCheckins.map((checkin) => (
                   <div
                     key={checkin.id}
                     className="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors hover:bg-secondary/50 cursor-pointer"
@@ -225,15 +285,12 @@ export function DashboardOverview() {
                         ) : (
                           <CheckCircle2 className="size-3.5 text-success shrink-0" />
                         )}
-                        <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                          {checkin.type === 'weekly' ? 'Wekelijks' : 'Dagelijks'}
-                        </Badge>
                       </div>
-                      <p className="text-xs text-muted-foreground truncate">{checkin.notitie || 'Geen notitie'}</p>
+                      <p className="text-xs text-muted-foreground truncate">{checkin.notitie}</p>
                     </div>
                     <div className="flex items-center gap-1 text-xs text-muted-foreground shrink-0">
                       <Clock className="size-3" />
-                      {formatDistanceToNow(new Date(checkin.tijd), { addSuffix: true, locale: nl })}
+                      {checkin.tijd}
                     </div>
                   </div>
                 ))
@@ -262,15 +319,11 @@ export function DashboardOverview() {
                     </div>
                   </div>
                 ))
-              ) : sessions.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-4">Geen sessies gepland</p>
               ) : (
-                sessions.map((sessie) => (
+                aankomendeSessies.map((sessie) => (
                   <div key={sessie.id} className="flex items-center gap-3">
                     <div className="flex flex-col items-center">
-                      <span className="text-sm font-semibold text-foreground">
-                        {new Date(sessie.tijd).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' })}
-                      </span>
+                      <span className="text-sm font-semibold text-foreground">{sessie.tijd}</span>
                     </div>
                     <div className="w-px h-10 bg-border" />
                     <Avatar className="size-8">
@@ -294,7 +347,7 @@ export function DashboardOverview() {
       <Card className="border-border shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-semibold text-foreground">Cliënt voortgang</CardTitle>
-          <p className="text-xs text-muted-foreground">Programma-afronding</p>
+          <p className="text-xs text-muted-foreground">Programma-afronding deze maand</p>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -311,10 +364,8 @@ export function DashboardOverview() {
                   <Skeleton className="h-1.5 w-full" />
                 </div>
               ))
-            ) : progress.length === 0 ? (
-              <p className="text-sm text-muted-foreground col-span-full py-4">Geen actieve programma&apos;s</p>
             ) : (
-              progress.map((client) => (
+              clientVoortgang.map((client) => (
                 <div key={client.naam} className="flex flex-col gap-3 rounded-lg border border-border p-4 hover:border-primary/30 transition-colors cursor-pointer">
                   <div className="flex items-center gap-3">
                     <Avatar className="size-8">

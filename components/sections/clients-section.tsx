@@ -1,6 +1,5 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { Search, Filter, Plus, MoreHorizontal, Mail, Phone, TrendingUp, TrendingDown, Minus } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -16,9 +15,139 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { getCoachClients, type ClientData } from "@/app/actions/clients"
-import { formatDistanceToNow } from "date-fns"
-import { nl } from "date-fns/locale"
+
+// ============================================================================
+// PLACEHOLDER DATA — Vervang met echte cliëntdata uit Supabase
+//
+// COACH-SCOPED DATA:
+//   De coach ziet ALLEEN zijn/haar eigen toegewezen clienten.
+//   Filter: WHERE clients.coach_id = auth.uid()
+//   Een coach kan NOOIT clienten van andere coaches zien.
+//
+// Supabase tabellen (gefilterd op coach_id):
+//   - clients (naam, email, status, tags, avatar_url WHERE coach_id = auth.uid())
+//   - client_programs (huidig programma via JOIN clients WHERE coach_id = auth.uid())
+//   - client_checkins (laatste check-in via JOIN clients WHERE coach_id = auth.uid())
+//   - client_sessions (volgende sessie via JOIN clients WHERE coach_id = auth.uid())
+//
+// RLS Policy op clients tabel:
+//   SELECT: WHERE coach_id = auth.uid() (coach ziet alleen eigen clienten)
+//   UPDATE: WHERE coach_id = auth.uid() (coach kan alleen eigen clienten bewerken)
+//   DELETE: NIET toegestaan voor coaches (admin-only via /admin)
+//   INSERT: NIET toegestaan voor coaches (clienten worden via /admin goedgekeurd)
+//
+// Status: actief | risico (>3 dagen geen activiteit) | gepauzeerd
+// Tags: opgeslagen als text[] array in clients tabel
+// Trend: berekend uit laatste 2 check-ins (gewicht verschil)
+// ============================================================================
+
+/** Lijst van cliënten met hun coaching-status en voortgang — Supabase tabel: clients */
+const defaultClienten = [
+  {
+    id: "client_001",                   // <-- Supabase UUID
+    naam: "Sarah van Dijk",
+    initialen: "SD",
+    email: "sarah@email.com",
+    status: "actief",                   // actief | risico | gepauzeerd
+    programma: "Kracht Fase 2",
+    voortgang: 85,                      // percentage 0-100
+    volgendeSessie: "Vandaag, 10:00",
+    trend: "up" as const,               // up | down | neutral
+    laatsteCheckin: "2 uur geleden",
+    tags: ["Premium", "Online"],
+  },
+  {
+    id: "client_002",
+    naam: "Tom Bakker",
+    initialen: "TB",
+    email: "tom@email.com",
+    status: "actief",
+    programma: "Afvallen 12 weken",
+    voortgang: 62,
+    volgendeSessie: "Vandaag, 11:30",
+    trend: "up" as const,
+    laatsteCheckin: "5 uur geleden",
+    tags: ["Online"],
+  },
+  {
+    id: "client_003",
+    naam: "Lisa de Vries",
+    initialen: "LV",
+    email: "lisa@email.com",
+    status: "actief",
+    programma: "Wedstrijd Prep",
+    voortgang: 94,
+    volgendeSessie: "Morgen, 16:00",
+    trend: "up" as const,
+    laatsteCheckin: "1 dag geleden",
+    tags: ["Premium", "Competitie"],
+  },
+  {
+    id: "client_004",
+    naam: "James Peters",
+    initialen: "JP",
+    email: "james@email.com",
+    status: "risico",
+    programma: "Spiermassa Basis",
+    voortgang: 41,
+    volgendeSessie: "3 mrt, 09:00",
+    trend: "down" as const,
+    laatsteCheckin: "4 dagen geleden",
+    tags: ["Online"],
+  },
+  {
+    id: "client_005",
+    naam: "Emma Jansen",
+    initialen: "EJ",
+    email: "emma@email.com",
+    status: "actief",
+    programma: "Wellness & Mobiliteit",
+    voortgang: 72,
+    volgendeSessie: "2 mrt, 14:00",
+    trend: "neutral" as const,
+    laatsteCheckin: "1 dag geleden",
+    tags: ["Hybride"],
+  },
+  {
+    id: "client_006",
+    naam: "David Smit",
+    initialen: "DS",
+    email: "david@email.com",
+    status: "gepauzeerd",
+    programma: "Kracht Basis",
+    voortgang: 30,
+    volgendeSessie: "Gepauzeerd",
+    trend: "neutral" as const,
+    laatsteCheckin: "2 weken geleden",
+    tags: ["Online"],
+  },
+  {
+    id: "client_007",
+    naam: "Anna Groot",
+    initialen: "AG",
+    email: "anna@email.com",
+    status: "actief",
+    programma: "Postnataal Herstel",
+    voortgang: 55,
+    volgendeSessie: "2 mrt, 11:00",
+    trend: "up" as const,
+    laatsteCheckin: "6 uur geleden",
+    tags: ["Premium", "Hybride"],
+  },
+  {
+    id: "client_008",
+    naam: "Marco Visser",
+    initialen: "MV",
+    email: "marco@email.com",
+    status: "actief",
+    programma: "Marathon Prep",
+    voortgang: 78,
+    volgendeSessie: "3 mrt, 07:00",
+    trend: "up" as const,
+    laatsteCheckin: "12 uur geleden",
+    tags: ["Online"],
+  },
+]
 
 function getStatusBadge(status: string) {
   switch (status) {
@@ -44,62 +173,21 @@ function getTrendIcon(trend: string) {
   }
 }
 
-function formatRelativeTime(dateStr: string | null): string {
-  if (!dateStr) return "Geen data"
-  try {
-    return formatDistanceToNow(new Date(dateStr), { addSuffix: true, locale: nl })
-  } catch {
-    return "Onbekend"
-  }
-}
-
-function formatSessionTime(dateStr: string | null): string {
-  if (!dateStr) return "Geen sessie"
-  try {
-    const date = new Date(dateStr)
-    const now = new Date()
-    const diffDays = Math.floor((date.getTime() - now.getTime()) / 86400000)
-
-    const timeStr = date.toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" })
-
-    if (diffDays === 0) return `Vandaag, ${timeStr}`
-    if (diffDays === 1) return `Morgen, ${timeStr}`
-    return `${date.toLocaleDateString("nl-NL", { day: "numeric", month: "short" })}, ${timeStr}`
-  } catch {
-    return "Onbekend"
-  }
-}
-
-interface ClientsSectionProps {
+// ============================================================================
+// PROPS INTERFACE — Data wrapper stuurt echte data door via deze props.
+// V0 kan dit bestand blijven regenereren; voeg alleen deze interface toe.
+// ============================================================================
+export interface ClientsSectionProps {
+  clienten?: typeof defaultClienten
+  loading?: boolean
   onSelectClient?: (clientId: string) => void
 }
 
-export function ClientsSection({ onSelectClient }: ClientsSectionProps) {
-  const [clienten, setClienten] = useState<ClientData[]>([])
-  const [loading, setLoading] = useState(true)
-  const [zoekterm, setZoekterm] = useState("")
-
-  useEffect(() => {
-    async function fetchClients() {
-      try {
-        const result = await getCoachClients()
-        if (result.success && result.clients) {
-          setClienten(result.clients)
-        }
-      } catch (err) {
-        console.error("Failed to load clients:", err)
-      } finally {
-        setLoading(false)
-      }
-    }
-    fetchClients()
-  }, [])
-
-  const gefilterdeClienten = clienten.filter(c =>
-    c.naam.toLowerCase().includes(zoekterm.toLowerCase()) ||
-    c.email.toLowerCase().includes(zoekterm.toLowerCase())
-  )
-
+export function ClientsSection({
+  clienten = defaultClienten,
+  loading = false,
+  onSelectClient,
+}: ClientsSectionProps) {
   if (loading) {
     return (
       <div className="flex flex-col gap-6 p-6">
@@ -147,20 +235,15 @@ export function ClientsSection({ onSelectClient }: ClientsSectionProps) {
       <Tabs defaultValue="alle">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <TabsList>
-            <TabsTrigger value="alle">Alle ({gefilterdeClienten.length})</TabsTrigger>
-            <TabsTrigger value="actief">Actief ({gefilterdeClienten.filter(c => c.status === "actief").length})</TabsTrigger>
-            <TabsTrigger value="risico">Risico ({gefilterdeClienten.filter(c => c.status === "risico").length})</TabsTrigger>
-            <TabsTrigger value="gepauzeerd">Gepauzeerd ({gefilterdeClienten.filter(c => c.status === "gepauzeerd").length})</TabsTrigger>
+            <TabsTrigger value="alle">Alle ({clienten.length})</TabsTrigger>
+            <TabsTrigger value="actief">Actief ({clienten.filter(c => c.status === "actief").length})</TabsTrigger>
+            <TabsTrigger value="risico">Risico ({clienten.filter(c => c.status === "risico").length})</TabsTrigger>
+            <TabsTrigger value="gepauzeerd">Gepauzeerd ({clienten.filter(c => c.status === "gepauzeerd").length})</TabsTrigger>
           </TabsList>
           <div className="flex items-center gap-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-              <Input
-                placeholder="Zoek cliënten..."
-                className="pl-9 h-9 w-64 bg-card border-border"
-                value={zoekterm}
-                onChange={(e) => setZoekterm(e.target.value)}
-              />
+              <Input placeholder="Zoek cliënten..." className="pl-9 h-9 w-64 bg-card border-border" />
             </div>
             <Button variant="outline" size="icon" className="h-9 w-9 border-border">
               <Filter className="size-4" />
@@ -169,49 +252,40 @@ export function ClientsSection({ onSelectClient }: ClientsSectionProps) {
           </div>
         </div>
 
-        {gefilterdeClienten.length === 0 ? (
-          <div className="mt-8 text-center text-muted-foreground">
-            <p className="text-lg font-medium">Geen cliënten gevonden</p>
-            <p className="text-sm mt-1">Er zijn nog geen cliënten aan jouw coaching account gekoppeld.</p>
+        <TabsContent value="alle" className="mt-4">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {clienten.map((client) => (
+              <ClientKaart key={client.id} client={client} onClick={() => onSelectClient?.(client.id)} />
+            ))}
           </div>
-        ) : (
-          <>
-            <TabsContent value="alle" className="mt-4">
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                {gefilterdeClienten.map((client) => (
-                  <ClientKaart key={client.id} client={client} onClick={() => onSelectClient?.(client.id)} />
-                ))}
-              </div>
-            </TabsContent>
-            <TabsContent value="actief" className="mt-4">
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                {gefilterdeClienten.filter(c => c.status === "actief").map((client) => (
-                  <ClientKaart key={client.id} client={client} onClick={() => onSelectClient?.(client.id)} />
-                ))}
-              </div>
-            </TabsContent>
-            <TabsContent value="risico" className="mt-4">
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                {gefilterdeClienten.filter(c => c.status === "risico").map((client) => (
-                  <ClientKaart key={client.id} client={client} onClick={() => onSelectClient?.(client.id)} />
-                ))}
-              </div>
-            </TabsContent>
-            <TabsContent value="gepauzeerd" className="mt-4">
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                {gefilterdeClienten.filter(c => c.status === "gepauzeerd").map((client) => (
-                  <ClientKaart key={client.id} client={client} onClick={() => onSelectClient?.(client.id)} />
-                ))}
-              </div>
-            </TabsContent>
-          </>
-        )}
+        </TabsContent>
+        <TabsContent value="actief" className="mt-4">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {clienten.filter(c => c.status === "actief").map((client) => (
+              <ClientKaart key={client.id} client={client} onClick={() => onSelectClient?.(client.id)} />
+            ))}
+          </div>
+        </TabsContent>
+        <TabsContent value="risico" className="mt-4">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {clienten.filter(c => c.status === "risico").map((client) => (
+              <ClientKaart key={client.id} client={client} onClick={() => onSelectClient?.(client.id)} />
+            ))}
+          </div>
+        </TabsContent>
+        <TabsContent value="gepauzeerd" className="mt-4">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {clienten.filter(c => c.status === "gepauzeerd").map((client) => (
+              <ClientKaart key={client.id} client={client} onClick={() => onSelectClient?.(client.id)} />
+            ))}
+          </div>
+        </TabsContent>
       </Tabs>
     </div>
   )
 }
 
-function ClientKaart({ client, onClick }: { client: ClientData; onClick?: () => void }) {
+function ClientKaart({ client, onClick }: { client: typeof defaultClienten[number]; onClick?: () => void }) {
   return (
     <Card
       className="border-border shadow-sm hover:border-primary/30 transition-all cursor-pointer group"
@@ -257,7 +331,7 @@ function ClientKaart({ client, onClick }: { client: ClientData; onClick?: () => 
             {getStatusBadge(client.status)}
             <div className="flex items-center gap-1.5">
               {getTrendIcon(client.trend)}
-              <span className="text-xs text-muted-foreground">Laatste check-in: {formatRelativeTime(client.laatsteCheckin)}</span>
+              <span className="text-xs text-muted-foreground">Laatste check-in: {client.laatsteCheckin}</span>
             </div>
           </div>
 
@@ -271,17 +345,13 @@ function ClientKaart({ client, onClick }: { client: ClientData; onClick?: () => 
 
           <div className="flex items-center justify-between">
             <div className="flex gap-1.5">
-              {client.tags.length > 0 ? client.tags.map((tag) => (
+              {client.tags.map((tag) => (
                 <Badge key={tag} variant="outline" className="text-[10px] px-1.5 py-0 h-5 border-border text-muted-foreground">
                   {tag}
                 </Badge>
-              )) : (
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-5 border-border text-muted-foreground">
-                  Online
-                </Badge>
-              )}
+              ))}
             </div>
-            <span className="text-[11px] text-muted-foreground">Volgende: {formatSessionTime(client.volgendeSessie)}</span>
+            <span className="text-[11px] text-muted-foreground">Volgende: {client.volgendeSessie}</span>
           </div>
         </div>
       </CardContent>
