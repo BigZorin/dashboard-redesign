@@ -258,7 +258,7 @@ export function ClientDetailSection({ clientId, onTerug }: ClientDetailSectionPr
             <Activity className="size-3.5 text-muted-foreground" />
             <span className="text-xs text-muted-foreground">Energie</span>
             <span className="text-sm font-bold text-foreground">
-              {stats?.energie ? `${stats.energie}/10` : "--"}
+              {stats?.energie ? `${stats.energie}/5` : "--"}
             </span>
           </div>
           <div className="flex items-center gap-2">

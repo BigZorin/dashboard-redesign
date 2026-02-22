@@ -30,7 +30,6 @@ export interface ClientHeaderStats {
   complianceVoeding: number
   energie: number | null
   slaap: number | null
-  waterInname: number | null
   openVoorstellen: number
 }
 
@@ -42,7 +41,6 @@ export interface ClientOverviewStats {
   gewichtsTrend: number | null
   energieNiveau: number | null
   slaapKwaliteit: number | null
-  waterInname: number | null
 }
 
 export interface GewichtsDataPunt {
@@ -142,19 +140,19 @@ export async function getClientDetail(clientId: string): Promise<{
       .from("client_programs")
       .select("id, status, start_date, current_block_index, training_programs(name, description, duration_weeks, program_blocks(id, order_index, block_workouts(id)))")
       .eq("client_id", clientId)
-      .eq("status", "ACTIVE")
+      .eq("status", "active")
       .maybeSingle(),
     // Weekly check-ins (last 12) — include notes
     supabase
       .from("check_ins")
-      .select("created_at, weight, energy_level, sleep_quality, water_intake, training_compliance, nutrition_compliance, notes")
+      .select("created_at, weight, energy_level, sleep_quality, training_adherence, nutrition_adherence, notes")
       .eq("user_id", clientId)
       .order("created_at", { ascending: false })
       .limit(12),
     // Daily check-ins (last 30) — include notes
     supabase
       .from("daily_check_ins")
-      .select("check_in_date, weight, energy_level, sleep_quality, water_intake, notes")
+      .select("check_in_date, weight, mood, sleep_quality, notes")
       .eq("user_id", clientId)
       .order("check_in_date", { ascending: false })
       .limit(30),
@@ -297,32 +295,33 @@ export async function getClientDetail(clientId: string): Promise<{
 
   for (const ci of dailyCheckIns) {
     if (ci.weight) {
-      allWeights.push({ date: ci.check_in_date, weight: ci.weight })
-      if (!latestWeight) latestWeight = ci.weight
-      else if (!previousWeight) previousWeight = ci.weight
+      const w = Number(ci.weight)
+      allWeights.push({ date: ci.check_in_date, weight: w })
+      if (!latestWeight) latestWeight = w
+      else if (!previousWeight) previousWeight = w
     }
   }
   for (const ci of weeklyCheckIns) {
     if (ci.weight) {
+      const w = Number(ci.weight)
       const date = new Date(ci.created_at).toISOString().split('T')[0]
-      allWeights.push({ date, weight: ci.weight })
-      if (!latestWeight) latestWeight = ci.weight
-      else if (!previousWeight) previousWeight = ci.weight
+      allWeights.push({ date, weight: w })
+      if (!latestWeight) latestWeight = w
+      else if (!previousWeight) previousWeight = w
     }
   }
 
   const gewichtTrend = latestWeight && previousWeight ? Math.round((latestWeight - previousWeight) * 10) / 10 : null
 
-  // Energy & Sleep from latest daily check-in
+  // Energy & Sleep from latest daily check-in (mood in daily = energy_level in weekly, 1-5 scale)
   const latestDaily = dailyCheckIns[0]
-  const energie = latestDaily?.energy_level || weeklyCheckIns[0]?.energy_level || null
+  const energie = latestDaily?.mood || weeklyCheckIns[0]?.energy_level || null
   const slaap = latestDaily?.sleep_quality || weeklyCheckIns[0]?.sleep_quality || null
-  const waterInname = latestDaily?.water_intake || weeklyCheckIns[0]?.water_intake || null
 
-  // Training compliance from latest weekly check-in
+  // Training/nutrition adherence from latest weekly check-in (1-5 scale → percentage * 20)
   const latestWeekly = weeklyCheckIns[0]
-  const complianceTraining = latestWeekly?.training_compliance || 0
-  const complianceVoeding = latestWeekly?.nutrition_compliance || 0
+  const complianceTraining = (latestWeekly?.training_adherence || 0) * 20
+  const complianceVoeding = (latestWeekly?.nutrition_adherence || 0) * 20
 
   // Weight chart data (chronological, unique by date)
   const weightMap = new Map<string, number>()
@@ -331,10 +330,13 @@ export async function getClientDetail(clientId: string): Promise<{
   }
   const gewichtsDataSorted = Array.from(weightMap.entries())
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([date, gewicht], i) => ({
-      week: `Wk ${i + 1}`,
-      gewicht,
-    }))
+    .map(([date, gewicht]) => {
+      const d = new Date(date)
+      return {
+        week: d.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short' }),
+        gewicht,
+      }
+    })
 
   // ── Macro targets ──
   const nt = nutritionRes.data
@@ -364,7 +366,7 @@ export async function getClientDetail(clientId: string): Promise<{
       datum: ciDate.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' }),
       gewicht: latestDailyCI.weight ? Number(latestDailyCI.weight) : null,
       verandering: latestDailyCI.weight && prevDailyWeight ? Math.round((Number(latestDailyCI.weight) - Number(prevDailyWeight)) * 10) / 10 : null,
-      energie: latestDailyCI.energy_level || null,
+      energie: latestDailyCI.mood || null,
       slaap: latestDailyCI.sleep_quality || null,
       opmerkingen: latestDailyCI.notes || null,
     }
@@ -412,7 +414,6 @@ export async function getClientDetail(clientId: string): Promise<{
       complianceVoeding,
       energie,
       slaap,
-      waterInname,
       openVoorstellen: 0, // TODO: count from AI logs
     },
     overviewStats: {
@@ -423,7 +424,6 @@ export async function getClientDetail(clientId: string): Promise<{
       gewichtsTrend: gewichtTrend,
       energieNiveau: energie,
       slaapKwaliteit: slaap,
-      waterInname,
     },
     gewichtsData: gewichtsDataSorted,
     programmaDetails: program ? {

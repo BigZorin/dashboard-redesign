@@ -106,21 +106,21 @@ export function OverzichtTab({
         <Card className="border-border">
           <CardContent className="p-3 flex flex-col items-center text-center gap-1">
             <Activity className="size-3 text-muted-foreground" />
-            <span className="text-2xl font-bold text-foreground">{stats?.energieNiveau ?? "--"}</span>
+            <span className="text-2xl font-bold text-foreground">{stats?.energieNiveau != null ? `${stats.energieNiveau}/5` : "--"}</span>
             <span className="text-[10px] text-muted-foreground">Energie</span>
           </CardContent>
         </Card>
         <Card className="border-border">
           <CardContent className="p-3 flex flex-col items-center text-center gap-1">
             <Moon className="size-3 text-muted-foreground" />
-            <span className="text-2xl font-bold text-foreground">{stats?.slaapKwaliteit ?? "--"}</span>
+            <span className="text-2xl font-bold text-foreground">{stats?.slaapKwaliteit != null ? `${stats.slaapKwaliteit}/5` : "--"}</span>
             <span className="text-[10px] text-muted-foreground">Slaap</span>
           </CardContent>
         </Card>
         <Card className="border-border">
           <CardContent className="p-3 flex flex-col items-center text-center gap-1">
             <Droplets className="size-3 text-muted-foreground" />
-            <span className="text-2xl font-bold text-foreground">{stats?.waterInname != null ? `${stats.waterInname}L` : "--"}</span>
+            <span className="text-2xl font-bold text-foreground">{"--"}</span>
             <span className="text-[10px] text-muted-foreground">Water/dag</span>
           </CardContent>
         </Card>
@@ -282,13 +282,13 @@ export function OverzichtTab({
                   <div className="flex flex-col gap-0.5">
                     <span className="text-[11px] text-muted-foreground">Energie</span>
                     <span className="text-sm font-semibold text-foreground">
-                      {laatsteCheckinDetails.energie != null ? `${laatsteCheckinDetails.energie}/10` : "--"}
+                      {laatsteCheckinDetails.energie != null ? `${laatsteCheckinDetails.energie}/5` : "--"}
                     </span>
                   </div>
                   <div className="flex flex-col gap-0.5">
                     <span className="text-[11px] text-muted-foreground">Slaap</span>
                     <span className="text-sm font-semibold text-foreground">
-                      {laatsteCheckinDetails.slaap != null ? `${laatsteCheckinDetails.slaap}/10` : "--"}
+                      {laatsteCheckinDetails.slaap != null ? `${laatsteCheckinDetails.slaap}/5` : "--"}
                     </span>
                   </div>
                 </div>
