@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { ArrowLeft, MessageCircle, ClipboardCheck, Sparkles, MoreHorizontal, Mail, CalendarDays, Dumbbell, Apple, Activity, TrendingDown, TrendingUp, Minus, Scale, FileText } from "lucide-react"
+import { useState, useEffect } from "react"
+import { ArrowLeft, MessageCircle, ClipboardCheck, Sparkles, MoreHorizontal, Mail, CalendarDays, Dumbbell, Apple, Activity, TrendingDown, TrendingUp, Minus, Scale, FileText, Loader2 } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -23,52 +23,18 @@ import { AiCoachTab } from "@/components/client-detail/ai-coach-tab"
 import { NotitiesTab } from "@/components/client-detail/notities-tab"
 import { InstellingenTab } from "@/components/client-detail/instellingen-tab"
 import { AiSheet } from "@/components/client-detail/ai-sheet"
-
-// ============================================================================
-// PLACEHOLDER DATA — Client basisgegevens
-// Vervang met echte data uit Supabase tabel: clients
-// In productie: fetch op basis van clientId prop
-//
-// COACH-SCOPED DATA:
-//   De coach kan ALLEEN zijn/haar eigen clienten bekijken.
-//   Server-side check: WHERE clients.id = :clientId AND clients.coach_id = auth.uid()
-//   Als de client niet van deze coach is -> redirect naar clientenlijst
-//   Een coach kan NOOIT een client van een andere coach openen.
-//
-// GEEN financiële data op deze pagina!
-//   Betalingen, abonnementen, bedragen zijn ADMIN-ONLY (/admin -> Facturatie)
-//   De coach ziet alleen het pakket-label (bijv. "Premium") zonder bedragen.
-// ============================================================================
-
-/** Cliënt basisgegevens — Supabase tabel: clients */
-const clientGegevens = {
-  id: "client_001",                     // <-- Supabase client UUID
-  naam: "Sarah van Dijk",              // <-- clients.naam
-  initialen: "SD",                      // <-- Gegenereerd uit naam
-  email: "sarah@email.com",            // <-- clients.email
-  telefoon: "+31 6 1234 5678",         // <-- clients.telefoon
-  status: "actief" as const,           // <-- clients.status: actief | risico | gepauzeerd
-  programma: "Kracht Fase 2",          // <-- via client_programs join
-  programmWeek: 6,                      // <-- Huidige week in programma
-  programmaTotaalWeken: 12,            // <-- Totaal aantal weken programma
-  lidSinds: "15 sep 2025",            // <-- clients.created_at
-  laatsteActiviteit: "2 uur geleden",  // <-- Berekend uit laatste actie
-  volgendeSessie: "Vandaag, 10:00",   // <-- Eerstvolgende sessie uit agenda
-  avatarUrl: "",                        // <-- clients.avatar_url (leeg = fallback)
-  tags: ["Premium", "Online"],         // <-- clients.tags array
-}
-
-/** Snelle statistieken voor de header strip — Berekend uit meerdere tabellen */
-const headerStats = {
-  gewicht: 71.1,                        // <-- Laatste gewicht uit client_checkins
-  gewichtTrend: -0.4,                   // <-- kg verschil t.o.v. vorige week
-  complianceTraining: 92,               // <-- % trainingen voltooid deze week
-  complianceVoeding: 78,               // <-- % voedingsdoelen gehaald
-  energie: 7,                           // <-- Uit laatste check-in (1-10)
-  openVoorstellen: 2,                   // <-- Aantal onbehandelde AI voorstellen
-}
-
-
+import {
+  getClientDetail,
+  type ClientDetail,
+  type ClientHeaderStats,
+  type ClientOverviewStats,
+  type GewichtsDataPunt,
+  type ProgrammaDetails,
+  type MacroTargets,
+  type LaatstCheckinDetails,
+  type KomendeSessie,
+  type RecenteNotitie,
+} from "@/app/actions/client-detail"
 
 function getStatusKleur(status: string) {
   switch (status) {
@@ -100,9 +66,72 @@ interface ClientDetailSectionProps {
 export function ClientDetailSection({ clientId, onTerug }: ClientDetailSectionProps) {
   const [actieveTab, setActieveTab] = useState("overzicht")
   const [aiSheetOpen, setAiSheetOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // In productie: gebruik clientId om data op te halen uit Supabase
-  const client = clientGegevens
+  // Real data from Supabase
+  const [client, setClient] = useState<ClientDetail | null>(null)
+  const [stats, setStats] = useState<ClientHeaderStats | null>(null)
+  const [overviewStats, setOverviewStats] = useState<ClientOverviewStats | null>(null)
+  const [gewichtsData, setGewichtsData] = useState<GewichtsDataPunt[]>([])
+  const [programmaDetails, setProgrammaDetails] = useState<ProgrammaDetails | undefined>()
+  const [macroTargets, setMacroTargets] = useState<MacroTargets | undefined>()
+  const [laatsteCheckinDetails, setLaatsteCheckinDetails] = useState<LaatstCheckinDetails | undefined>()
+  const [komendeSessies, setKomendeSessies] = useState<KomendeSessie[]>([])
+  const [recenteNotities, setRecenteNotities] = useState<RecenteNotitie[]>([])
+
+  useEffect(() => {
+    async function loadClientData() {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const result = await getClientDetail(clientId)
+        if (result.success && result.client) {
+          setClient(result.client)
+          setStats(result.headerStats || null)
+          setOverviewStats(result.overviewStats || null)
+          setGewichtsData(result.gewichtsData || [])
+          setProgrammaDetails(result.programmaDetails)
+          setMacroTargets(result.macroTargets)
+          setLaatsteCheckinDetails(result.laatsteCheckinDetails)
+          setKomendeSessies(result.komendeSessies || [])
+          setRecenteNotities(result.recenteNotities || [])
+        } else {
+          setError(result.error || 'Client niet gevonden')
+        }
+      } catch (err: any) {
+        setError(err?.message || 'Er ging iets mis')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    loadClientData()
+  }, [clientId])
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="flex items-center gap-3 text-muted-foreground">
+          <Loader2 className="h-5 w-5 animate-spin" />
+          <span>Client laden...</span>
+        </div>
+      </div>
+    )
+  }
+
+  // Error state
+  if (error || !client) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 gap-3">
+        <p className="text-muted-foreground">{error || 'Client niet gevonden'}</p>
+        <Button variant="outline" size="sm" onClick={onTerug}>
+          <ArrowLeft className="size-4 mr-1.5" />
+          Terug naar cliënten
+        </Button>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -133,8 +162,12 @@ export function ClientDetailSection({ clientId, onTerug }: ClientDetailSectionPr
               </div>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                 <span>{client.email}</span>
-                <span className="hidden sm:inline">|</span>
-                <span>{client.programma} &mdash; Week {client.programmWeek}/{client.programmaTotaalWeken}</span>
+                {client.programma !== 'Geen programma' && (
+                  <>
+                    <span className="hidden sm:inline">|</span>
+                    <span>{client.programma} &mdash; Week {client.programmWeek}/{client.programmaTotaalWeken}</span>
+                  </>
+                )}
               </div>
               <div className="flex items-center gap-2 mt-0.5">
                 {client.tags.map((tag) => (
@@ -191,43 +224,55 @@ export function ClientDetailSection({ clientId, onTerug }: ClientDetailSectionPr
           <div className="flex items-center gap-2 pr-3 border-r border-border">
             <Scale className="size-3.5 text-muted-foreground" />
             <span className="text-xs text-muted-foreground">Gewicht</span>
-            <span className="text-sm font-bold text-foreground">{headerStats.gewicht} kg</span>
-            <span className={`flex items-center gap-0.5 text-[11px] font-medium ${headerStats.gewichtTrend < 0 ? "text-success" : headerStats.gewichtTrend > 0 ? "text-destructive" : "text-muted-foreground"}`}>
-              {headerStats.gewichtTrend < 0 ? <TrendingDown className="size-3" /> : headerStats.gewichtTrend > 0 ? <TrendingUp className="size-3" /> : <Minus className="size-3" />}
-              {headerStats.gewichtTrend > 0 ? "+" : ""}{headerStats.gewichtTrend} kg
+            <span className="text-sm font-bold text-foreground">
+              {stats?.gewicht ? `${stats.gewicht} kg` : "--"}
             </span>
+            {stats?.gewichtTrend !== null && stats?.gewichtTrend !== undefined && stats.gewichtTrend !== 0 && (
+              <span className={`flex items-center gap-0.5 text-[11px] font-medium ${stats.gewichtTrend < 0 ? "text-success" : "text-destructive"}`}>
+                {stats.gewichtTrend < 0 ? <TrendingDown className="size-3" /> : <TrendingUp className="size-3" />}
+                {stats.gewichtTrend > 0 ? "+" : ""}{stats.gewichtTrend} kg
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2 pr-3 border-r border-border">
             <Dumbbell className="size-3.5 text-muted-foreground" />
             <span className="text-xs text-muted-foreground">Training</span>
             <div className="flex items-center gap-1.5">
-              <Progress value={headerStats.complianceTraining} className="h-1.5 w-16" />
-              <span className={`text-xs font-bold ${headerStats.complianceTraining >= 90 ? "text-success" : "text-warning-foreground"}`}>{headerStats.complianceTraining}%</span>
+              <Progress value={stats?.complianceTraining || 0} className="h-1.5 w-16" />
+              <span className={`text-xs font-bold ${(stats?.complianceTraining || 0) >= 90 ? "text-success" : "text-warning-foreground"}`}>
+                {stats?.complianceTraining || 0}%
+              </span>
             </div>
           </div>
           <div className="flex items-center gap-2 pr-3 border-r border-border">
             <Apple className="size-3.5 text-muted-foreground" />
             <span className="text-xs text-muted-foreground">Voeding</span>
             <div className="flex items-center gap-1.5">
-              <Progress value={headerStats.complianceVoeding} className="h-1.5 w-16" />
-              <span className={`text-xs font-bold ${headerStats.complianceVoeding >= 80 ? "text-success" : "text-warning-foreground"}`}>{headerStats.complianceVoeding}%</span>
+              <Progress value={stats?.complianceVoeding || 0} className="h-1.5 w-16" />
+              <span className={`text-xs font-bold ${(stats?.complianceVoeding || 0) >= 80 ? "text-success" : "text-warning-foreground"}`}>
+                {stats?.complianceVoeding || 0}%
+              </span>
             </div>
           </div>
           <div className="flex items-center gap-2 pr-3 border-r border-border">
             <Activity className="size-3.5 text-muted-foreground" />
             <span className="text-xs text-muted-foreground">Energie</span>
-            <span className="text-sm font-bold text-foreground">{headerStats.energie}/10</span>
+            <span className="text-sm font-bold text-foreground">
+              {stats?.energie ? `${stats.energie}/10` : "--"}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <CalendarDays className="size-3.5 text-muted-foreground" />
             <span className="text-xs text-muted-foreground">Sessie</span>
-            <span className="text-xs font-semibold text-foreground">{client.volgendeSessie}</span>
+            <span className="text-xs font-semibold text-foreground">
+              {client.volgendeSessie || "Geen sessie"}
+            </span>
           </div>
-          {headerStats.openVoorstellen > 0 && (
+          {(stats?.openVoorstellen || 0) > 0 && (
             <div className="ml-auto flex items-center gap-1.5">
               <Badge className="bg-primary/10 text-primary border-primary/20 text-[10px] gap-1">
                 <Sparkles className="size-3" />
-                {headerStats.openVoorstellen} AI voorstellen
+                {stats!.openVoorstellen} AI voorstellen
               </Badge>
             </div>
           )}
@@ -247,7 +292,7 @@ export function ClientDetailSection({ clientId, onTerug }: ClientDetailSectionPr
               { value: "voeding", label: "Voeding", icon: Apple },
               { value: "checkins", label: "Check-ins", icon: ClipboardCheck },
               { value: "metingen", label: "Metingen", icon: Scale },
-              { value: "ai-coach", label: "AI Coach", icon: Sparkles, badge: headerStats.openVoorstellen },
+              { value: "ai-coach", label: "AI Coach", icon: Sparkles, badge: stats?.openVoorstellen || 0 },
               { value: "notities", label: "Notities", icon: MessageCircle },
               { value: "instellingen", label: "Instellingen", icon: CalendarDays },
             ].map((tab) => (
@@ -270,7 +315,15 @@ export function ClientDetailSection({ clientId, onTerug }: ClientDetailSectionPr
 
         <div className="flex-1 overflow-auto">
           <TabsContent value="overzicht" className="mt-0 h-full">
-            <OverzichtTab />
+            <OverzichtTab
+              overviewStats={overviewStats}
+              gewichtsData={gewichtsData}
+              programmaDetails={programmaDetails}
+              macroTargets={macroTargets}
+              laatsteCheckinDetails={laatsteCheckinDetails}
+              komendeSessies={komendeSessies}
+              recenteNotities={recenteNotities}
+            />
           </TabsContent>
           <TabsContent value="intake" className="mt-0 h-full">
             <IntakeTab />
