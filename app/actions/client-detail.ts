@@ -109,7 +109,7 @@ export async function getClientDetail(clientId: string): Promise<{
   // Verify coaching relationship
   const { data: relationship } = await supabase
     .from("coaching_relationships")
-    .select("status, created_at")
+    .select("status, started_at")
     .eq("coach_id", user.id)
     .eq("client_id", clientId)
     .maybeSingle()
@@ -243,7 +243,7 @@ export async function getClientDetail(clientId: string): Promise<{
   const voltooidDezeWeek = weekWorkouts.filter((w: any) => w.completed).length
 
   // Lid sinds
-  const lidSindsDate = new Date(relationship.created_at)
+  const lidSindsDate = new Date(relationship.started_at)
   const lidSinds = lidSindsDate.toLocaleDateString('nl-NL', { day: 'numeric', month: 'short', year: 'numeric' })
 
   // Last activity
