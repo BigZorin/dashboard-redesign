@@ -2,7 +2,7 @@
 
 import { Search, Filter, Plus, MoreHorizontal, Mail, Phone, TrendingUp, TrendingDown, Minus } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -55,6 +55,7 @@ const defaultClienten = [
     trend: "up" as const,               // up | down | neutral
     laatsteCheckin: "2 uur geleden",
     tags: ["Premium", "Online"],
+    avatarUrl: "",
   },
   {
     id: "client_002",
@@ -68,6 +69,7 @@ const defaultClienten = [
     trend: "up" as const,
     laatsteCheckin: "5 uur geleden",
     tags: ["Online"],
+    avatarUrl: "",
   },
   {
     id: "client_003",
@@ -81,6 +83,7 @@ const defaultClienten = [
     trend: "up" as const,
     laatsteCheckin: "1 dag geleden",
     tags: ["Premium", "Competitie"],
+    avatarUrl: "",
   },
   {
     id: "client_004",
@@ -94,6 +97,7 @@ const defaultClienten = [
     trend: "down" as const,
     laatsteCheckin: "4 dagen geleden",
     tags: ["Online"],
+    avatarUrl: "",
   },
   {
     id: "client_005",
@@ -107,6 +111,7 @@ const defaultClienten = [
     trend: "neutral" as const,
     laatsteCheckin: "1 dag geleden",
     tags: ["Hybride"],
+    avatarUrl: "",
   },
   {
     id: "client_006",
@@ -120,6 +125,7 @@ const defaultClienten = [
     trend: "neutral" as const,
     laatsteCheckin: "2 weken geleden",
     tags: ["Online"],
+    avatarUrl: "",
   },
   {
     id: "client_007",
@@ -133,6 +139,7 @@ const defaultClienten = [
     trend: "up" as const,
     laatsteCheckin: "6 uur geleden",
     tags: ["Premium", "Hybride"],
+    avatarUrl: "",
   },
   {
     id: "client_008",
@@ -146,6 +153,7 @@ const defaultClienten = [
     trend: "up" as const,
     laatsteCheckin: "12 uur geleden",
     tags: ["Online"],
+    avatarUrl: "",
   },
 ]
 
@@ -298,6 +306,7 @@ function ClientKaart({ client, onClick }: { client: typeof defaultClienten[numbe
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
             <Avatar className="size-10">
+              {client.avatarUrl && <AvatarImage src={client.avatarUrl} alt={client.naam} />}
               <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
                 {client.initialen}
               </AvatarFallback>

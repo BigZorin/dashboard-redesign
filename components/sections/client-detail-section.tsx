@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { ArrowLeft, MessageCircle, ClipboardCheck, Sparkles, MoreHorizontal, Mail, CalendarDays, Dumbbell, Apple, Activity, TrendingDown, TrendingUp, Minus, Scale, FileText, Loader2 } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
@@ -149,6 +149,7 @@ export function ClientDetailSection({ clientId, onTerug }: ClientDetailSectionPr
           {/* Linkerkant: profiel info */}
           <div className="flex items-center gap-4">
             <Avatar className="size-14 border-2 border-primary/20">
+              {client.avatarUrl && <AvatarImage src={client.avatarUrl} alt={client.naam} />}
               <AvatarFallback className="bg-primary/10 text-primary text-lg font-bold">
                 {client.initialen}
               </AvatarFallback>

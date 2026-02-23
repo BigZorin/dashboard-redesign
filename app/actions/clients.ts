@@ -58,7 +58,7 @@ export async function getCoachClients(): Promise<{ success: boolean; clients?: C
       .from("client_programs")
       .select("client_id, status, training_programs(name)")
       .in("client_id", clientIds)
-      .eq("status", "ACTIVE"),
+      .eq("status", "active"),
     supabase.auth.admin.listUsers(),
     supabase
       .from("client_sessions")

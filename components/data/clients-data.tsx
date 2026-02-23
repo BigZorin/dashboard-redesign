@@ -31,6 +31,7 @@ export function ClientsSectionWithData({ onSelectClient }: ClientsWithDataProps)
             trend: c.trend,
             laatsteCheckin: formatRelative(c.laatsteCheckin),
             tags: c.tags.length > 0 ? c.tags : ["Online"],
+            avatarUrl: c.avatarUrl,
           }))
         )
       }
