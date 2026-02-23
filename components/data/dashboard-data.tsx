@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { Users, TrendingUp, MessageCircle, CalendarDays } from "lucide-react"
 import { DashboardOverview } from "@/components/sections/dashboard-overview"
-import { getDashboardStats, getRecentCheckIns, getUpcomingSessions, getClientProgress } from "@/app/actions/dashboard"
+import { getDashboardStats, getRecentCheckIns, getUpcomingSessions, getClientProgress, getComplianceChartData, getClientActivityChartData } from "@/app/actions/dashboard"
 import { formatDistanceToNow } from "date-fns"
 import { nl } from "date-fns/locale"
 
@@ -13,6 +13,8 @@ export function DashboardOverviewWithData() {
   const [recenteCheckins, setRecenteCheckins] = useState<any[]>([])
   const [aankomendeSessies, setAankomendeSessies] = useState<any[]>([])
   const [clientVoortgang, setClientVoortgang] = useState<any[]>([])
+  const [complianceData, setComplianceData] = useState<any[] | undefined>(undefined)
+  const [activityData, setActivityData] = useState<any[] | undefined>(undefined)
 
   useEffect(() => {
     Promise.all([
@@ -20,7 +22,12 @@ export function DashboardOverviewWithData() {
       getRecentCheckIns(5),
       getUpcomingSessions(4),
       getClientProgress(),
-    ]).then(([stats, checkins, sessions, progress]) => {
+      getComplianceChartData(),
+      getClientActivityChartData(),
+    ]).then(([stats, checkins, sessions, progress, compliance, activity]) => {
+      // Chart data
+      if (compliance && compliance.length > 0) setComplianceData(compliance)
+      if (activity) setActivityData(activity)
       // Transform stats → statKaarten format
       if (stats) {
         setStatKaarten([
@@ -102,6 +109,8 @@ export function DashboardOverviewWithData() {
       recenteCheckins={loading ? undefined : recenteCheckins}
       aankomendeSessies={loading ? undefined : aankomendeSessies}
       clientVoortgang={loading ? undefined : clientVoortgang}
+      complianceData={loading ? undefined : complianceData}
+      activityData={loading ? undefined : activityData}
       loading={loading}
     />
   )

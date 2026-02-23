@@ -128,6 +128,8 @@ export interface DashboardOverviewProps {
   recenteCheckins?: typeof defaultRecenteCheckins
   aankomendeSessies?: typeof defaultAankomendeSessies
   clientVoortgang?: typeof defaultClientVoortgang
+  complianceData?: { week: string; training: number; voeding: number }[]
+  activityData?: { dag: string; checkins: number; workouts: number }[]
   loading?: boolean
 }
 
@@ -136,8 +138,12 @@ export function DashboardOverview({
   recenteCheckins = defaultRecenteCheckins,
   aankomendeSessies = defaultAankomendeSessies,
   clientVoortgang = defaultClientVoortgang,
+  complianceData: complianceDataProp,
+  activityData: activityDataProp,
   loading = false,
 }: DashboardOverviewProps) {
+  const activeComplianceData = complianceDataProp || complianceData
+  const activeActivityData = activityDataProp || clientActiviteitData
   return (
     <div className="flex flex-col gap-6 p-6">
       {/* KPI Kaarten */}
@@ -182,7 +188,7 @@ export function DashboardOverview({
           </CardHeader>
           <CardContent className="pb-4">
             <ResponsiveContainer width="100%" height={220}>
-              <AreaChart data={complianceData}>
+              <AreaChart data={activeComplianceData}>
                 <defs>
                   <linearGradient id="trainingGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="oklch(0.55 0.15 160)" stopOpacity={0.3} />
@@ -219,7 +225,7 @@ export function DashboardOverview({
           </CardHeader>
           <CardContent className="pb-4">
             <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={clientActiviteitData} barGap={4}>
+              <BarChart data={activeActivityData} barGap={4}>
                 <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.91 0.005 240)" />
                 <XAxis dataKey="dag" tick={{ fontSize: 12, fill: "oklch(0.5 0.01 240)" }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 12, fill: "oklch(0.5 0.01 240)" }} axisLine={false} tickLine={false} />

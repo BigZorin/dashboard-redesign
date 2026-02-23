@@ -215,3 +215,142 @@ export async function getClientProgress() {
     }
   })
 }
+
+// ============================================================
+// COMPLIANCE CHART DATA (last 6 weeks)
+// ============================================================
+
+export interface ComplianceChartPoint {
+  week: string
+  training: number
+  voeding: number
+}
+
+export async function getComplianceChartData(): Promise<ComplianceChartPoint[]> {
+  const user = await getCurrentUser()
+  if (!user) return []
+
+  const supabase = await getSupabaseAdmin()
+
+  const { data: relationships } = await supabase
+    .from("coaching_relationships")
+    .select("client_id")
+    .eq("coach_id", user.id)
+    .eq("status", "ACTIVE")
+
+  const clientIds = (relationships || []).map(r => r.client_id)
+  if (clientIds.length === 0) return []
+
+  const sixWeeksAgo = new Date(Date.now() - 6 * 7 * 86400000).toISOString()
+  const { data: checkIns } = await supabase
+    .from("check_ins")
+    .select("week_number, year, training_adherence, nutrition_adherence")
+    .in("user_id", clientIds)
+    .gte("created_at", sixWeeksAgo)
+
+  if (!checkIns || checkIns.length === 0) return []
+
+  // Group by week and calculate averages
+  const weekMap = new Map<string, { training: number[]; voeding: number[] }>()
+  for (const ci of checkIns) {
+    const key = `${ci.year}-${ci.week_number}`
+    if (!weekMap.has(key)) weekMap.set(key, { training: [], voeding: [] })
+    const w = weekMap.get(key)!
+    if (ci.training_adherence != null) w.training.push(ci.training_adherence)
+    if (ci.nutrition_adherence != null) w.voeding.push(ci.nutrition_adherence)
+  }
+
+  const sorted = [...weekMap.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .slice(-6)
+
+  return sorted.map(([_key, vals], i) => ({
+    week: `Wk ${i + 1}`,
+    training: vals.training.length > 0
+      ? Math.round((vals.training.reduce((s, v) => s + v, 0) / vals.training.length) * 10)
+      : 0,
+    voeding: vals.voeding.length > 0
+      ? Math.round((vals.voeding.reduce((s, v) => s + v, 0) / vals.voeding.length) * 10)
+      : 0,
+  }))
+}
+
+// ============================================================
+// CLIENT ACTIVITY CHART DATA (current week, Ma-Zo)
+// ============================================================
+
+export interface ActivityChartPoint {
+  dag: string
+  checkins: number
+  workouts: number
+}
+
+export async function getClientActivityChartData(): Promise<ActivityChartPoint[]> {
+  const user = await getCurrentUser()
+  if (!user) {
+    return ["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"].map(dag => ({ dag, checkins: 0, workouts: 0 }))
+  }
+
+  const supabase = await getSupabaseAdmin()
+
+  const { data: relationships } = await supabase
+    .from("coaching_relationships")
+    .select("client_id")
+    .eq("coach_id", user.id)
+    .eq("status", "ACTIVE")
+
+  const clientIds = (relationships || []).map(r => r.client_id)
+  const orderedDays = ["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"]
+  if (clientIds.length === 0) {
+    return orderedDays.map(dag => ({ dag, checkins: 0, workouts: 0 }))
+  }
+
+  // Calculate current week boundaries (Monday to Sunday)
+  const now = new Date()
+  const dayOfWeek = now.getDay()
+  const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek
+  const monday = new Date(now)
+  monday.setDate(now.getDate() + mondayOffset)
+  monday.setHours(0, 0, 0, 0)
+  const sunday = new Date(monday)
+  sunday.setDate(monday.getDate() + 7)
+
+  const [checkInsResult, workoutsResult] = await Promise.all([
+    supabase
+      .from("daily_check_ins")
+      .select("check_in_date")
+      .in("user_id", clientIds)
+      .gte("check_in_date", monday.toISOString().split("T")[0])
+      .lte("check_in_date", sunday.toISOString().split("T")[0]),
+    supabase
+      .from("client_workouts")
+      .select("completed_at")
+      .in("client_id", clientIds)
+      .eq("completed", true)
+      .gte("completed_at", monday.toISOString())
+      .lt("completed_at", sunday.toISOString()),
+  ])
+
+  const dayNames = ["Zo", "Ma", "Di", "Wo", "Do", "Vr", "Za"]
+  const counts: Record<string, { checkins: number; workouts: number }> = {}
+  for (const d of orderedDays) counts[d] = { checkins: 0, workouts: 0 }
+
+  for (const ci of checkInsResult.data || []) {
+    const date = new Date(ci.check_in_date + "T12:00:00")
+    const name = dayNames[date.getDay()]
+    if (counts[name]) counts[name].checkins++
+  }
+
+  for (const w of workoutsResult.data || []) {
+    if (!w.completed_at) continue
+    const date = new Date(w.completed_at)
+    const name = dayNames[date.getDay()]
+    if (counts[name]) counts[name].workouts++
+  }
+
+  return orderedDays.map(dag => ({
+    dag,
+    checkins: counts[dag].checkins,
+    workouts: counts[dag].workouts,
+  }))
+}
