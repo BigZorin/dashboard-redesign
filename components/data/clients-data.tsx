@@ -44,7 +44,7 @@ export function ClientsSectionWithData({ onSelectClient }: ClientsWithDataProps)
 
   return (
     <ClientsSection
-      clienten={loading ? undefined : clienten}
+      clienten={loading ? undefined : (clienten.length > 0 ? clienten : undefined)}
       loading={loading}
       onSelectClient={onSelectClient}
     />
