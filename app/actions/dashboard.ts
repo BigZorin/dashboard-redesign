@@ -217,11 +217,11 @@ export async function getClientProgress() {
 }
 
 // ============================================================
-// COMPLIANCE CHART DATA (last 6 weeks)
+// COMPLIANCE CHART DATA (per day, last 30 days)
 // ============================================================
 
 export interface ComplianceChartPoint {
-  week: string
+  week: string  // label for x-axis (date)
   training: number
   voeding: number
 }
@@ -241,38 +241,41 @@ export async function getComplianceChartData(): Promise<ComplianceChartPoint[]> 
   const clientIds = (relationships || []).map(r => r.client_id)
   if (clientIds.length === 0) return []
 
-  const sixWeeksAgo = new Date(Date.now() - 6 * 7 * 86400000).toISOString()
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 86400000).toISOString()
   const { data: checkIns } = await supabase
     .from("check_ins")
-    .select("week_number, year, training_adherence, nutrition_adherence")
+    .select("created_at, training_adherence, nutrition_adherence")
     .in("user_id", clientIds)
-    .gte("created_at", sixWeeksAgo)
+    .gte("created_at", thirtyDaysAgo)
+    .order("created_at", { ascending: true })
 
   if (!checkIns || checkIns.length === 0) return []
 
-  // Group by week and calculate averages
-  const weekMap = new Map<string, { training: number[]; voeding: number[] }>()
+  // Group by date and calculate averages across all clients
+  const dayMap = new Map<string, { training: number[]; voeding: number[] }>()
   for (const ci of checkIns) {
-    const key = `${ci.year}-${ci.week_number}`
-    if (!weekMap.has(key)) weekMap.set(key, { training: [], voeding: [] })
-    const w = weekMap.get(key)!
-    if (ci.training_adherence != null) w.training.push(ci.training_adherence)
-    if (ci.nutrition_adherence != null) w.voeding.push(ci.nutrition_adherence)
+    const date = new Date(ci.created_at).toISOString().split("T")[0]
+    if (!dayMap.has(date)) dayMap.set(date, { training: [], voeding: [] })
+    const d = dayMap.get(date)!
+    if (ci.training_adherence != null) d.training.push(ci.training_adherence)
+    if (ci.nutrition_adherence != null) d.voeding.push(ci.nutrition_adherence)
   }
 
-  const sorted = [...weekMap.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
-    .slice(-6)
+  const sorted = [...dayMap.entries()].sort(([a], [b]) => a.localeCompare(b))
 
-  return sorted.map(([_key, vals], i) => ({
-    week: `Wk ${i + 1}`,
-    training: vals.training.length > 0
-      ? Math.round((vals.training.reduce((s, v) => s + v, 0) / vals.training.length) * 10)
-      : 0,
-    voeding: vals.voeding.length > 0
-      ? Math.round((vals.voeding.reduce((s, v) => s + v, 0) / vals.voeding.length) * 10)
-      : 0,
-  }))
+  return sorted.map(([date, vals]) => {
+    const d = new Date(date + "T12:00:00")
+    const label = `${d.getDate()}/${d.getMonth() + 1}`
+    return {
+      week: label,
+      training: vals.training.length > 0
+        ? Math.round((vals.training.reduce((s, v) => s + v, 0) / vals.training.length) * 10)
+        : 0,
+      voeding: vals.voeding.length > 0
+        ? Math.round((vals.voeding.reduce((s, v) => s + v, 0) / vals.voeding.length) * 10)
+        : 0,
+    }
+  })
 }
 
 // ============================================================

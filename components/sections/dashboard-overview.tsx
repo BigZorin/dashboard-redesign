@@ -184,7 +184,7 @@ export function DashboardOverview({
         <Card className="border-border shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold text-foreground">Compliance overzicht</CardTitle>
-            <p className="text-xs text-muted-foreground">Training & voeding compliance per week</p>
+            <p className="text-xs text-muted-foreground">Training & voeding compliance per dag</p>
           </CardHeader>
           <CardContent className="pb-4">
             <ResponsiveContainer width="100%" height={220}>
@@ -201,7 +201,7 @@ export function DashboardOverview({
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.91 0.005 240)" />
                 <XAxis dataKey="week" tick={{ fontSize: 12, fill: "oklch(0.5 0.01 240)" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 12, fill: "oklch(0.5 0.01 240)" }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}%`} domain={[60, 100]} />
+                <YAxis tick={{ fontSize: 12, fill: "oklch(0.5 0.01 240)" }} axisLine={false} tickLine={false} tickFormatter={(v) => `${v}%`} domain={[0, 100]} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "oklch(1 0 0)",
