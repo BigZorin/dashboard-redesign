@@ -16,7 +16,7 @@ export function ClientsSectionWithData({ onSelectClient }: ClientsWithDataProps)
 
   useEffect(() => {
     getCoachClients().then((result) => {
-      if (result.success && result.clients) {
+      if (result.success && result.clients && result.clients.length > 0) {
         // Transform ClientData → V0 component format
         setClienten(
           result.clients.map((c: ClientData) => ({
@@ -35,13 +35,17 @@ export function ClientsSectionWithData({ onSelectClient }: ClientsWithDataProps)
           }))
         )
       }
+      // When no clients returned (no Supabase / no auth), pass undefined
+      // so ClientsSection falls back to its built-in defaultClienten mock data
+      setLoading(false)
+    }).catch(() => {
       setLoading(false)
     })
   }, [])
 
   return (
     <ClientsSection
-      clienten={loading ? undefined : clienten}
+      clienten={loading ? undefined : (clienten.length > 0 ? clienten : undefined)}
       loading={loading}
       onSelectClient={onSelectClient}
     />
