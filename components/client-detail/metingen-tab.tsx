@@ -128,7 +128,7 @@ export function MetingenTab() {
                     contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }}
                     formatter={(value: number) => [`${value} kg`, "Gewicht"]}
                   />
-                  <Line type="monotone" dataKey="gewicht" stroke="hsl(var(--success))" strokeWidth={2} dot={{ fill: "hsl(var(--success))", r: 4 }} />
+                  <Line type="monotone" dataKey="gewicht" stroke="#22c55e" strokeWidth={2} dot={{ fill: "#22c55e", r: 4 }} activeDot={{ r: 6, fill: "#22c55e" }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -154,10 +154,10 @@ export function MetingenTab() {
                     contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }}
                   />
                   <Legend wrapperStyle={{ fontSize: "11px" }} />
-                  <Line type="monotone" dataKey="taille" name="Taille" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="heupen" name="Heupen" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="borst" name="Borst" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="armen" name="Armen" stroke="hsl(var(--chart-4))" strokeWidth={2} dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="taille" name="Taille" stroke="#ef4444" strokeWidth={2} dot={{ r: 3, fill: "#ef4444" }} />
+                  <Line type="monotone" dataKey="heupen" name="Heupen" stroke="#f97316" strokeWidth={2} dot={{ r: 3, fill: "#f97316" }} />
+                  <Line type="monotone" dataKey="borst" name="Borst" stroke="#eab308" strokeWidth={2} dot={{ r: 3, fill: "#eab308" }} />
+                  <Line type="monotone" dataKey="armen" name="Armen" stroke="#22c55e" strokeWidth={2} dot={{ r: 3, fill: "#22c55e" }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
