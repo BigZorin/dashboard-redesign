@@ -261,7 +261,6 @@ export function VoedingTab() {
           </div>
           {isVandaag && <div className="size-2 rounded-full bg-success animate-pulse" />}
         </div>
-        {isVandaag && <Badge className="bg-success/10 text-success text-[10px]">Vandaag</Badge>}
       </div>
 
       {/* 2-kolom grid */}

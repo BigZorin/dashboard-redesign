@@ -178,45 +178,6 @@ function StatBox({ label, value, suffix, trend, trendLabel }: {
 }
 
 // ============================================================================
-// AI MODE TOGGLE (per tab)
-// ============================================================================
-
-type AIMode = "auto" | "voorstellen" | "handmatig"
-
-function AIModeToggle({ mode, onModeChange }: { mode: AIMode; onModeChange: (mode: AIMode) => void }) {
-  return (
-    <div className="flex items-center gap-2">
-      <span className="text-xs text-muted-foreground">AI modus:</span>
-      <Select value={mode} onValueChange={(v) => onModeChange(v as AIMode)}>
-        <SelectTrigger className="h-7 w-[140px] text-xs border-border">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="auto" className="text-xs">
-            <div className="flex items-center gap-2">
-              <Zap className="size-3 text-success" />
-              AI stuurt
-            </div>
-          </SelectItem>
-          <SelectItem value="voorstellen" className="text-xs">
-            <div className="flex items-center gap-2">
-              <Sparkles className="size-3 text-primary" />
-              Voorstellen
-            </div>
-          </SelectItem>
-          <SelectItem value="handmatig" className="text-xs">
-            <div className="flex items-center gap-2">
-              <Settings2 className="size-3 text-muted-foreground" />
-              Handmatig
-            </div>
-          </SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
-  )
-}
-
-// ============================================================================
 // TAB BADGE COMPONENT
 // ============================================================================
 
@@ -240,21 +201,7 @@ interface ClientDetailSectionProps {
 
 export function ClientDetailSection({ clientId, onTerug }: ClientDetailSectionProps) {
   const [activeTab, setActiveTab] = useState("overzicht")
-  const [aiModes, setAiModes] = useState<Record<string, AIMode>>({
-    training: "voorstellen",
-    voeding: "voorstellen",
-    checkins: "voorstellen",
-    metingen: "voorstellen",
-  })
-
   const client = clientGegevens
-
-  const handleAIModeChange = (tab: string, mode: AIMode) => {
-    setAiModes((prev) => ({ ...prev, [tab]: mode }))
-  }
-
-  // Tabs that show AI toggle
-  const tabsWithAIToggle = ["training", "voeding", "checkins", "metingen"]
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -434,16 +381,8 @@ export function ClientDetailSection({ clientId, onTerug }: ClientDetailSectionPr
                 <Settings className="size-3.5 mr-1.5" />
                 Instellingen
               </TabsTrigger>
-            </TabsList>
-
-            {/* AI Mode Toggle (shown for relevant tabs) */}
-            {tabsWithAIToggle.includes(activeTab) && (
-              <AIModeToggle
-                mode={aiModes[activeTab]}
-                onModeChange={(mode) => handleAIModeChange(activeTab, mode)}
-              />
-            )}
-          </div>
+  </TabsList>
+  </div>
         </div>
 
         {/* ================================================================== */}
