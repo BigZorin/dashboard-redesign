@@ -16,6 +16,7 @@ import {
   Edit3,
   ChevronDown,
   ChevronRight,
+  ChevronUp,
   RefreshCw,
   Brain,
   Zap,
@@ -29,6 +30,18 @@ import {
   LineChart,
   Settings,
   FileText,
+  Database,
+  Circle,
+  Pause,
+  Play,
+  Bot,
+  Camera,
+  Watch,
+  Gauge,
+  Utensils,
+  Calendar,
+  Moon,
+  Pill,
 } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -550,6 +563,76 @@ const clientMemory = [
   { id: "mem_004", observatie: "Slaapproblemen bij training na 20:00", bron: "Correlatie check-in data" },
 ]
 
+/** Data Status — Overzicht van welke databronnen de AI heeft */
+type DataStatus = "beschikbaar" | "beperkt" | "niet_beschikbaar"
+
+const dataBronnen: Array<{
+  id: string
+  label: string
+  icon: React.ElementType
+  status: DataStatus
+  detail: string
+}> = [
+  { id: "intake", label: "Intake", icon: FileText, status: "beschikbaar", detail: "volledig ingevuld" },
+  { id: "wekelijks", label: "Wekelijkse check-ins", icon: Calendar, status: "beschikbaar", detail: "6 van 6 weken" },
+  { id: "dagelijks", label: "Dagelijkse check-ins", icon: Zap, status: "beschikbaar", detail: "laatste 28 dagen" },
+  { id: "voeding", label: "Voedingslogs", icon: Utensils, status: "beschikbaar", detail: "laatste 14 dagen" },
+  { id: "training", label: "Training logs", icon: Dumbbell, status: "beschikbaar", detail: "laatste 6 weken" },
+  { id: "supplementen", label: "Supplementen", icon: Pill, status: "beschikbaar", detail: "actief (4 items)" },
+  { id: "fotos", label: "Voortgangsfoto's", icon: Camera, status: "beperkt", detail: "3 van 6 weken" },
+  { id: "maten", label: "Lichaamsmaten", icon: Gauge, status: "niet_beschikbaar", detail: "nog nooit ingevuld" },
+  { id: "wearable", label: "Wearable data", icon: Watch, status: "niet_beschikbaar", detail: "niet gekoppeld" },
+]
+
+const beschikbaarCount = dataBronnen.filter(d => d.status === "beschikbaar").length
+const beperktCount = dataBronnen.filter(d => d.status === "beperkt").length
+const aiDekking = Math.round(((beschikbaarCount + beperktCount * 0.5) / dataBronnen.length) * 100)
+
+/** AI Activity Log */
+type LogType = "analyse" | "patroon" | "voorstel" | "auto" | "fout" | "check"
+
+const aiActivityLog: Array<{
+  tijd: string
+  type: LogType
+  tekst: string
+  detail?: string
+}> = [
+  { tijd: "14:40", type: "auto", tekst: "Rustdag ingepland (regel: max 5 dagen)", detail: "Automatisch toegepast" },
+  { tijd: "14:36", type: "voorstel", tekst: "Gegenereerd: volume +1 set per compound", detail: "Zekerheid: 75%" },
+  { tijd: "14:35", type: "patroon", tekst: "Compound lifts: progressie 3 weken consistent" },
+  { tijd: "14:35", type: "check", tekst: "RPE data niet beschikbaar — analyse beperkt" },
+  { tijd: "14:35", type: "analyse", tekst: "Training logs week 6 verwerkt" },
+  { tijd: "14:33", type: "voorstel", tekst: "Gegenereerd: verhoog eiwit target → 160g", detail: "Zekerheid: 80%" },
+  { tijd: "14:32", type: "patroon", tekst: "Eiwitinname za/zo gem. 105g vs doordeweeks 142g" },
+  { tijd: "14:32", type: "analyse", tekst: "Client memory: \"Moeite met eiwit in weekenden\"" },
+]
+
+const logTypeConfig: Record<LogType, { label: string; color: string }> = {
+  analyse: { label: "ANALYSE", color: "text-muted-foreground" },
+  patroon: { label: "PATROON", color: "text-blue-400" },
+  voorstel: { label: "VOORSTEL", color: "text-primary" },
+  auto: { label: "AUTO", color: "text-success" },
+  fout: { label: "FOUT", color: "text-destructive" },
+  check: { label: "CHECK", color: "text-warning" },
+}
+
+/** AI Automatiseringsregels — Per domein */
+type AIRuleMode = "ai_stuurt" | "voorstellen" | "handmatig"
+
+const aiDomeinen: Array<{
+  id: string
+  label: string
+  icon: React.ElementType
+  beschrijving: string
+  defaultMode: AIRuleMode
+}> = [
+  { id: "voeding", label: "Voeding", icon: Apple, beschrijving: "Macro-aanpassingen", defaultMode: "voorstellen" },
+  { id: "training", label: "Training", icon: Dumbbell, beschrijving: "Sets, reps, deload", defaultMode: "voorstellen" },
+  { id: "rustdagen", label: "Rustdagen", icon: Moon, beschrijving: "Extra rustdagen", defaultMode: "ai_stuurt" },
+  { id: "supplementen", label: "Supplementen", icon: Pill, beschrijving: "Dosering", defaultMode: "handmatig" },
+  { id: "programma", label: "Programma", icon: RefreshCw, beschrijving: "Programmawissels", defaultMode: "voorstellen" },
+]
+
 function getCategorieBadge(categorie: FeedCategorie) {
   const config: Record<FeedCategorie, { bg: string; text: string; label: string }> = {
     training: { bg: "bg-primary/10", text: "text-primary", label: "Training" },
@@ -574,6 +657,11 @@ function getUrgentieBorderColor(urgentie?: Urgentie) {
 function OverzichtTabWithAI() {
   const [feedFilter, setFeedFilter] = useState<"alles" | "openstaand" | "goedgekeurd" | "afgewezen" | "auto">("alles")
   const [expandedReasoning, setExpandedReasoning] = useState<string | null>(null)
+  const [activityLogOpen, setActivityLogOpen] = useState(false)
+  const [activityLogPaused, setActivityLogPaused] = useState(false)
+  const [aiRuleModes, setAiRuleModes] = useState<Record<string, AIRuleMode>>(
+    Object.fromEntries(aiDomeinen.map(d => [d.id, d.defaultMode]))
+  )
 
   const filteredFeed = feedItems.filter((item) => {
     if (feedFilter === "alles") return true
@@ -587,9 +675,11 @@ function OverzichtTabWithAI() {
   const openVoorstellen = feedItems.filter((i) => i.type === "voorstel").length
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 p-6">
-      {/* LEFT COLUMN: AI Summary + AI Feed */}
-      <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 p-6">
+      {/* ROW 1: AI Summary + Feed + Memory (2 columns) */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
+        {/* LEFT COLUMN: AI Summary + AI Feed */}
+        <div className="flex flex-col gap-6">
         {/* AI Summary */}
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="p-4">
@@ -788,6 +878,223 @@ function OverzichtTabWithAI() {
                 </div>
               </div>
             ))}
+          </CardContent>
+        </Card>
+      </div>
+
+      </div>
+
+      {/* ROW 2: AI Automatiseringsregels */}
+      <Card className="border-border">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-semibold flex items-center gap-2">
+            <Bot className="size-4 text-primary" />
+            AI Automatiseringsregels
+          </CardTitle>
+          <p className="text-[11px] text-muted-foreground">Bepaal hoe AI handelt per domein</p>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+            {aiDomeinen.map((domein) => {
+              const Icon = domein.icon
+              return (
+                <div key={domein.id} className="flex flex-col gap-2 p-3 rounded-lg bg-secondary/30 border border-border">
+                  <div className="flex items-center gap-2">
+                    <Icon className="size-4 text-primary" />
+                    <span className="text-xs font-semibold text-foreground">{domein.label}</span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">{domein.beschrijving}</p>
+                  <Select
+                    value={aiRuleModes[domein.id]}
+                    onValueChange={(value: AIRuleMode) => setAiRuleModes(prev => ({ ...prev, [domein.id]: value }))}
+                  >
+                    <SelectTrigger className="h-7 text-[11px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ai_stuurt" className="text-xs">
+                        <span className="flex items-center gap-1.5">
+                          <Sparkles className="size-3 text-primary" />
+                          AI stuurt
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="voorstellen" className="text-xs">
+                        <span className="flex items-center gap-1.5">
+                          <span className="size-1.5 rounded-full bg-warning" />
+                          Voorstellen
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="handmatig" className="text-xs">
+                        <span className="flex items-center gap-1.5">
+                          <span className="size-1.5 rounded-full bg-muted-foreground" />
+                          Handmatig
+                        </span>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ROW 3: Data Status + AI Activity Log */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Data Status */}
+        <Card className="border-border">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <Database className="size-4 text-primary" />
+              Data Status
+            </CardTitle>
+            <p className="text-[11px] text-muted-foreground">Databronnen beschikbaar voor AI analyse</p>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {/* Beschikbaar */}
+            <div className="space-y-1">
+              <span className="text-[10px] font-medium text-success uppercase tracking-wide">Beschikbaar</span>
+              <div className="space-y-0.5">
+                {dataBronnen.filter(d => d.status === "beschikbaar").map(bron => {
+                  const Icon = bron.icon
+                  return (
+                    <div key={bron.id} className="flex items-center justify-between py-1 px-2 rounded bg-success/5">
+                      <div className="flex items-center gap-2">
+                        <Circle className="size-1.5 fill-success text-success" />
+                        <Icon className="size-3 text-muted-foreground" />
+                        <span className="text-[11px] text-foreground">{bron.label}</span>
+                      </div>
+                      <span className="text-[10px] text-muted-foreground">{bron.detail}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Beperkt */}
+            {dataBronnen.filter(d => d.status === "beperkt").length > 0 && (
+              <div className="space-y-1">
+                <span className="text-[10px] font-medium text-warning uppercase tracking-wide">Beperkt</span>
+                <div className="space-y-0.5">
+                  {dataBronnen.filter(d => d.status === "beperkt").map(bron => {
+                    const Icon = bron.icon
+                    return (
+                      <div key={bron.id} className="flex items-center justify-between py-1 px-2 rounded bg-warning/5">
+                        <div className="flex items-center gap-2">
+                          <div className="size-1.5 rounded-full border border-warning" />
+                          <Icon className="size-3 text-muted-foreground" />
+                          <span className="text-[11px] text-foreground">{bron.label}</span>
+                        </div>
+                        <span className="text-[10px] text-muted-foreground">{bron.detail}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Niet beschikbaar */}
+            {dataBronnen.filter(d => d.status === "niet_beschikbaar").length > 0 && (
+              <div className="space-y-1">
+                <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Niet beschikbaar</span>
+                <div className="space-y-0.5">
+                  {dataBronnen.filter(d => d.status === "niet_beschikbaar").map(bron => {
+                    const Icon = bron.icon
+                    return (
+                      <div key={bron.id} className="flex items-center justify-between py-1 px-2 rounded bg-secondary/30">
+                        <div className="flex items-center gap-2">
+                          <Circle className="size-1.5 text-muted-foreground" />
+                          <Icon className="size-3 text-muted-foreground/50" />
+                          <span className="text-[11px] text-muted-foreground">{bron.label}</span>
+                        </div>
+                        <button className="text-[10px] text-primary hover:underline">Activeren</button>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* AI Dekking */}
+            <div className="pt-2 border-t border-border">
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[11px] font-medium text-foreground">AI dekking</span>
+                <span className="text-sm font-bold text-primary">{aiDekking}%</span>
+              </div>
+              <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-primary to-primary/60"
+                  style={{ width: `${aiDekking}%` }}
+                />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* AI Activity Log */}
+        <Card className="border-border">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                <Bot className="size-4 text-primary" />
+                AI Activity Log
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
+                  <span className={cn(
+                    "size-1.5 rounded-full",
+                    activityLogPaused ? "bg-muted-foreground" : "bg-success animate-pulse"
+                  )} />
+                  <span className="text-[10px] text-muted-foreground">
+                    {activityLogPaused ? "Gepauzeerd" : "Live"}
+                  </span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-6"
+                  onClick={() => setActivityLogPaused(!activityLogPaused)}
+                >
+                  {activityLogPaused ? <Play className="size-3" /> : <Pause className="size-3" />}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-6"
+                  onClick={() => setActivityLogOpen(!activityLogOpen)}
+                >
+                  {activityLogOpen ? <ChevronUp className="size-3" /> : <ChevronDown className="size-3" />}
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div
+              className={cn(
+                "rounded-lg bg-[#0d0d0d] border border-border overflow-hidden transition-all",
+                activityLogOpen ? "max-h-[300px]" : "max-h-[160px]"
+              )}
+            >
+              <div className="p-3 overflow-y-auto max-h-[inherit] font-mono text-[10px] space-y-1">
+                {aiActivityLog.map((log, i) => {
+                  const config = logTypeConfig[log.type]
+                  return (
+                    <div key={i} className="flex gap-2">
+                      <span className="text-muted-foreground shrink-0 w-8">{log.tijd}</span>
+                      <span className={cn("shrink-0 w-14 font-semibold", config.color)}>
+                        {config.label}
+                      </span>
+                      <div className="flex flex-col gap-0.5 min-w-0">
+                        <span className="text-foreground/90">{log.tekst}</span>
+                        {log.detail && (
+                          <span className="text-muted-foreground text-[9px]">→ {log.detail}</span>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
