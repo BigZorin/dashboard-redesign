@@ -97,10 +97,11 @@ const maaltijden: {
 ]
 
 const supplementen = [
-  { naam: "Whey Proteïne", timing: "Ochtend", ingenomen: true },
-  { naam: "Creatine", timing: "Ontbijt", ingenomen: true },
-  { naam: "Vitamine D3", timing: "Lunch", ingenomen: false },
-  { naam: "Omega-3", timing: "Diner", ingenomen: false },
+  { naam: "Whey Proteïne", timing: "Ochtend", dosering: "30g", ingenomen: true, tijdIngenomen: "07:45" },
+  { naam: "Creatine", timing: "Ontbijt", dosering: "5g", ingenomen: true, tijdIngenomen: "07:50" },
+  { naam: "Vitamine D3", timing: "Lunch", dosering: "2000 IU", ingenomen: false },
+  { naam: "Omega-3", timing: "Diner", dosering: "1000mg", ingenomen: false },
+  { naam: "Magnesium", timing: "Avond", dosering: "400mg", ingenomen: false },
 ]
 
 const weekData = [
@@ -312,18 +313,49 @@ export function VoedingTab() {
                   <Pill className="size-4 text-chart-3" />
                   Supplementen
                 </span>
-                <Badge variant="outline" className="text-[10px]">{suppIngenomen}/{supplementen.length}</Badge>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    <div className="h-1.5 w-12 bg-secondary rounded-full overflow-hidden">
+                      <div className="h-full bg-success rounded-full" style={{ width: `${(suppIngenomen / supplementen.length) * 100}%` }} />
+                    </div>
+                    <span className="text-[10px] text-muted-foreground">{suppIngenomen}/{supplementen.length}</span>
+                  </div>
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-0">
-              <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-2">
                 {supplementen.map((s, i) => (
                   <div key={i} className={cn(
-                    "flex items-center gap-2 p-2 rounded-md text-xs",
-                    s.ingenomen ? "bg-success/10" : "bg-secondary/50"
+                    "flex items-center justify-between p-2.5 rounded-lg border transition-colors",
+                    s.ingenomen 
+                      ? "bg-success/5 border-success/20" 
+                      : "bg-secondary/30 border-border hover:border-muted-foreground/30"
                   )}>
-                    {s.ingenomen ? <Check className="size-3 text-success" /> : <Clock className="size-3 text-muted-foreground" />}
-                    <span className={s.ingenomen ? "text-foreground" : "text-muted-foreground"}>{s.naam}</span>
+                    <div className="flex items-center gap-3">
+                      <div className={cn(
+                        "flex items-center justify-center size-7 rounded-full",
+                        s.ingenomen ? "bg-success/10" : "bg-secondary"
+                      )}>
+                        {s.ingenomen 
+                          ? <Check className="size-3.5 text-success" /> 
+                          : <Clock className="size-3.5 text-muted-foreground" />
+                        }
+                      </div>
+                      <div className="flex flex-col">
+                        <span className={cn(
+                          "text-xs font-medium",
+                          s.ingenomen ? "text-foreground" : "text-muted-foreground"
+                        )}>{s.naam}</span>
+                        <span className="text-[10px] text-muted-foreground">{s.dosering}</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <span className="text-[10px] text-muted-foreground">{s.timing}</span>
+                      {s.ingenomen && s.tijdIngenomen && (
+                        <span className="text-[10px] text-success font-medium">{s.tijdIngenomen}</span>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -333,30 +365,71 @@ export function VoedingTab() {
           {/* Week chart */}
           <Card>
             <CardHeader className="p-4 pb-3">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <TrendingUp className="size-4 text-chart-1" />
-                Week trend
+              <CardTitle className="text-sm flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <TrendingUp className="size-4 text-chart-1" />
+                  Week trend
+                </span>
+                <div className="flex items-center gap-3 text-[10px]">
+                  <span className="flex items-center gap-1">
+                    <span className="size-2 rounded-full bg-success" /> Op target
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="size-2 rounded-full bg-warning" /> Afwijking
+                  </span>
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 pt-0">
-              <div className="h-32">
+              <div className="h-36">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={weekData} barGap={2}>
+                  <BarChart data={weekData} barGap={4}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                     <XAxis dataKey="dag" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" tickLine={false} axisLine={false} />
                     <YAxis hide domain={[0, 3000]} />
                     <Tooltip
-                      contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "6px", fontSize: "11px" }}
+                      cursor={{ fill: "hsl(var(--primary))", fillOpacity: 0.1, radius: 4 }}
+                      contentStyle={{ 
+                        backgroundColor: "hsl(var(--card))", 
+                        border: "1px solid hsl(var(--border))", 
+                        borderRadius: "8px", 
+                        fontSize: "11px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
+                      }}
                       formatter={(v: number, n: string) => [`${v} kcal`, n === "plan" ? "Plan" : "Gelogd"]}
+                      labelFormatter={(label) => `${label}`}
                     />
-                    <Bar dataKey="plan" fill="hsl(var(--primary))" opacity={0.2} radius={[3, 3, 0, 0]} />
-                    <Bar dataKey="gelogd" radius={[3, 3, 0, 0]}>
+                    <Bar dataKey="plan" fill="hsl(var(--muted-foreground))" opacity={0.15} radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="gelogd" radius={[4, 4, 0, 0]}>
                       {weekData.map((e, i) => {
                         const pct = (e.gelogd / e.plan) * 100
-                        return <Cell key={i} fill={pct >= 90 && pct <= 110 ? "hsl(var(--success))" : "hsl(var(--warning))"} />
+                        const isOnTarget = pct >= 90 && pct <= 110
+                        return (
+                          <Cell 
+                            key={i} 
+                            fill={isOnTarget ? "hsl(var(--success))" : "hsl(var(--warning))"} 
+                            className="transition-opacity hover:opacity-80"
+                          />
+                        )
                       })}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
+              </div>
+              {/* Percentage labels */}
+              <div className="flex justify-between mt-2 px-1">
+                {weekData.map((e, i) => {
+                  const pct = Math.round((e.gelogd / e.plan) * 100)
+                  const isOnTarget = pct >= 90 && pct <= 110
+                  return (
+                    <span key={i} className={cn(
+                      "text-[9px] font-medium w-7 text-center",
+                      isOnTarget ? "text-success" : "text-warning"
+                    )}>
+                      {pct}%
+                    </span>
+                  )
+                })}
               </div>
             </CardContent>
           </Card>
