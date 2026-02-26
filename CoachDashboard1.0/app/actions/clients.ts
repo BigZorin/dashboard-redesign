@@ -1103,3 +1103,164 @@ export async function submitCheckInFeedback(checkInId: string, type: "weekly" | 
   if (error) return { success: false, error: error.message }
   return { success: true }
 }
+
+// ============================================================================
+// WEEK SUMMARY — Aggregated weekly data for expandable check-in cards
+// ============================================================================
+
+export interface WeekSummary {
+  workouts: {
+    scheduled: number
+    completed: number
+    details: { name: string; date: string; completed: boolean }[]
+  }
+  nutrition: {
+    daysLogged: number
+    dailyAvg: { calories: number; protein: number; carbs: number; fat: number }
+    target: { calories: number; protein: number; carbs: number; fat: number } | null
+  }
+  dailyCheckIns: {
+    date: string
+    weight: number | null
+    mood: number | null
+    sleepQuality: number | null
+  }[]
+  aiSummary: string | null
+}
+
+/**
+ * ISO week number → date range (Monday–Sunday)
+ */
+function getWeekDateRange(weekNumber: number, year: number): { start: string; end: string } {
+  // ISO 8601: Week 1 contains Jan 4 (or the first Thursday)
+  const jan4 = new Date(Date.UTC(year, 0, 4))
+  const jan4Day = jan4.getUTCDay() || 7 // Make Sunday = 7
+  const monday = new Date(jan4)
+  monday.setUTCDate(jan4.getUTCDate() - jan4Day + 1 + (weekNumber - 1) * 7)
+  const sunday = new Date(monday)
+  sunday.setUTCDate(monday.getUTCDate() + 6)
+
+  const fmt = (d: Date) => d.toISOString().split("T")[0]
+  return { start: fmt(monday), end: fmt(sunday) }
+}
+
+export { getWeekDateRange }
+
+export async function getWeekSummary(
+  clientId: string,
+  weekNumber: number,
+  year: number,
+): Promise<{ success: boolean; summary?: WeekSummary; error?: string }> {
+  const user = await getCurrentUser()
+  if (!user) return { success: false, error: "Niet ingelogd" }
+
+  const supabase = await getSupabaseAdmin()
+  const { start: weekStart, end: weekEnd } = getWeekDateRange(weekNumber, year)
+
+  const [workoutsRes, foodLogsRes, dailyRes, targetsRes, aiSummaryRes] = await Promise.all([
+    // Workouts with template name
+    supabase
+      .from("client_workouts")
+      .select("id, scheduled_date, completed, workout_template_id, workout_templates(name)")
+      .eq("client_id", clientId)
+      .gte("scheduled_date", weekStart)
+      .lte("scheduled_date", weekEnd + "T23:59:59")
+      .order("scheduled_date", { ascending: true }),
+    // Food logs
+    supabase
+      .from("food_logs")
+      .select("date, calories, protein_grams, carbs_grams, fat_grams")
+      .eq("user_id", clientId)
+      .gte("date", weekStart)
+      .lte("date", weekEnd),
+    // Daily check-ins
+    supabase
+      .from("daily_check_ins")
+      .select("check_in_date, weight, mood, sleep_quality")
+      .eq("user_id", clientId)
+      .gte("check_in_date", weekStart)
+      .lte("check_in_date", weekEnd)
+      .order("check_in_date", { ascending: true }),
+    // Nutrition targets (latest for client)
+    supabase
+      .from("nutrition_targets")
+      .select("daily_calories, daily_protein_grams, daily_carbs_grams, daily_fat_grams")
+      .eq("user_id", clientId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    // Cached AI summary
+    supabase
+      .from("weekly_ai_summaries")
+      .select("summary")
+      .eq("client_id", clientId)
+      .eq("week_number", weekNumber)
+      .eq("year", year)
+      .maybeSingle(),
+  ])
+
+  // --- Workouts ---
+  const workouts = workoutsRes.data || []
+  const workoutDetails = workouts.map((w: any) => ({
+    name: w.workout_templates?.name || "Workout",
+    date: typeof w.scheduled_date === "string"
+      ? w.scheduled_date.split("T")[0]
+      : new Date(w.scheduled_date).toISOString().split("T")[0],
+    completed: !!w.completed,
+  }))
+
+  // --- Nutrition ---
+  const foodLogs = foodLogsRes.data || []
+  const dayTotals = new Map<string, { calories: number; protein: number; carbs: number; fat: number }>()
+  for (const log of foodLogs) {
+    const day = log.date
+    if (!dayTotals.has(day)) dayTotals.set(day, { calories: 0, protein: 0, carbs: 0, fat: 0 })
+    const t = dayTotals.get(day)!
+    t.calories += log.calories || 0
+    t.protein += log.protein_grams || 0
+    t.carbs += log.carbs_grams || 0
+    t.fat += log.fat_grams || 0
+  }
+  const daysLogged = dayTotals.size
+  const totals = Array.from(dayTotals.values())
+  const dailyAvg = daysLogged > 0
+    ? {
+        calories: Math.round(totals.reduce((a, b) => a + b.calories, 0) / daysLogged),
+        protein: Math.round(totals.reduce((a, b) => a + b.protein, 0) / daysLogged),
+        carbs: Math.round(totals.reduce((a, b) => a + b.carbs, 0) / daysLogged),
+        fat: Math.round(totals.reduce((a, b) => a + b.fat, 0) / daysLogged),
+      }
+    : { calories: 0, protein: 0, carbs: 0, fat: 0 }
+
+  const targetData = targetsRes.data
+  const target = targetData
+    ? {
+        calories: targetData.daily_calories || 0,
+        protein: targetData.daily_protein_grams || 0,
+        carbs: targetData.daily_carbs_grams || 0,
+        fat: targetData.daily_fat_grams || 0,
+      }
+    : null
+
+  // --- Daily check-ins ---
+  const dailyCheckIns = (dailyRes.data || []).map((d: any) => ({
+    date: d.check_in_date,
+    weight: d.weight ? Number(d.weight) : null,
+    mood: d.mood,
+    sleepQuality: d.sleep_quality,
+  }))
+
+  return {
+    success: true,
+    summary: {
+      workouts: {
+        scheduled: workouts.length,
+        completed: workouts.filter((w: any) => w.completed).length,
+        details: workoutDetails,
+      },
+      nutrition: { daysLogged, dailyAvg, target },
+      dailyCheckIns,
+      aiSummary: aiSummaryRes.data?.summary || null,
+    },
+  }
+}
