@@ -42,6 +42,9 @@ import {
   Calendar,
   Moon,
   Pill,
+  Pen,
+  Filter,
+  Heart,
 } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -588,11 +591,20 @@ const feedItems: FeedItem[] = [
 ]
 
 /** Client Memory */
-const clientMemory = [
-  { id: "mem_001", observatie: "Reageert goed op hogere trainingsfrequentie", bron: "3x goedgekeurd in laatste 2 maanden" },
-  { id: "mem_002", observatie: "Moeite met eiwitinname in weekenden", bron: "Check-in data analyse (8 weken)" },
-  { id: "mem_003", observatie: "Prefereert geleidelijke kcal-aanpassingen", bron: "Coach paste 2x een groot voorstel aan naar kleiner" },
-  { id: "mem_004", observatie: "Slaapproblemen bij training na 20:00", bron: "Correlatie check-in data" },
+type MemorySource = "ai" | "coach"
+
+const clientMemory: Array<{
+  id: string
+  observatie: string
+  bron: string
+  type: MemorySource
+}> = [
+  { id: "mem_001", observatie: "Reageert goed op hogere trainingsfrequentie", bron: "3x goedgekeurd in laatste 2 maanden", type: "ai" },
+  { id: "mem_002", observatie: "Moeite met eiwitinname in weekenden", bron: "Check-in data analyse (8 weken)", type: "ai" },
+  { id: "mem_003", observatie: "Prefereert geleidelijke kcal-aanpassingen", bron: "Coach feedback op voorstellen", type: "ai" },
+  { id: "mem_004", observatie: "Slaapproblemen bij training na 20:00", bron: "Correlatie check-in data", type: "ai" },
+  { id: "mem_005", observatie: "Heeft lichte knieklachten bij hoog volume squats", bron: "Coach notitie", type: "coach" },
+  { id: "mem_006", observatie: "Vegetarisch sinds januari 2026", bron: "Handmatig toegevoegd", type: "coach" },
 ]
 
 /** Data Status — Overzicht van welke databronnen de AI heeft */
@@ -604,6 +616,7 @@ const dataBronnen: Array<{
   icon: React.ElementType
   status: DataStatus
   detail: string
+  actie?: string
 }> = [
   { id: "intake", label: "Intake", icon: FileText, status: "beschikbaar", detail: "volledig ingevuld" },
   { id: "wekelijks", label: "Wekelijkse check-ins", icon: Calendar, status: "beschikbaar", detail: "6 van 6 weken" },
@@ -612,8 +625,10 @@ const dataBronnen: Array<{
   { id: "training", label: "Training logs", icon: Dumbbell, status: "beschikbaar", detail: "laatste 6 weken" },
   { id: "supplementen", label: "Supplementen", icon: Pill, status: "beschikbaar", detail: "actief (4 items)" },
   { id: "fotos", label: "Voortgangsfoto's", icon: Camera, status: "beperkt", detail: "3 van 6 weken" },
-  { id: "maten", label: "Lichaamsmaten", icon: Gauge, status: "niet_beschikbaar", detail: "nog nooit ingevuld" },
-  { id: "wearable", label: "Wearable data", icon: Watch, status: "niet_beschikbaar", detail: "niet gekoppeld" },
+  { id: "maten", label: "Lichaamsmaten", icon: Gauge, status: "niet_beschikbaar", detail: "nog nooit ingevuld", actie: "Activeren" },
+  { id: "wearable", label: "Wearable data", icon: Watch, status: "niet_beschikbaar", detail: "niet gekoppeld", actie: "Koppelen" },
+  { id: "rpe", label: "RPE per workout", icon: Gauge, status: "niet_beschikbaar", detail: "niet ingeschakeld", actie: "Activeren" },
+  { id: "mood", label: "Mood score", icon: Sparkles, status: "niet_beschikbaar", detail: "niet ingeschakeld", actie: "Activeren" },
 ]
 
 const beschikbaarCount = dataBronnen.filter(d => d.status === "beschikbaar").length
@@ -918,9 +933,14 @@ function OverzichtTabWithAI() {
 
 function AIConfigTab() {
   const [activityLogPaused, setActivityLogPaused] = useState(false)
+  const [activityLogFilter, setActivityLogFilter] = useState<LogType | "alles">("alles")
   const [aiRuleModes, setAiRuleModes] = useState<Record<string, AIRuleMode>>(
     Object.fromEntries(aiDomeinen.map(d => [d.id, d.defaultMode]))
   )
+  
+  const filteredLogs = activityLogFilter === "alles" 
+    ? aiActivityLog 
+    : aiActivityLog.filter(log => log.type === activityLogFilter)
 
   return (
     <div className="flex flex-col gap-6 p-6">
@@ -940,14 +960,31 @@ function AIConfigTab() {
             </div>
             <p className="text-[11px] text-muted-foreground">Wat de AI heeft geleerd over deze client</p>
           </CardHeader>
-          <CardContent className="flex flex-col gap-3">
+          <CardContent className="flex flex-col gap-2">
             {clientMemory.map((mem) => (
-              <div key={mem.id} className="flex items-start justify-between gap-2 p-3 rounded-lg bg-secondary/50 border border-border">
-                <div className="flex flex-col gap-1">
-                  <p className="text-xs text-foreground">{mem.observatie}</p>
-                  <p className="text-[10px] text-muted-foreground">Bron: {mem.bron}</p>
+              <div key={mem.id} className={cn(
+                "flex items-start justify-between gap-2 p-3 rounded-lg border",
+                mem.type === "ai" ? "bg-primary/5 border-primary/20" : "bg-secondary/50 border-border"
+              )}>
+                <div className="flex gap-2">
+                  <div className={cn(
+                    "flex items-center justify-center size-5 rounded-full shrink-0 mt-0.5",
+                    mem.type === "ai" ? "bg-primary/10" : "bg-secondary"
+                  )}>
+                    {mem.type === "ai" ? (
+                      <Sparkles className="size-3 text-primary" />
+                    ) : (
+                      <Pen className="size-2.5 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <p className="text-xs text-foreground">{mem.observatie}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {mem.type === "ai" ? "AI geleerd" : "Coach"} · {mem.bron}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1 shrink-0">
+                <div className="flex items-center gap-0.5 shrink-0">
                   <Button variant="ghost" size="icon" className="size-6">
                     <Edit3 className="size-3 text-muted-foreground" />
                   </Button>
@@ -1084,7 +1121,7 @@ function AIConfigTab() {
                           <Icon className="size-3.5 text-muted-foreground/50" />
                           <span className="text-xs text-muted-foreground">{bron.label}</span>
                         </div>
-                        <button className="text-[10px] text-primary hover:underline">Activeren</button>
+                        <button className="text-[10px] text-primary hover:underline">{bron.actie || "Activeren"}</button>
                       </div>
                     )
                   })}
@@ -1136,26 +1173,49 @@ function AIConfigTab() {
                 </Button>
               </div>
             </div>
+            {/* Filter chips */}
+            <div className="flex items-center gap-1.5 pt-2">
+              <Filter className="size-3 text-muted-foreground" />
+              {(["alles", "voorstel", "auto", "patroon", "check"] as const).map((filter) => (
+                <button
+                  key={filter}
+                  onClick={() => setActivityLogFilter(filter)}
+                  className={cn(
+                    "px-2 py-0.5 text-[10px] rounded-full transition-colors",
+                    activityLogFilter === filter
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+                  )}
+                >
+                  {filter === "alles" ? "Alles" : filter.toUpperCase()}
+                </button>
+              ))}
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="rounded-lg bg-[#0d0d0d] border border-border p-4 font-mono text-[11px] space-y-2">
-              {aiActivityLog.map((log, i) => {
+            <div className="rounded-lg bg-[#0d0d0d] border border-border p-4 font-mono text-[11px] space-y-2.5">
+              {filteredLogs.map((log, i) => {
                 const config = logTypeConfig[log.type]
                 return (
-                  <div key={i} className="flex gap-3">
+                  <div key={i} className="flex gap-3 group cursor-pointer hover:bg-white/5 -mx-2 px-2 py-1 rounded">
                     <span className="text-muted-foreground shrink-0 w-10">{log.tijd}</span>
                     <span className={cn("shrink-0 w-16 font-semibold", config.color)}>
                       {config.label}
                     </span>
-                    <div className="flex flex-col gap-0.5 min-w-0">
-                      <span className="text-foreground/90">{log.tekst}</span>
+                    <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+                      <span className="text-foreground/90 break-words">{log.tekst}</span>
                       {log.detail && (
-                        <span className="text-muted-foreground text-[10px]">  {log.detail}</span>
+                        <span className="text-muted-foreground text-[10px] break-words">  {log.detail}</span>
                       )}
                     </div>
                   </div>
                 )
               })}
+              {filteredLogs.length === 0 && (
+                <div className="text-muted-foreground text-center py-4">
+                  Geen {activityLogFilter} logs gevonden
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
