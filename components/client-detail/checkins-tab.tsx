@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { List, LayoutGrid, TrendingUp, TrendingDown, Minus, Camera, MessageSquare, ArrowLeftRight } from "lucide-react"
+import { List, LayoutGrid, TrendingUp, TrendingDown, Minus, Camera, MessageSquare, ArrowLeftRight, Sparkles } from "lucide-react"
+import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -173,6 +174,7 @@ export function CheckinsTab() {
   const [weergave, setWeergave] = useState<"tijdlijn" | "tabel">("tijdlijn")
   const [vergelijkModus, setVergelijkModus] = useState(false)
   const [geselecteerdeWeken, setGeselecteerdeWeken] = useState<string[]>([])
+  const [aiMode, setAiMode] = useState<"voorstellen" | "handmatig">("voorstellen")
 
   function toggleWeekSelectie(id: string) {
     setGeselecteerdeWeken(prev => {
@@ -194,7 +196,29 @@ export function CheckinsTab() {
           <h3 className="text-lg font-semibold text-foreground">Wekelijkse check-ins</h3>
           <p className="text-xs text-muted-foreground">{checkins.length} check-ins vastgelegd</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          {/* AI Mode Toggle */}
+          <div className="flex items-center bg-secondary rounded-lg p-0.5">
+            <button
+              onClick={() => setAiMode("voorstellen")}
+              className={cn(
+                "px-2.5 py-1 text-xs font-medium rounded-md transition-all",
+                aiMode === "voorstellen" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Sparkles className="size-3 inline mr-1" />
+              AI
+            </button>
+            <button
+              onClick={() => setAiMode("handmatig")}
+              className={cn(
+                "px-2.5 py-1 text-xs font-medium rounded-md transition-all",
+                aiMode === "handmatig" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              Handmatig
+            </button>
+          </div>
           <Button
             variant={vergelijkModus ? "default" : "outline"}
             size="sm"

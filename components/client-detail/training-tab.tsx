@@ -260,10 +260,19 @@ export function TrainingTab() {
               {actieveProgrammas.length} actief &middot; {voltooide.length} voltooid
             </p>
           </div>
-          <Button size="sm" className="h-8 gap-1.5 text-xs bg-primary text-primary-foreground hover:bg-primary/90">
-            <Plus className="size-3.5" />
-            Programma toewijzen
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            className="h-8 gap-1.5 text-xs bg-gradient-to-r from-[#6c3caf] to-[#5b2d9e] hover:from-[#7c4dbd] hover:to-[#6c3caf] text-white border-0"
+          >
+            <Sparkles className="size-3.5" />
+            AI genereert programma
           </Button>
+          <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs border-border">
+            <Plus className="size-3.5" />
+            Toewijzen
+          </Button>
+        </div>
         </div>
 
         {/* Actieve programma's */}

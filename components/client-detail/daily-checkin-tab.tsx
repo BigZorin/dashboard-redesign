@@ -104,6 +104,7 @@ function ScoreBar({ value, label, color }: { value: number; label: string; color
 
 export function DailyCheckinTab() {
   const [selectedIdx, setSelectedIdx] = useState(0)
+  const [aiMode, setAiMode] = useState<"voorstellen" | "handmatig">("voorstellen")
   const selected = weekData[selectedIdx]
 
   const chartData = [...weekData].reverse().map(d => ({
@@ -133,9 +134,33 @@ export function DailyCheckinTab() {
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Calendar className="size-3.5" />
-          Week 9, 2026
+        <div className="flex items-center gap-3">
+          {/* AI Mode Toggle */}
+          <div className="flex items-center bg-secondary rounded-lg p-0.5">
+            <button
+              onClick={() => setAiMode("voorstellen")}
+              className={cn(
+                "px-2.5 py-1 text-xs font-medium rounded-md transition-all",
+                aiMode === "voorstellen" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Sparkles className="size-3 inline mr-1" />
+              AI
+            </button>
+            <button
+              onClick={() => setAiMode("handmatig")}
+              className={cn(
+                "px-2.5 py-1 text-xs font-medium rounded-md transition-all",
+                aiMode === "handmatig" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              Handmatig
+            </button>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Calendar className="size-3.5" />
+            Week 9, 2026
+          </div>
         </div>
       </div>
 

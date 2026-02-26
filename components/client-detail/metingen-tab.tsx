@@ -1,26 +1,25 @@
 "use client"
 
-import { TrendingDown, TrendingUp, Minus, ImageIcon } from "lucide-react"
+import { useState } from "react"
+import { TrendingDown, TrendingUp, Minus, ImageIcon, Trophy, Sparkles, ChevronLeft, ChevronRight, Camera, ZoomIn, X } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   LineChart, Line, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from "recharts"
 
 // ============================================================================
-// PLACEHOLDER DATA — Metingen & progressie van de cliënt
-//
-// COACH-SCOPED: Data van 1 specifieke client.
-// RLS: Alle data via JOIN clients WHERE coach_id = auth.uid()
-//
-// Vervang met echte data uit Supabase tabellen:
-//   - client_checkins (gewicht + lichaamsmaten per week)
-//   - client_exercise_logs (kracht PR's en trends)
-//   - client_photos (progressiefoto's — Supabase Storage bucket "client-photos")
+// METINGEN & VOORTGANG TAB
+// - Delta samenvatting kaarten
+// - Gewichtsgrafiek
+// - Lichaamsmaten grafiek
+// - PERSONAL RECORDS lijst (NIEUW)
+// - Voortgangsfoto's galerij met vergelijk functie (NIEUW)
 // ============================================================================
 
-/** Samenvatting delta's — Berekend: verschil week 1 vs huidige week */
+/** Samenvatting delta's */
 const samenvattingDeltas = [
   { label: "Gewicht", waarde: "-1.7 kg", trend: "down" as const, startWaarde: "72.8 kg", huidigeWaarde: "71.1 kg" },
   { label: "Taille", waarde: "-2.5 cm", trend: "down" as const, startWaarde: "80.5 cm", huidigeWaarde: "78 cm" },
@@ -29,7 +28,7 @@ const samenvattingDeltas = [
   { label: "Armen", waarde: "+1.0 cm", trend: "up" as const, startWaarde: "32 cm", huidigeWaarde: "33 cm" },
 ]
 
-/** Gewichtsverloop — Supabase: client_checkins.gewicht */
+/** Gewichtsverloop */
 const gewichtsData = [
   { week: "Wk 1", gewicht: 72.8 },
   { week: "Wk 2", gewicht: 72.5 },
@@ -39,7 +38,7 @@ const gewichtsData = [
   { week: "Wk 6", gewicht: 71.1 },
 ]
 
-/** Lichaamsmaten per week — Supabase: client_checkins (taille, heupen, borst, armen) */
+/** Lichaamsmaten per week */
 const metingenData = [
   { week: "Wk 1", taille: 80.5, heupen: 98, borst: 96, armen: 32 },
   { week: "Wk 2", taille: 80, heupen: 97.5, borst: 96, armen: 32 },
@@ -49,21 +48,21 @@ const metingenData = [
   { week: "Wk 6", taille: 78, heupen: 96, borst: 95, armen: 33 },
 ]
 
-/** Kracht PR's — Supabase: client_exercise_logs (max gewicht per oefening per week) */
-const krachtData = [
-  { week: "Wk 1", squat: 80, bench: 62.5, deadlift: 90, ohp: 37.5 },
-  { week: "Wk 2", squat: 82.5, bench: 65, deadlift: 92.5, ohp: 37.5 },
-  { week: "Wk 3", squat: 82.5, bench: 65, deadlift: 95, ohp: 40 },
-  { week: "Wk 4", squat: 87.5, bench: 67.5, deadlift: 97.5, ohp: 40 },
-  { week: "Wk 5", squat: 87.5, bench: 67.5, deadlift: 100, ohp: 40 },
-  { week: "Wk 6", squat: 90, bench: 70, deadlift: 100, ohp: 40 },
+/** PERSONAL RECORDS */
+const personalRecords = [
+  { oefening: "Squat", gewicht: "90 kg", est1RM: "105 kg", datum: "24 feb 2026", isNieuw: true },
+  { oefening: "Bench Press", gewicht: "70 kg", est1RM: "82.5 kg", datum: "22 feb 2026", isNieuw: true },
+  { oefening: "Deadlift", gewicht: "100 kg", est1RM: "115 kg", datum: "20 feb 2026", isNieuw: false },
+  { oefening: "Overhead Press", gewicht: "40 kg", est1RM: "47.5 kg", datum: "18 feb 2026", isNieuw: false },
+  { oefening: "Barbell Row", gewicht: "65 kg", est1RM: "75 kg", datum: "15 feb 2026", isNieuw: false },
+  { oefening: "Romanian Deadlift", gewicht: "80 kg", est1RM: "92.5 kg", datum: "13 feb 2026", isNieuw: false },
 ]
 
-/** Progressiefoto's — Supabase: client_photos */
+/** Progressiefoto's */
 const progressieFotos = [
-  { label: "Week 1 - Start", datum: "24 jan 2026", fotoUrl: "" },     // <-- URL naar foto
-  { label: "Week 3", datum: "7 feb 2026", fotoUrl: "" },
-  { label: "Week 6 - Huidig", datum: "28 feb 2026", fotoUrl: "" },
+  { id: "foto1", label: "Week 1 - Start", datum: "24 jan 2026", fotoUrl: "", poses: ["Front", "Zij", "Rug"] },
+  { id: "foto2", label: "Week 3", datum: "7 feb 2026", fotoUrl: "", poses: ["Front", "Zij", "Rug"] },
+  { id: "foto3", label: "Week 6 - Huidig", datum: "28 feb 2026", fotoUrl: "", poses: ["Front", "Zij", "Rug"] },
 ]
 
 function DeltaKaart({ label, waarde, trend, startWaarde, huidigeWaarde }: {
@@ -97,6 +96,9 @@ function DeltaKaart({ label, waarde, trend, startWaarde, huidigeWaarde }: {
 }
 
 export function MetingenTab() {
+  const [vergelijkModus, setVergelijkModus] = useState(false)
+  const [vergelijkFotos, setVergelijkFotos] = useState<[string, string]>(["foto1", "foto3"])
+
   return (
     <div className="flex flex-col gap-6 p-6">
       {/* Delta samenvatting kaarten */}
@@ -119,14 +121,14 @@ export function MetingenTab() {
             <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={gewichtsData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.91 0.005 240)" />
-                  <XAxis dataKey="week" tick={{ fontSize: 11 }} stroke="oklch(0.5 0.01 240)" />
-                  <YAxis domain={["dataMin - 0.5", "dataMax + 0.5"]} tick={{ fontSize: 11 }} stroke="oklch(0.5 0.01 240)" />
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <XAxis dataKey="week" tick={{ fontSize: 11 }} className="text-muted-foreground" />
+                  <YAxis domain={["dataMin - 0.5", "dataMax + 0.5"]} tick={{ fontSize: 11 }} className="text-muted-foreground" />
                   <Tooltip
-                    contentStyle={{ backgroundColor: "oklch(1 0 0)", border: "1px solid oklch(0.91 0.005 240)", borderRadius: "8px", fontSize: "12px" }}
+                    contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }}
                     formatter={(value: number) => [`${value} kg`, "Gewicht"]}
                   />
-                  <Line type="monotone" dataKey="gewicht" stroke="oklch(0.55 0.15 160)" strokeWidth={2} dot={{ fill: "oklch(0.55 0.15 160)", r: 4 }} />
+                  <Line type="monotone" dataKey="gewicht" stroke="hsl(var(--success))" strokeWidth={2} dot={{ fill: "hsl(var(--success))", r: 4 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -145,17 +147,17 @@ export function MetingenTab() {
             <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={metingenData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.91 0.005 240)" />
-                  <XAxis dataKey="week" tick={{ fontSize: 11 }} stroke="oklch(0.5 0.01 240)" />
-                  <YAxis tick={{ fontSize: 11 }} stroke="oklch(0.5 0.01 240)" />
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <XAxis dataKey="week" tick={{ fontSize: 11 }} className="text-muted-foreground" />
+                  <YAxis tick={{ fontSize: 11 }} className="text-muted-foreground" />
                   <Tooltip
-                    contentStyle={{ backgroundColor: "oklch(1 0 0)", border: "1px solid oklch(0.91 0.005 240)", borderRadius: "8px", fontSize: "12px" }}
+                    contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }}
                   />
                   <Legend wrapperStyle={{ fontSize: "11px" }} />
-                  <Line type="monotone" dataKey="taille" name="Taille" stroke="oklch(0.55 0.15 160)" strokeWidth={2} dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="heupen" name="Heupen" stroke="oklch(0.6 0.12 200)" strokeWidth={2} dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="borst" name="Borst" stroke="oklch(0.65 0.1 260)" strokeWidth={2} dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="armen" name="Armen" stroke="oklch(0.7 0.15 80)" strokeWidth={2} dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="taille" name="Taille" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="heupen" name="Heupen" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="borst" name="Borst" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="armen" name="Armen" stroke="hsl(var(--chart-4))" strokeWidth={2} dot={{ r: 3 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -163,67 +165,154 @@ export function MetingenTab() {
         </Card>
       </div>
 
-      {/* Kracht progressie */}
+      {/* PERSONAL RECORDS */}
       <Card className="border-border">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-semibold">Krachtprogressie (werkgewicht in kg)</CardTitle>
-            <Badge variant="outline" className="text-[10px]">Compound lifts</Badge>
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <Trophy className="size-4 text-warning" />
+              Personal Records
+            </CardTitle>
+            <Badge variant="outline" className="text-[10px]">Est. 1RM</Badge>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={krachtData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.91 0.005 240)" />
-                <XAxis dataKey="week" tick={{ fontSize: 11 }} stroke="oklch(0.5 0.01 240)" />
-                <YAxis tick={{ fontSize: 11 }} stroke="oklch(0.5 0.01 240)" />
-                <Tooltip
-                  contentStyle={{ backgroundColor: "oklch(1 0 0)", border: "1px solid oklch(0.91 0.005 240)", borderRadius: "8px", fontSize: "12px" }}
-                  formatter={(value: number) => [`${value} kg`]}
-                />
-                <Legend wrapperStyle={{ fontSize: "11px" }} />
-                <Bar dataKey="squat" name="Squat" fill="oklch(0.55 0.15 160)" radius={[2, 2, 0, 0]} />
-                <Bar dataKey="bench" name="Bench Press" fill="oklch(0.6 0.12 200)" radius={[2, 2, 0, 0]} />
-                <Bar dataKey="deadlift" name="Deadlift" fill="oklch(0.65 0.1 260)" radius={[2, 2, 0, 0]} />
-                <Bar dataKey="ohp" name="OHP" fill="oklch(0.7 0.15 80)" radius={[2, 2, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Progressiefoto vergelijking */}
-      <Card className="border-border">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold">Progressiefoto vergelijking</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            {progressieFotos.map((foto, i) => (
-              <div key={i} className="flex flex-col gap-2">
-                <div className="aspect-[3/4] rounded-lg bg-secondary/60 border border-border flex items-center justify-center">
-                  {foto.fotoUrl ? (
-                    <img
-                      src={foto.fotoUrl}
-                      alt={foto.label}
-                      className="size-full object-cover rounded-lg"
-                      crossOrigin="anonymous"
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                      <ImageIcon className="size-8" />
-                      <span className="text-xs">Foto placeholder</span>
-                    </div>
-                  )}
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {personalRecords.map((pr, i) => (
+              <div
+                key={i}
+                className={`flex items-center justify-between p-3 rounded-lg border ${
+                  pr.isNieuw ? "bg-warning/5 border-warning/30" : "bg-secondary/30 border-border"
+                }`}
+              >
+                <div className="flex flex-col gap-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-foreground">{pr.oefening}</span>
+                    {pr.isNieuw && (
+                      <Badge className="text-[8px] h-4 bg-warning/10 text-warning border-warning/20">Nieuw!</Badge>
+                    )}
+                  </div>
+                  <span className="text-[10px] text-muted-foreground">{pr.datum}</span>
                 </div>
-                <div className="text-center">
-                  <p className="text-xs font-semibold text-foreground">{foto.label}</p>
-                  <p className="text-[10px] text-muted-foreground">{foto.datum}</p>
+                <div className="text-right">
+                  <p className="text-sm font-bold text-foreground">{pr.gewicht}</p>
+                  <p className="text-[10px] text-muted-foreground">Est. 1RM: {pr.est1RM}</p>
                 </div>
               </div>
             ))}
           </div>
+        </CardContent>
+      </Card>
+
+      {/* VOORTGANGSFOTO'S GALERIJ */}
+      <Card className="border-border">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <Camera className="size-4 text-primary" />
+              Voortgangsfoto's
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <Button
+                variant={vergelijkModus ? "default" : "outline"}
+                size="sm"
+                className="h-7 text-xs gap-1.5"
+                onClick={() => setVergelijkModus(!vergelijkModus)}
+              >
+                <ZoomIn className="size-3" />
+                {vergelijkModus ? "Sluiten" : "Vergelijk"}
+              </Button>
+              <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5">
+                <Camera className="size-3" />
+                Upload
+              </Button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {vergelijkModus ? (
+            /* Vergelijk modus - side by side */
+            <div className="space-y-4">
+              <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
+                <select
+                  className="bg-secondary rounded px-2 py-1 text-foreground"
+                  value={vergelijkFotos[0]}
+                  onChange={(e) => setVergelijkFotos([e.target.value, vergelijkFotos[1]])}
+                >
+                  {progressieFotos.map((f) => (
+                    <option key={f.id} value={f.id}>{f.label}</option>
+                  ))}
+                </select>
+                <span>vs</span>
+                <select
+                  className="bg-secondary rounded px-2 py-1 text-foreground"
+                  value={vergelijkFotos[1]}
+                  onChange={(e) => setVergelijkFotos([vergelijkFotos[0], e.target.value])}
+                >
+                  {progressieFotos.map((f) => (
+                    <option key={f.id} value={f.id}>{f.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                {vergelijkFotos.map((fotoId, idx) => {
+                  const foto = progressieFotos.find((f) => f.id === fotoId)!
+                  return (
+                    <div key={idx} className="flex flex-col gap-2">
+                      <div className="aspect-[3/4] rounded-lg bg-secondary/60 border-2 border-primary/20 flex items-center justify-center">
+                        {foto.fotoUrl ? (
+                          <img
+                            src={foto.fotoUrl}
+                            alt={foto.label}
+                            className="size-full object-cover rounded-lg"
+                            crossOrigin="anonymous"
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                            <ImageIcon className="size-12" />
+                            <span className="text-sm">{foto.label}</span>
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-center text-xs text-muted-foreground">{foto.datum}</p>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          ) : (
+            /* Normale galerij weergave */
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              {progressieFotos.map((foto, i) => (
+                <div key={i} className="flex flex-col gap-2">
+                  <div className="aspect-[3/4] rounded-lg bg-secondary/60 border border-border flex items-center justify-center hover:border-primary/50 transition-colors cursor-pointer group">
+                    {foto.fotoUrl ? (
+                      <img
+                        src={foto.fotoUrl}
+                        alt={foto.label}
+                        className="size-full object-cover rounded-lg"
+                        crossOrigin="anonymous"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center gap-2 text-muted-foreground group-hover:text-primary transition-colors">
+                        <ImageIcon className="size-8" />
+                        <span className="text-xs">Foto placeholder</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-center">
+                    <p className="text-xs font-semibold text-foreground">{foto.label}</p>
+                    <p className="text-[10px] text-muted-foreground">{foto.datum}</p>
+                    <div className="flex items-center justify-center gap-1 mt-1">
+                      {foto.poses.map((pose) => (
+                        <Badge key={pose} variant="outline" className="text-[8px] h-4">{pose}</Badge>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
