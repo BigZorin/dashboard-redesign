@@ -107,11 +107,11 @@ const supplementen = [
 const weekData = [
   { dag: "Ma", plan: 2200, gelogd: 2150 },
   { dag: "Di", plan: 2200, gelogd: 1980 },
-  { dag: "Wo", plan: 2200, gelogd: 2300 },
+  { dag: "Wo", plan: 2200, gelogd: 2100 },
   { dag: "Do", plan: 2200, gelogd: 2050 },
   { dag: "Vr", plan: 2200, gelogd: 1920 },
-  { dag: "Za", plan: 2400, gelogd: 2600 },
-  { dag: "Zo", plan: 2400, gelogd: 2200 },
+  { dag: "Za", plan: 2200, gelogd: 1850 },
+  { dag: "Zo", plan: 2200, gelogd: 2000 },
 ]
 
 function formatDatum(datum: Date): string {
@@ -428,13 +428,16 @@ export function VoedingTab() {
                     <XAxis dataKey="dag" tick={{ fontSize: 10, fill: "#888" }} tickLine={false} axisLine={false} />
                     <YAxis hide domain={[0, 3000]} />
                     <Tooltip
-                      cursor={{ fill: "rgba(99, 102, 241, 0.1)" }}
+                      cursor={{ fill: "rgba(99, 102, 241, 0.08)" }}
+                      position={{ y: -10 }}
+                      wrapperStyle={{ zIndex: 100 }}
                       contentStyle={{ 
                         backgroundColor: "#1a1a1a", 
                         border: "1px solid #333", 
                         borderRadius: "8px", 
                         fontSize: "11px",
-                        color: "#fff"
+                        color: "#fff",
+                        padding: "8px 12px"
                       }}
                       formatter={(v: number, n: string) => [`${v} kcal`, n === "plan" ? "Plan" : "Gelogd"]}
                     />
