@@ -362,82 +362,12 @@ export function VoedingTab() {
             </CardContent>
           </Card>
 
-          {/* Week chart */}
-          <Card>
-            <CardHeader className="p-4 pb-3">
-              <CardTitle className="text-sm flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <TrendingUp className="size-4 text-chart-1" />
-                  Week trend
-                </span>
-                <div className="flex items-center gap-3 text-[10px]">
-                  <span className="flex items-center gap-1">
-                    <span className="size-2 rounded-full bg-success" /> Op target
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="size-2 rounded-full bg-warning" /> Afwijking
-                  </span>
-                </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-              <div className="h-36">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={weekData} barGap={4}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                    <XAxis dataKey="dag" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" tickLine={false} axisLine={false} />
-                    <YAxis hide domain={[0, 3000]} />
-                    <Tooltip
-                      cursor={{ fill: "hsl(var(--primary))", fillOpacity: 0.1, radius: 4 }}
-                      contentStyle={{ 
-                        backgroundColor: "hsl(var(--card))", 
-                        border: "1px solid hsl(var(--border))", 
-                        borderRadius: "8px", 
-                        fontSize: "11px",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
-                      }}
-                      formatter={(v: number, n: string) => [`${v} kcal`, n === "plan" ? "Plan" : "Gelogd"]}
-                      labelFormatter={(label) => `${label}`}
-                    />
-                    <Bar dataKey="plan" fill="hsl(var(--muted-foreground))" opacity={0.15} radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="gelogd" radius={[4, 4, 0, 0]}>
-                      {weekData.map((e, i) => {
-                        const pct = (e.gelogd / e.plan) * 100
-                        const isOnTarget = pct >= 90 && pct <= 110
-                        return (
-                          <Cell 
-                            key={i} 
-                            fill={isOnTarget ? "hsl(var(--success))" : "hsl(var(--warning))"} 
-                            className="transition-opacity hover:opacity-80"
-                          />
-                        )
-                      })}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-              {/* Percentage labels */}
-              <div className="flex justify-between mt-2 px-1">
-                {weekData.map((e, i) => {
-                  const pct = Math.round((e.gelogd / e.plan) * 100)
-                  const isOnTarget = pct >= 90 && pct <= 110
-                  return (
-                    <span key={i} className={cn(
-                      "text-[9px] font-medium w-7 text-center",
-                      isOnTarget ? "text-success" : "text-warning"
-                    )}>
-                      {pct}%
-                    </span>
-                  )
-                })}
-              </div>
-            </CardContent>
-          </Card>
+
         </div>
 
         {/* RECHTER KOLOM: Maaltijden (3/5) */}
-        <div className="lg:col-span-3">
-          <Card className="h-full">
+        <div className="lg:col-span-3 space-y-5">
+          <Card>
             <CardHeader className="p-4 pb-3 border-b border-border">
               <CardTitle className="text-sm flex items-center justify-between">
                 <span className="flex items-center gap-2">
@@ -470,6 +400,75 @@ export function VoedingTab() {
                   </div>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Week trend - onder maaltijden */}
+          <Card>
+            <CardHeader className="p-4 pb-3">
+              <CardTitle className="text-sm flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <TrendingUp className="size-4 text-primary" />
+                  Week trend
+                </span>
+                <div className="flex items-center gap-3 text-[10px]">
+                  <span className="flex items-center gap-1">
+                    <span className="size-2 rounded-full bg-[#22c55e]" /> Op target
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="size-2 rounded-full bg-[#f97316]" /> Afwijking
+                  </span>
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+              <div className="h-32">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={weekData} barGap={6}>
+                    <XAxis dataKey="dag" tick={{ fontSize: 10, fill: "#888" }} tickLine={false} axisLine={false} />
+                    <YAxis hide domain={[0, 3000]} />
+                    <Tooltip
+                      cursor={{ fill: "rgba(99, 102, 241, 0.1)" }}
+                      contentStyle={{ 
+                        backgroundColor: "#1a1a1a", 
+                        border: "1px solid #333", 
+                        borderRadius: "8px", 
+                        fontSize: "11px",
+                        color: "#fff"
+                      }}
+                      formatter={(v: number, n: string) => [`${v} kcal`, n === "plan" ? "Plan" : "Gelogd"]}
+                    />
+                    <Bar dataKey="plan" fill="#e5e5e5" opacity={0.4} radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="gelogd" radius={[4, 4, 0, 0]}>
+                      {weekData.map((e, i) => {
+                        const pct = (e.gelogd / e.plan) * 100
+                        const isOnTarget = pct >= 90 && pct <= 110
+                        return (
+                          <Cell 
+                            key={i} 
+                            fill={isOnTarget ? "#22c55e" : "#f97316"} 
+                          />
+                        )
+                      })}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              {/* Percentage labels */}
+              <div className="flex justify-between mt-1 px-2">
+                {weekData.map((e, i) => {
+                  const pct = Math.round((e.gelogd / e.plan) * 100)
+                  const isOnTarget = pct >= 90 && pct <= 110
+                  return (
+                    <span key={i} className={cn(
+                      "text-[9px] font-medium w-8 text-center",
+                      isOnTarget ? "text-[#22c55e]" : "text-[#f97316]"
+                    )}>
+                      {pct}%
+                    </span>
+                  )
+                })}
+              </div>
             </CardContent>
           </Card>
         </div>
