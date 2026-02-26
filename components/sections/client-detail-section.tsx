@@ -28,6 +28,7 @@ import {
   ClipboardList,
   LineChart,
   Settings,
+  FileText,
 } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -62,6 +63,7 @@ import { cn } from "@/lib/utils"
 
 // Import existing tabs
 import { OverzichtTab } from "@/components/client-detail/overzicht-tab"
+import { IntakeTab } from "@/components/client-detail/intake-tab"
 import { TrainingTab } from "@/components/client-detail/training-tab"
 import { VoedingTab } from "@/components/client-detail/voeding-tab"
 import { CheckinsTab } from "@/components/client-detail/checkins-tab"
@@ -350,20 +352,11 @@ export function ClientDetailSection({ clientId, onTerug }: ClientDetailSectionPr
                 <TabBadge count={aiVoorstellenPerTab.overzicht} />
               </TabsTrigger>
               <TabsTrigger
-                value="training"
+                value="intake"
                 className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 text-sm"
               >
-                <Dumbbell className="size-3.5 mr-1.5" />
-                Training
-                <TabBadge count={aiVoorstellenPerTab.training} />
-              </TabsTrigger>
-              <TabsTrigger
-                value="voeding"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 text-sm"
-              >
-                <Apple className="size-3.5 mr-1.5" />
-                Voeding
-                <TabBadge count={aiVoorstellenPerTab.voeding} />
+                <FileText className="size-3.5 mr-1.5" />
+                Intake
               </TabsTrigger>
               <TabsTrigger
                 value="checkins"
@@ -378,6 +371,22 @@ export function ClientDetailSection({ clientId, onTerug }: ClientDetailSectionPr
               >
                 <Zap className="size-3.5 mr-1.5" />
                 Dagelijks
+              </TabsTrigger>
+              <TabsTrigger
+                value="training"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 text-sm"
+              >
+                <Dumbbell className="size-3.5 mr-1.5" />
+                Training
+                <TabBadge count={aiVoorstellenPerTab.training} />
+              </TabsTrigger>
+              <TabsTrigger
+                value="voeding"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 text-sm"
+              >
+                <Apple className="size-3.5 mr-1.5" />
+                Voeding
+                <TabBadge count={aiVoorstellenPerTab.voeding} />
               </TabsTrigger>
               <TabsTrigger
                 value="metingen"
@@ -412,17 +421,20 @@ export function ClientDetailSection({ clientId, onTerug }: ClientDetailSectionPr
           <TabsContent value="overzicht" className="m-0 h-full">
             <OverzichtTabWithAI />
           </TabsContent>
-          <TabsContent value="training" className="m-0 h-full">
-            <TrainingTab />
-          </TabsContent>
-          <TabsContent value="voeding" className="m-0 h-full">
-            <VoedingTab />
+          <TabsContent value="intake" className="m-0 h-full">
+            <IntakeTab />
           </TabsContent>
           <TabsContent value="checkins" className="m-0 h-full">
             <CheckinsTab />
           </TabsContent>
           <TabsContent value="daily" className="m-0 h-full">
             <DailyCheckinTab />
+          </TabsContent>
+          <TabsContent value="training" className="m-0 h-full">
+            <TrainingTab />
+          </TabsContent>
+          <TabsContent value="voeding" className="m-0 h-full">
+            <VoedingTab />
           </TabsContent>
           <TabsContent value="metingen" className="m-0 h-full">
             <MetingenTab />
