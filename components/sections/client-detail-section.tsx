@@ -628,7 +628,7 @@ const aiActivityLog: Array<{
   type: LogType
   tekst: string
   detail?: string
-}> = [
+  }> = [
   { tijd: "14:40", type: "auto", tekst: "Rustdag ingepland (regel: max 5 dagen)", detail: "Automatisch toegepast" },
   { tijd: "14:36", type: "voorstel", tekst: "Gegenereerd: volume +1 set per compound", detail: "Zekerheid: 75%" },
   { tijd: "14:35", type: "patroon", tekst: "Compound lifts: progressie 3 weken consistent" },
@@ -637,7 +637,19 @@ const aiActivityLog: Array<{
   { tijd: "14:33", type: "voorstel", tekst: "Gegenereerd: verhoog eiwit target → 160g", detail: "Zekerheid: 80%" },
   { tijd: "14:32", type: "patroon", tekst: "Eiwitinname za/zo gem. 105g vs doordeweeks 142g" },
   { tijd: "14:32", type: "analyse", tekst: "Client memory: \"Moeite met eiwit in weekenden\"" },
-]
+  { tijd: "14:32", type: "analyse", tekst: "Voedingslogs afgelopen 7 dagen opgehaald" },
+  { tijd: "14:30", type: "analyse", tekst: "Wekelijkse check-in week 6 verwerkt" },
+  { tijd: "14:30", type: "patroon", tekst: "Gewichtstrend: −0.45kg/week (4 weken consistent)" },
+  { tijd: "14:29", type: "analyse", tekst: "Slaapdata correlatie berekend met trainingstijden" },
+  { tijd: "14:29", type: "patroon", tekst: "Slaapkwaliteit −1.5pt bij training na 20:00" },
+  { tijd: "14:28", type: "check", tekst: "Wearable data niet gekoppeld — HRV analyse overgeslagen" },
+  { tijd: "14:28", type: "analyse", tekst: "Dagelijkse check-ins laatste 28 dagen geladen" },
+  { tijd: "14:27", type: "auto", tekst: "Supplementen reminder verzonden", detail: "Creatine, Vitamine D" },
+  { tijd: "14:26", type: "analyse", tekst: "Foto vergelijking week 1 vs week 6 uitgevoerd" },
+  { tijd: "14:26", type: "patroon", tekst: "Visuele progressie: zichtbare reductie buikomvang" },
+  { tijd: "14:25", type: "analyse", tekst: "Client profiel en intake data geladen" },
+  { tijd: "14:25", type: "analyse", tekst: "AI analyse cyclus gestart voor Lisa de Vries" },
+  ]
 
 const logTypeConfig: Record<LogType, { label: string; color: string }> = {
   analyse: { label: "ANALYSE", color: "text-muted-foreground" },
