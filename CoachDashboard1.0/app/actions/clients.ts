@@ -1262,3 +1262,157 @@ export async function getWeekSummary(
     },
   }
 }
+
+// ============================================================================
+// CLIENT NUTRITION — Daily nutrition data for Voeding tab
+// ============================================================================
+
+export interface FoodLogEntry {
+  id: string
+  foodName: string
+  mealType: string
+  calories: number
+  proteinGrams: number
+  carbsGrams: number
+  fatGrams: number
+  servingSize: number | null
+  servingUnit: string | null
+  numberOfServings: number | null
+  source: string | null
+  loggedAt: string | null
+}
+
+export interface NutritionDayData {
+  date: string
+  foodLogs: FoodLogEntry[]
+  totals: { calories: number; protein: number; carbs: number; fat: number }
+  target: { calories: number; protein: number; carbs: number; fat: number } | null
+  mealBreakdown: Record<string, { calories: number; protein: number; carbs: number; fat: number; items: FoodLogEntry[] }>
+}
+
+export interface NutritionWeekTrend {
+  date: string
+  dayLabel: string
+  calories: number
+  targetCalories: number
+}
+
+export async function getClientNutrition(
+  clientId: string,
+  date: string, // YYYY-MM-DD
+): Promise<{ success: boolean; data?: NutritionDayData; weekTrend?: NutritionWeekTrend[]; error?: string }> {
+  const user = await getCurrentUser()
+  if (!user) return { success: false, error: "Niet ingelogd" }
+
+  const supabase = await getSupabaseAdmin()
+
+  // Calculate week range (Mon-Sun containing this date)
+  const d = new Date(date + "T12:00:00Z")
+  const dayOfWeek = d.getUTCDay() || 7
+  const monday = new Date(d)
+  monday.setUTCDate(d.getUTCDate() - dayOfWeek + 1)
+  const sunday = new Date(monday)
+  sunday.setUTCDate(monday.getUTCDate() + 6)
+  const weekStart = monday.toISOString().split("T")[0]
+  const weekEnd = sunday.toISOString().split("T")[0]
+
+  const [foodLogsRes, weekLogsRes, targetsRes] = await Promise.all([
+    // Food logs for the specific date
+    supabase
+      .from("food_logs")
+      .select("id, food_name, meal_type, calories, protein_grams, carbs_grams, fat_grams, serving_size, serving_unit, number_of_servings, source, logged_at")
+      .eq("user_id", clientId)
+      .eq("date", date)
+      .order("logged_at", { ascending: true }),
+    // Food logs for the week (for trend chart)
+    supabase
+      .from("food_logs")
+      .select("date, calories")
+      .eq("user_id", clientId)
+      .gte("date", weekStart)
+      .lte("date", weekEnd),
+    // Nutrition targets
+    supabase
+      .from("nutrition_targets")
+      .select("daily_calories, daily_protein_grams, daily_carbs_grams, daily_fat_grams")
+      .eq("user_id", clientId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ])
+
+  // --- Today's food logs ---
+  const foodLogs: FoodLogEntry[] = (foodLogsRes.data || []).map((log: any) => ({
+    id: log.id,
+    foodName: log.food_name,
+    mealType: log.meal_type || "SNACK",
+    calories: log.calories || 0,
+    proteinGrams: log.protein_grams || 0,
+    carbsGrams: log.carbs_grams || 0,
+    fatGrams: log.fat_grams || 0,
+    servingSize: log.serving_size,
+    servingUnit: log.serving_unit,
+    numberOfServings: log.number_of_servings,
+    source: log.source,
+    loggedAt: log.logged_at,
+  }))
+
+  // Totals
+  const totals = {
+    calories: foodLogs.reduce((s, l) => s + l.calories, 0),
+    protein: foodLogs.reduce((s, l) => s + l.proteinGrams, 0),
+    carbs: foodLogs.reduce((s, l) => s + l.carbsGrams, 0),
+    fat: foodLogs.reduce((s, l) => s + l.fatGrams, 0),
+  }
+
+  // Meal breakdown
+  const mealBreakdown: NutritionDayData["mealBreakdown"] = {}
+  for (const log of foodLogs) {
+    const mt = log.mealType
+    if (!mealBreakdown[mt]) {
+      mealBreakdown[mt] = { calories: 0, protein: 0, carbs: 0, fat: 0, items: [] }
+    }
+    mealBreakdown[mt].calories += log.calories
+    mealBreakdown[mt].protein += log.proteinGrams
+    mealBreakdown[mt].carbs += log.carbsGrams
+    mealBreakdown[mt].fat += log.fatGrams
+    mealBreakdown[mt].items.push(log)
+  }
+
+  // Target
+  const targetData = targetsRes.data
+  const target = targetData
+    ? {
+        calories: targetData.daily_calories || 0,
+        protein: targetData.daily_protein_grams || 0,
+        carbs: targetData.daily_carbs_grams || 0,
+        fat: targetData.daily_fat_grams || 0,
+      }
+    : null
+
+  // --- Week trend ---
+  const weekCalByDay = new Map<string, number>()
+  for (const log of weekLogsRes.data || []) {
+    weekCalByDay.set(log.date, (weekCalByDay.get(log.date) || 0) + (log.calories || 0))
+  }
+
+  const dagLabels = ["Ma", "Di", "Wo", "Do", "Vr", "Za", "Zo"]
+  const weekTrend: NutritionWeekTrend[] = []
+  for (let i = 0; i < 7; i++) {
+    const day = new Date(monday)
+    day.setUTCDate(monday.getUTCDate() + i)
+    const dayStr = day.toISOString().split("T")[0]
+    weekTrend.push({
+      date: dayStr,
+      dayLabel: dagLabels[i],
+      calories: weekCalByDay.get(dayStr) || 0,
+      targetCalories: target?.calories || 0,
+    })
+  }
+
+  return {
+    success: true,
+    data: { date, foodLogs, totals, target, mealBreakdown },
+    weekTrend,
+  }
+}

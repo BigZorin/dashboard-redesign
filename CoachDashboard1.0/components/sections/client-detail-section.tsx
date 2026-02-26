@@ -470,7 +470,7 @@ export function ClientDetailSection({ clientId, clientData, loading = false, onT
   <TrainingTab />
   </TabsContent>
   <TabsContent value="voeding" className="m-0 h-full">
-            <VoedingTab />
+            <VoedingTab clientId={clientId} />
           </TabsContent>
           <TabsContent value="metingen" className="m-0 h-full">
             <MetingenTab />
