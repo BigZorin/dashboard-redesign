@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "Evotion",
+    "slug": "evotion",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.evotion.app"
+    },
+    "android": {
+      "package": "com.evotion.app"
+    }
+  }
+}

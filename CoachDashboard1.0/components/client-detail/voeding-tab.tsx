@@ -13,6 +13,13 @@ import {
   Utensils,
   ScanBarcode,
   AlertCircle,
+  Pill,
+  Check,
+  X,
+  Clock,
+  Sun,
+  Dumbbell,
+  Moon,
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -22,9 +29,11 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 
 import { cn } from "@/lib/utils"
 import {
   getClientNutrition,
+  getClientSupplements,
   type NutritionDayData,
   type NutritionWeekTrend,
   type FoodLogEntry,
+  type SupplementWithLog,
 } from "@/app/actions/clients"
 
 // ============================================================================
@@ -125,6 +134,101 @@ function MaaltijdSection({ mealType, items }: { mealType: string; items: FoodLog
   )
 }
 
+// Supplementen card
+const TIME_BLOCK_ICONS: Record<string, React.ReactNode> = {
+  ochtend: <Sun className="size-3 text-amber-400" />,
+  training: <Dumbbell className="size-3 text-blue-400" />,
+  avond: <Moon className="size-3 text-indigo-400" />,
+}
+
+const TIME_BLOCK_LABELS: Record<string, string> = {
+  ochtend: "Ochtend",
+  training: "Training",
+  avond: "Avond",
+}
+
+function SupplementenCard({ supplements }: { supplements: SupplementWithLog[] }) {
+  const taken = supplements.filter((s) => s.taken).length
+  const total = supplements.length
+  const pct = total > 0 ? Math.round((taken / total) * 100) : 0
+
+  // Group by time block
+  const grouped = supplements.reduce<Record<string, SupplementWithLog[]>>((acc, s) => {
+    const block = s.timeBlock || "ochtend"
+    if (!acc[block]) acc[block] = []
+    acc[block].push(s)
+    return acc
+  }, {})
+
+  const blockOrder = ["ochtend", "training", "avond"]
+  const sortedBlocks = blockOrder.filter((b) => grouped[b])
+
+  return (
+    <Card>
+      <CardHeader className="p-4 pb-3">
+        <CardTitle className="text-sm flex items-center justify-between">
+          <span className="flex items-center gap-2">
+            <Pill className="size-4 text-chart-5" />
+            Supplementen
+          </span>
+          <Badge
+            variant={pct === 100 ? "default" : pct >= 50 ? "secondary" : "destructive"}
+            className="text-[10px] h-5"
+          >
+            {taken}/{total} ingenomen
+          </Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-4 pt-0">
+        {/* Progress bar */}
+        <Progress value={pct} className="h-1.5 mb-3" />
+
+        {/* Grouped by time block */}
+        <div className="space-y-3">
+          {sortedBlocks.map((block) => (
+            <div key={block}>
+              <div className="flex items-center gap-1.5 mb-1.5">
+                {TIME_BLOCK_ICONS[block]}
+                <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
+                  {TIME_BLOCK_LABELS[block] || block}
+                </span>
+              </div>
+              <div className="space-y-1">
+                {grouped[block].map((sup) => (
+                  <div key={sup.id} className="flex items-center gap-2 py-1 px-2 rounded-md bg-secondary/30">
+                    <div className={cn(
+                      "size-4 rounded-full flex items-center justify-center shrink-0",
+                      sup.taken ? "bg-success/20" : "bg-destructive/20"
+                    )}>
+                      {sup.taken ? (
+                        <Check className="size-2.5 text-success" />
+                      ) : (
+                        <X className="size-2.5 text-destructive" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-xs text-foreground truncate block">{sup.name}</span>
+                    </div>
+                    {sup.dosage && (
+                      <span className="text-[10px] text-muted-foreground shrink-0">{sup.dosage}</span>
+                    )}
+                    {sup.taken && sup.takenAt && (
+                      <span className="text-[10px] text-muted-foreground flex items-center gap-0.5 shrink-0">
+                        <Clock className="size-2.5" />
+                        {new Date(sup.takenAt).toLocaleTimeString("nl-NL", { hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
 // ==== HOOFD COMPONENT ====
 
 interface VoedingTabProps {
@@ -136,17 +240,22 @@ export function VoedingTab({ clientId }: VoedingTabProps) {
   const [loading, setLoading] = useState(true)
   const [dayData, setDayData] = useState<NutritionDayData | null>(null)
   const [weekTrend, setWeekTrend] = useState<NutritionWeekTrend[]>([])
+  const [supplements, setSupplements] = useState<SupplementWithLog[]>([])
 
   const isVandaag = datum.toDateString() === new Date().toDateString()
   const dateStr = datum.toISOString().split("T")[0]
 
   const fetchData = useCallback(async (date: string) => {
     setLoading(true)
-    const res = await getClientNutrition(clientId, date)
-    if (res.success) {
-      setDayData(res.data || null)
-      setWeekTrend(res.weekTrend || [])
+    const [nutritionRes, supRes] = await Promise.all([
+      getClientNutrition(clientId, date),
+      getClientSupplements(clientId, date),
+    ])
+    if (nutritionRes.success) {
+      setDayData(nutritionRes.data || null)
+      setWeekTrend(nutritionRes.weekTrend || [])
     }
+    setSupplements(supRes.success ? supRes.supplements || [] : [])
     setLoading(false)
   }, [clientId])
 
@@ -204,13 +313,26 @@ export function VoedingTab({ clientId }: VoedingTabProps) {
         </div>
       </div>
 
-      {!hasData && !loading ? (
+      {!hasData && !loading && supplements.length === 0 ? (
         <div className="flex flex-col items-center justify-center p-12 text-center">
           <Utensils className="size-10 text-muted-foreground mb-3" />
           <p className="text-sm font-medium text-foreground">Geen voeding gelogd</p>
           <p className="text-xs text-muted-foreground mt-1">
             Er zijn geen food logs voor {isVandaag ? "vandaag" : formatDatum(datum)}
           </p>
+        </div>
+      ) : !hasData && supplements.length > 0 ? (
+        <div className="space-y-6">
+          <div className="flex flex-col items-center justify-center p-8 text-center">
+            <Utensils className="size-8 text-muted-foreground mb-2" />
+            <p className="text-sm font-medium text-foreground">Geen voeding gelogd</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Er zijn geen food logs voor {isVandaag ? "vandaag" : formatDatum(datum)}
+            </p>
+          </div>
+          <div className="max-w-md">
+            <SupplementenCard supplements={supplements} />
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
@@ -290,6 +412,11 @@ export function VoedingTab({ clientId }: VoedingTabProps) {
                   </div>
                 </CardContent>
               </Card>
+            )}
+
+            {/* Supplementen */}
+            {supplements.length > 0 && (
+              <SupplementenCard supplements={supplements} />
             )}
           </div>
 

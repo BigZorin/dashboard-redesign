@@ -1416,3 +1416,67 @@ export async function getClientNutrition(
     weekTrend,
   }
 }
+
+// ============================================================================
+// SUPPLEMENTEN
+// ============================================================================
+
+export interface SupplementWithLog {
+  id: string
+  name: string
+  brand: string | null
+  dosage: string | null
+  timeBlock: string // ochtend | training | avond
+  intakeTime: string
+  isCoachAssigned: boolean
+  taken: boolean
+  takenAt: string | null
+}
+
+export async function getClientSupplements(
+  clientId: string,
+  date: string
+): Promise<{ success: boolean; supplements?: SupplementWithLog[]; error?: string }> {
+  const user = await getCurrentUser()
+  if (!user) return { success: false, error: "Niet ingelogd" }
+
+  const supabase = await getSupabaseAdmin()
+
+  // Fetch supplements + logs for this date in parallel
+  const [supRes, logsRes] = await Promise.all([
+    supabase
+      .from("supplements")
+      .select("id, name, brand, dosage, time_block, intake_time, is_coach_assigned")
+      .eq("user_id", clientId)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("supplement_logs")
+      .select("supplement_id, taken, taken_at")
+      .eq("user_id", clientId)
+      .eq("date", date),
+  ])
+
+  if (supRes.error) return { success: false, error: supRes.error.message }
+
+  const logsMap = new Map<string, { taken: boolean; takenAt: string | null }>()
+  for (const log of logsRes.data || []) {
+    logsMap.set(log.supplement_id, { taken: log.taken ?? false, takenAt: log.taken_at })
+  }
+
+  const supplements: SupplementWithLog[] = (supRes.data || []).map((s) => {
+    const log = logsMap.get(s.id)
+    return {
+      id: s.id,
+      name: s.name,
+      brand: s.brand,
+      dosage: s.dosage,
+      timeBlock: s.time_block || "ochtend",
+      intakeTime: s.intake_time || "08:00",
+      isCoachAssigned: s.is_coach_assigned ?? false,
+      taken: log?.taken ?? false,
+      takenAt: log?.takenAt ?? null,
+    }
+  })
+
+  return { success: true, supplements }
+}

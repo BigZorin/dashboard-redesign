@@ -1,0 +1,288 @@
+"use client"
+
+import { useState } from "react"
+import { Search, Paperclip, Send, Image, Mic, MoreVertical, Check, CheckCheck } from "lucide-react"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { cn } from "@/lib/utils"
+
+// ============================================================================
+// PLACEHOLDER DATA — Vervang met echte chatdata uit Supabase (real-time via Supabase Realtime)
+//
+// ONDERSTEUNDE BERICHTTYPEN (GEEN bel- of videofunctionaliteit):
+//   - Tekstberichten (standaard chat)
+//   - Spraakberichten (voice messages, opname via microfoon)
+//   - Bestanden (PDF, documenten, trainingsschema's — via Supabase Storage)
+//   - Afbeeldingen (foto's, voortgangsfoto's — via Supabase Storage)
+//
+// COACH-SCOPED DATA:
+//   De coach ziet ALLEEN gesprekken met zijn/haar eigen clienten.
+//   Filter: WHERE conversations.coach_id = auth.uid()
+//   Een coach kan NOOIT berichten van andere coaches of hun clienten zien.
+//
+// Supabase tabellen (gefilterd op coach_id):
+//   - conversations (coach_id = auth.uid(), client_id)
+//   - messages (via JOIN conversations WHERE coach_id = auth.uid())
+//   - message_attachments (via JOIN messages -> conversations)
+//
+// RLS Policies:
+//   conversations: SELECT/INSERT WHERE coach_id = auth.uid()
+//   messages: SELECT/INSERT WHERE conversation.coach_id = auth.uid()
+//
+// Supabase Storage bucket: "chat-attachments" (bestanden + afbeeldingen)
+// Real-time: Supabase Realtime subscription op messages tabel
+// ============================================================================
+
+/** Conversatielijst in de sidebar van berichten */
+const gesprekken = [
+  {
+    id: "1",
+    naam: "Sarah van Dijk",
+    initialen: "SD",
+    laatsteBericht: "Bedankt coach! Ik ga morgen de nieuwe schouder warm-up proberen",
+    tijd: "10 min geleden",
+    ongelezen: 2,
+    online: true,
+  },
+  {
+    id: "2",
+    naam: "Tom Bakker",
+    initialen: "TB",
+    laatsteBericht: "Moet ik op rustdagen nog steeds cardio doen?",
+    tijd: "32 min geleden",
+    ongelezen: 1,
+    online: true,
+  },
+  {
+    id: "3",
+    naam: "Lisa de Vries",
+    initialen: "LV",
+    laatsteBericht: "Check-in ingediend! Peak week gaat super",
+    tijd: "1 uur geleden",
+    ongelezen: 0,
+    online: false,
+  },
+  {
+    id: "4",
+    naam: "James Peters",
+    initialen: "JP",
+    laatsteBericht: "Sorry, ik heb de sessie van maandag gemist. Kunnen we verzetten?",
+    tijd: "2 uur geleden",
+    ongelezen: 1,
+    online: false,
+  },
+  {
+    id: "5",
+    naam: "Emma Jansen",
+    initialen: "EJ",
+    laatsteBericht: "Ik voel me zoveel beter na het mobiliteitswerk!",
+    tijd: "3 uur geleden",
+    ongelezen: 0,
+    online: true,
+  },
+  {
+    id: "6",
+    naam: "Marco Visser",
+    initialen: "MV",
+    laatsteBericht: "Lange duurloop gedaan! 18km op een comfortabel tempo",
+    tijd: "5 uur geleden",
+    ongelezen: 0,
+    online: false,
+  },
+  {
+    id: "7",
+    naam: "Anna Groot",
+    initialen: "AG",
+    laatsteBericht: "De oefeningen worden makkelijker, kunnen we opbouwen?",
+    tijd: "1 dag geleden",
+    ongelezen: 1,
+    online: false,
+  },
+]
+
+/** Chatberichten voor het geselecteerde gesprek */
+const chatBerichten = [
+  { id: "1", afzender: "client", tekst: "Hey coach! Net mijn workout afgerond. De bench voelde zwaar vandaag.", tijd: "09:15", gelezen: true },
+  { id: "2", afzender: "coach", tekst: "Dat is normaal na de deload week. Je zenuwstelsel past zich weer aan. Hoe was je slaap vannacht?", tijd: "09:18", gelezen: true },
+  { id: "3", afzender: "client", tekst: "Niet geweldig, maar 5-6 uur. Mijn schouder voelde ook een beetje stijf bij de warm-up sets.", tijd: "09:20", gelezen: true },
+  { id: "4", afzender: "coach", tekst: "Slaap kan zeker je prestatie beïnvloeden. Laten we extra schoudermobiliteit toevoegen voor je volgende druksessie. Ik pas je warm-up protocol aan.", tijd: "09:22", gelezen: true },
+  { id: "5", afzender: "client", tekst: "Dat zou top zijn! Moet ik donderdag nog steeds de geplande gewichten pakken?", tijd: "09:24", gelezen: true },
+  { id: "6", afzender: "coach", tekst: "Ja, houd je aan het plan. Maar als je schouder gek aanvoelt bij de warm-up, ga 10% omlaag en focus op controle. Kwaliteit boven ego.", tijd: "09:26", gelezen: true },
+  { id: "7", afzender: "client", tekst: "Bedankt coach! Ik ga morgen de nieuwe schouder warm-up proberen", tijd: "09:30", gelezen: false },
+  { id: "8", afzender: "client", tekst: "Oh, en snelle vraag over voeding - mag ik de rijst omruilen voor zoete aardappel bij maaltijd 3?", tijd: "09:31", gelezen: false },
+]
+
+export function MessagesSection() {
+  const [geselecteerdChat, setGeselecteerdChat] = useState("1")
+  const geselecteerdGesprek = gesprekken.find((g) => g.id === geselecteerdChat)
+
+  return (
+    <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
+      {/* Gesprekkenlijst */}
+      <div className="flex w-80 flex-col border-r border-border bg-card">
+        <div className="flex items-center gap-2 border-b border-border p-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+            <Input placeholder="Zoek gesprekken..." className="pl-9 h-9 bg-secondary/60 border-0 focus-visible:ring-1" />
+          </div>
+        </div>
+        <ScrollArea className="flex-1">
+          <div className="flex flex-col">
+            {gesprekken.map((gesprek, index) => (
+              <div key={gesprek.id}>
+                <button
+                  onClick={() => setGeselecteerdChat(gesprek.id)}
+                  className={cn(
+                    "flex w-full items-start gap-3 px-4 py-3.5 text-left transition-colors hover:bg-secondary/50",
+                    geselecteerdChat === gesprek.id && "bg-secondary/80 border-l-2 border-l-primary"
+                  )}
+                >
+                  <div className="relative shrink-0 mt-0.5">
+                    <Avatar className={cn(
+                      "size-10 border",
+                      geselecteerdChat === gesprek.id ? "border-primary/30" : "border-border"
+                    )}>
+                      <AvatarFallback className={cn(
+                        "text-xs font-semibold",
+                        geselecteerdChat === gesprek.id
+                          ? "bg-primary/10 text-primary"
+                          : "bg-secondary text-foreground"
+                      )}>
+                        {gesprek.initialen}
+                      </AvatarFallback>
+                    </Avatar>
+                    {gesprek.online && (
+                      <div className="absolute bottom-0 right-0 size-2.5 rounded-full border-[1.5px] border-card bg-success" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className={cn(
+                        "text-sm truncate",
+                        gesprek.ongelezen > 0 ? "font-semibold text-foreground" : "font-medium text-foreground"
+                      )}>{gesprek.naam}</p>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="text-[10px] text-muted-foreground">{gesprek.tijd}</span>
+                        {gesprek.ongelezen > 0 && (
+                          <div className="flex size-4.5 items-center justify-center rounded-full bg-primary text-[9px] font-bold text-primary-foreground">
+                            {gesprek.ongelezen}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <p className={cn(
+                      "text-xs mt-1 line-clamp-2 leading-relaxed",
+                      gesprek.ongelezen > 0 ? "text-foreground/70" : "text-muted-foreground"
+                    )}>{gesprek.laatsteBericht}</p>
+                  </div>
+                </button>
+                {index < gesprekken.length - 1 && (
+                  <div className="mx-4 border-b border-border/50" />
+                )}
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+      </div>
+
+      {/* Chatvenster */}
+      <div className="flex flex-1 flex-col">
+        {/* Chat header */}
+        <div className="flex items-center justify-between border-b border-border bg-card px-6 py-3">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Avatar className="size-9 border border-border">
+                <AvatarFallback className="bg-secondary text-foreground text-xs font-semibold">
+                  {geselecteerdGesprek?.initialen}
+                </AvatarFallback>
+              </Avatar>
+              {geselecteerdGesprek?.online && (
+                <div className="absolute bottom-0 right-0 size-2.5 rounded-full border-[1.5px] border-card bg-success" />
+              )}
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">{geselecteerdGesprek?.naam}</p>
+              <p className="text-xs text-muted-foreground">
+                {geselecteerdGesprek?.online ? "Online" : "Laatst gezien " + geselecteerdGesprek?.tijd}
+              </p>
+            </div>
+          </div>
+          {/* GEEN bel- of videofunctie — alleen tekst, voice messages, bestanden en afbeeldingen */}
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" className="size-8 text-muted-foreground hover:text-foreground">
+              <MoreVertical className="size-4" />
+              <span className="sr-only">Meer opties</span>
+            </Button>
+          </div>
+        </div>
+
+        {/* Berichten */}
+        <ScrollArea className="flex-1 p-6">
+          <div className="flex flex-col gap-4 max-w-3xl mx-auto">
+            <div className="text-center">
+              <span className="text-xs text-muted-foreground bg-secondary px-3 py-1 rounded-full">Vandaag</span>
+            </div>
+            {chatBerichten.map((bericht) => (
+              <div
+                key={bericht.id}
+                className={cn(
+                  "flex flex-col max-w-[75%]",
+                  bericht.afzender === "coach" ? "items-end ml-auto" : "items-start"
+                )}
+              >
+                <div
+                  className={cn(
+                    "rounded-2xl px-4 py-2.5 text-sm leading-relaxed",
+                    bericht.afzender === "coach"
+                      ? "bg-primary text-primary-foreground rounded-br-md"
+                      : "bg-card border border-border text-foreground rounded-bl-md"
+                  )}
+                >
+                  {bericht.tekst}
+                </div>
+                <div className="flex items-center gap-1 mt-1 px-1">
+                  <span className="text-[11px] text-muted-foreground">{bericht.tijd}</span>
+                  {bericht.afzender === "coach" && (
+                    bericht.gelezen ? (
+                      <CheckCheck className="size-3 text-primary" />
+                    ) : (
+                      <Check className="size-3 text-muted-foreground" />
+                    )
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+
+        {/* Berichtinvoer */}
+        <div className="border-t border-border bg-card p-4">
+          <div className="flex items-center gap-2 max-w-3xl mx-auto">
+            <Button variant="ghost" size="icon" className="size-9 text-muted-foreground hover:text-foreground shrink-0">
+              <Paperclip className="size-4" />
+              <span className="sr-only">Bestand bijvoegen</span>
+            </Button>
+            <Button variant="ghost" size="icon" className="size-9 text-muted-foreground hover:text-foreground shrink-0">
+              <Image className="size-4" />
+              <span className="sr-only">Afbeelding sturen</span>
+            </Button>
+            <Input
+              placeholder="Typ je bericht..."
+              className="flex-1 h-10 bg-secondary border-border rounded-full px-4"
+            />
+            <Button variant="ghost" size="icon" className="size-9 text-muted-foreground hover:text-foreground shrink-0">
+              <Mic className="size-4" />
+              <span className="sr-only">Spraakbericht</span>
+            </Button>
+            <Button size="icon" className="size-9 bg-primary text-primary-foreground hover:bg-primary/90 rounded-full shrink-0">
+              <Send className="size-4" />
+              <span className="sr-only">Verstuur bericht</span>
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
