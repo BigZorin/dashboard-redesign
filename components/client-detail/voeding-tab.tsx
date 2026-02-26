@@ -1,20 +1,20 @@
 "use client"
 
 import { useState } from "react"
-import { Apple, Droplets, Pill, Clock, Edit3, Sparkles, ChevronLeft, ChevronRight, Check, X, ScanBarcode, Plus, AlertTriangle, ArrowUpDown, Eye, EyeOff, Utensils, ChefHat, Scale, TrendingUp, TrendingDown } from "lucide-react"
+import { Apple, Droplets, Pill, Clock, Sparkles, ChevronLeft, ChevronRight, Check, X, ScanBarcode, Plus, ArrowUpDown, Eye, EyeOff, Scale, TrendingUp, AlertCircle } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell } from "recharts"
+import { Progress } from "@/components/ui/progress"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts"
 import { cn } from "@/lib/utils"
 
 // ============================================================================
 // VOEDING TAB - Coach view van client voeding
 // 
-// Duidelijk onderscheid tussen:
-// - VOORGESCHREVEN: Wat de coach/AI heeft klaargezet (het maaltijdplan)
-// - GELOGD: Wat de client daadwerkelijk heeft gegeten
-// - VERSCHIL: Wat ze hebben overgeslagen, vervangen, of toegevoegd
+// Clean 2-kolom layout:
+// - Links: Macro overzicht + week chart + supplementen
+// - Rechts: Maaltijden tijdlijn (voorgeschreven vs gelogd)
 // ============================================================================
 
 const macroTargets = {
@@ -22,8 +22,6 @@ const macroTargets = {
   eiwit: { doel: 160, gelogd: 145 },
   koolhydraten: { doel: 250, gelogd: 210 },
   vetten: { doel: 65, gelogd: 58 },
-  vezels: { doel: 30, gelogd: 22 },
-  water: { doel: 3.0, gelogd: 2.8 },
 }
 
 type ItemStatus = "gegeten" | "overgeslagen" | "vervangen" | "toegevoegd"
@@ -33,8 +31,6 @@ interface VoedselItem {
   hoeveelheid: string
   kcal: number
   eiwit: number
-  kh: number
-  vet: number
   status: ItemStatus
   vervangenDoor?: string
   bron?: "handmatig" | "barcode"
@@ -50,578 +46,365 @@ const maaltijden: {
     naam: "Ontbijt",
     tijd: "07:30",
     voorgeschreven: [
-      { naam: "Havermout", hoeveelheid: "80g", kcal: 304, eiwit: 10, kh: 52, vet: 6, status: "gegeten" },
-      { naam: "Whey proteïne", hoeveelheid: "30g", kcal: 120, eiwit: 24, kh: 3, vet: 1, status: "gegeten" },
-      { naam: "Banaan", hoeveelheid: "1 stuk", kcal: 105, eiwit: 1, kh: 27, vet: 0, status: "gegeten" },
-      { naam: "Walnoten", hoeveelheid: "15g", kcal: 98, eiwit: 2, kh: 2, vet: 10, status: "overgeslagen" },
+      { naam: "Havermout", hoeveelheid: "80g", kcal: 304, eiwit: 10, status: "gegeten" },
+      { naam: "Whey proteïne", hoeveelheid: "30g", kcal: 120, eiwit: 24, status: "gegeten" },
+      { naam: "Banaan", hoeveelheid: "1 stuk", kcal: 105, eiwit: 1, status: "gegeten" },
+      { naam: "Walnoten", hoeveelheid: "15g", kcal: 98, eiwit: 2, status: "overgeslagen" },
     ],
     gelogd: [
-      { naam: "Havermout", hoeveelheid: "80g", kcal: 304, eiwit: 10, kh: 52, vet: 6, status: "gegeten", bron: "handmatig" },
-      { naam: "Whey proteïne", hoeveelheid: "30g", kcal: 120, eiwit: 24, kh: 3, vet: 1, status: "gegeten", bron: "handmatig" },
-      { naam: "Banaan", hoeveelheid: "1 stuk", kcal: 105, eiwit: 1, kh: 27, vet: 0, status: "gegeten", bron: "barcode" },
+      { naam: "Havermout", hoeveelheid: "80g", kcal: 304, eiwit: 10, status: "gegeten", bron: "handmatig" },
+      { naam: "Whey proteïne", hoeveelheid: "30g", kcal: 120, eiwit: 24, status: "gegeten", bron: "handmatig" },
+      { naam: "Banaan", hoeveelheid: "1 stuk", kcal: 105, eiwit: 1, status: "gegeten", bron: "barcode" },
     ],
   },
   {
     naam: "Lunch",
     tijd: "12:30",
     voorgeschreven: [
-      { naam: "Kipfilet", hoeveelheid: "150g", kcal: 165, eiwit: 31, kh: 0, vet: 4, status: "gegeten" },
-      { naam: "Zilvervliesrijst", hoeveelheid: "100g", kcal: 130, eiwit: 3, kh: 28, vet: 1, status: "vervangen", vervangenDoor: "Witte rijst 120g" },
-      { naam: "Broccoli", hoeveelheid: "150g", kcal: 51, eiwit: 4, kh: 7, vet: 1, status: "gegeten" },
-      { naam: "Olijfolie", hoeveelheid: "10ml", kcal: 88, eiwit: 0, kh: 0, vet: 10, status: "overgeslagen" },
+      { naam: "Kipfilet", hoeveelheid: "150g", kcal: 165, eiwit: 31, status: "gegeten" },
+      { naam: "Zilvervliesrijst", hoeveelheid: "100g", kcal: 130, eiwit: 3, status: "vervangen", vervangenDoor: "Witte rijst 120g" },
+      { naam: "Broccoli", hoeveelheid: "150g", kcal: 51, eiwit: 4, status: "gegeten" },
     ],
     gelogd: [
-      { naam: "Kipfilet", hoeveelheid: "150g", kcal: 165, eiwit: 31, kh: 0, vet: 4, status: "gegeten", bron: "handmatig" },
-      { naam: "Witte rijst", hoeveelheid: "120g", kcal: 156, eiwit: 3, kh: 34, vet: 0, status: "vervangen", bron: "barcode" },
-      { naam: "Broccoli", hoeveelheid: "100g", kcal: 34, eiwit: 3, kh: 5, vet: 0, status: "gegeten", bron: "handmatig" },
-      { naam: "Cola Zero", hoeveelheid: "330ml", kcal: 1, eiwit: 0, kh: 0, vet: 0, status: "toegevoegd", bron: "barcode" },
+      { naam: "Kipfilet", hoeveelheid: "150g", kcal: 165, eiwit: 31, status: "gegeten", bron: "handmatig" },
+      { naam: "Witte rijst", hoeveelheid: "120g", kcal: 156, eiwit: 3, status: "vervangen", bron: "barcode" },
+      { naam: "Broccoli", hoeveelheid: "100g", kcal: 34, eiwit: 3, status: "gegeten", bron: "handmatig" },
+      { naam: "Cola Zero", hoeveelheid: "330ml", kcal: 1, eiwit: 0, status: "toegevoegd", bron: "barcode" },
     ],
   },
   {
-    naam: "Tussendoortje",
+    naam: "Snack",
     tijd: "15:30",
     voorgeschreven: [
-      { naam: "Griekse yoghurt", hoeveelheid: "200g", kcal: 130, eiwit: 20, kh: 8, vet: 2, status: "gegeten" },
-      { naam: "Blauwe bessen", hoeveelheid: "100g", kcal: 57, eiwit: 1, kh: 14, vet: 0, status: "overgeslagen" },
-      { naam: "Honing", hoeveelheid: "10g", kcal: 30, eiwit: 0, kh: 8, vet: 0, status: "overgeslagen" },
+      { naam: "Griekse yoghurt", hoeveelheid: "200g", kcal: 130, eiwit: 20, status: "gegeten" },
+      { naam: "Blauwe bessen", hoeveelheid: "100g", kcal: 57, eiwit: 1, status: "overgeslagen" },
     ],
     gelogd: [
-      { naam: "Griekse yoghurt", hoeveelheid: "200g", kcal: 130, eiwit: 20, kh: 8, vet: 2, status: "gegeten", bron: "barcode" },
-      { naam: "Granola bar", hoeveelheid: "1 stuk", kcal: 190, eiwit: 4, kh: 28, vet: 8, status: "toegevoegd", bron: "barcode" },
+      { naam: "Griekse yoghurt", hoeveelheid: "200g", kcal: 130, eiwit: 20, status: "gegeten", bron: "barcode" },
+      { naam: "Granola bar", hoeveelheid: "1 stuk", kcal: 190, eiwit: 4, status: "toegevoegd", bron: "barcode" },
     ],
   },
   {
     naam: "Diner",
     tijd: "19:00",
     voorgeschreven: [
-      { naam: "Zalm", hoeveelheid: "150g", kcal: 280, eiwit: 30, kh: 0, vet: 18, status: "overgeslagen" },
-      { naam: "Zoete aardappel", hoeveelheid: "200g", kcal: 172, eiwit: 3, kh: 40, vet: 0, status: "overgeslagen" },
-      { naam: "Sperziebonen", hoeveelheid: "150g", kcal: 47, eiwit: 3, kh: 7, vet: 0, status: "overgeslagen" },
-    ],
-    gelogd: [],
-  },
-  {
-    naam: "Avondsnack",
-    tijd: "21:00",
-    voorgeschreven: [
-      { naam: "Caseine shake", hoeveelheid: "30g", kcal: 115, eiwit: 24, kh: 3, vet: 1, status: "overgeslagen" },
-      { naam: "Pindakaas", hoeveelheid: "15g", kcal: 94, eiwit: 4, kh: 3, vet: 8, status: "overgeslagen" },
+      { naam: "Zalm", hoeveelheid: "150g", kcal: 280, eiwit: 30, status: "overgeslagen" },
+      { naam: "Zoete aardappel", hoeveelheid: "200g", kcal: 172, eiwit: 3, status: "overgeslagen" },
+      { naam: "Sperziebonen", hoeveelheid: "150g", kcal: 47, eiwit: 3, status: "overgeslagen" },
     ],
     gelogd: [],
   },
 ]
 
 const supplementen = [
-  { naam: "Whey Proteïne", dosering: "30g", timing: "Ochtend + post-workout", ingenomen: true },
-  { naam: "Creatine Monohydraat", dosering: "5g", timing: "Dagelijks bij ontbijt", ingenomen: true },
-  { naam: "Vitamine D3", dosering: "2000 IU", timing: "Dagelijks bij lunch", ingenomen: false },
-  { naam: "Omega-3 Visolie", dosering: "1000mg", timing: "Bij het diner", ingenomen: false },
-  { naam: "Magnesium", dosering: "400mg", timing: "Voor het slapen", ingenomen: false },
+  { naam: "Whey Proteïne", timing: "Ochtend", ingenomen: true },
+  { naam: "Creatine", timing: "Ontbijt", ingenomen: true },
+  { naam: "Vitamine D3", timing: "Lunch", ingenomen: false },
+  { naam: "Omega-3", timing: "Diner", ingenomen: false },
 ]
 
-const complianceData = [
-  { dag: "Ma", voorgeschreven: 2200, gelogd: 2150, compliance: 98 },
-  { dag: "Di", voorgeschreven: 2200, gelogd: 1980, compliance: 90 },
-  { dag: "Wo", voorgeschreven: 2200, gelogd: 2300, compliance: 95 },
-  { dag: "Do", voorgeschreven: 2200, gelogd: 2050, compliance: 93 },
-  { dag: "Vr", voorgeschreven: 2200, gelogd: 1920, compliance: 87 },
-  { dag: "Za", voorgeschreven: 2400, gelogd: 2600, compliance: 92 },
-  { dag: "Zo", voorgeschreven: 2400, gelogd: 2200, compliance: 92 },
+const weekData = [
+  { dag: "Ma", plan: 2200, gelogd: 2150 },
+  { dag: "Di", plan: 2200, gelogd: 1980 },
+  { dag: "Wo", plan: 2200, gelogd: 2300 },
+  { dag: "Do", plan: 2200, gelogd: 2050 },
+  { dag: "Vr", plan: 2200, gelogd: 1920 },
+  { dag: "Za", plan: 2400, gelogd: 2600 },
+  { dag: "Zo", plan: 2400, gelogd: 2200 },
 ]
 
 function formatDatum(datum: Date): string {
-  return datum.toLocaleDateString("nl-NL", { weekday: "long", day: "numeric", month: "long" })
+  return datum.toLocaleDateString("nl-NL", { weekday: "short", day: "numeric", month: "short" })
 }
 
-// Macro ring met duidelijke visuele feedback
-function MacroRing({ label, gelogd, doel, eenheid, kleur }: {
-  label: string; gelogd: number; doel: number; eenheid: string; kleur: string
-}) {
-  const percentage = Math.min(Math.round((gelogd / doel) * 100), 100)
+// Compacte macro bar
+function MacroBar({ label, gelogd, doel, kleur }: { label: string; gelogd: number; doel: number; kleur: string }) {
+  const pct = Math.min(Math.round((gelogd / doel) * 100), 120)
   const isOver = gelogd > doel
-  const verschil = gelogd - doel
-  
   return (
-    <div className="flex flex-col items-center gap-1.5">
-      <div className="relative size-16">
-        <svg className="size-16 -rotate-90" viewBox="0 0 36 36">
-          <path
-            className="text-secondary"
-            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-            fill="none" stroke="currentColor" strokeWidth="3"
-          />
-          <path
-            className={isOver ? "text-warning" : kleur}
-            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-            fill="none" stroke="currentColor" strokeWidth="3"
-            strokeDasharray={`${Math.min(percentage, 100)}, 100`}
-          />
-        </svg>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className={cn("text-xs font-bold", isOver ? "text-warning" : "text-foreground")}>{percentage}%</span>
-        </div>
+    <div className="flex items-center gap-3">
+      <span className="text-[11px] text-muted-foreground w-14 shrink-0">{label}</span>
+      <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden">
+        <div className={cn("h-full rounded-full transition-all", kleur, isOver && "bg-warning")} style={{ width: `${Math.min(pct, 100)}%` }} />
       </div>
-      <div className="text-center">
-        <p className="text-[11px] font-semibold text-foreground">{gelogd}{eenheid}</p>
-        <p className="text-[10px] text-muted-foreground">/ {doel}{eenheid}</p>
-        <p className="text-[10px] text-muted-foreground">{label}</p>
-        {verschil !== 0 && (
-          <p className={cn("text-[9px] font-medium", verschil > 0 ? "text-warning" : "text-chart-2")}>
-            {verschil > 0 ? "+" : ""}{verschil}{eenheid}
-          </p>
-        )}
-      </div>
+      <span className={cn("text-xs font-mono w-20 text-right", isOver ? "text-warning" : "text-foreground")}>
+        {gelogd} / {doel}
+      </span>
     </div>
   )
 }
 
-// Status indicator met kleur en icoon
-function StatusIndicator({ status }: { status: ItemStatus }) {
+// Status icon
+function StatusIcon({ status }: { status: ItemStatus }) {
   const config = {
-    gegeten: { icon: Check, color: "text-success bg-success/10", label: "Gegeten" },
-    overgeslagen: { icon: X, color: "text-muted-foreground bg-secondary", label: "Overgeslagen" },
-    vervangen: { icon: ArrowUpDown, color: "text-warning bg-warning/10", label: "Vervangen" },
-    toegevoegd: { icon: Plus, color: "text-chart-2 bg-chart-2/10", label: "Toegevoegd" },
+    gegeten: { icon: Check, cls: "text-success" },
+    overgeslagen: { icon: X, cls: "text-muted-foreground" },
+    vervangen: { icon: ArrowUpDown, cls: "text-warning" },
+    toegevoegd: { icon: Plus, cls: "text-chart-2" },
   }
-  const { icon: Icon, color } = config[status]
-  return (
-    <div className={cn("size-5 rounded-full flex items-center justify-center shrink-0", color)}>
-      <Icon className="size-3" />
-    </div>
-  )
+  const { icon: Icon, cls } = config[status]
+  return <Icon className={cn("size-3.5 shrink-0", cls)} />
 }
 
-// Verbeterde maaltijdkaart met side-by-side vergelijking
-function MaaltijdKaart({ maaltijd }: { maaltijd: typeof maaltijden[0] }) {
-  const [expanded, setExpanded] = useState(true)
+// Maaltijd row - compact timeline style
+function MaaltijdRow({ maaltijd }: { maaltijd: typeof maaltijden[0] }) {
+  const [open, setOpen] = useState(false)
   
-  const voorgeschrevenTotaal = {
-    kcal: maaltijd.voorgeschreven.reduce((s, v) => s + v.kcal, 0),
-    eiwit: maaltijd.voorgeschreven.reduce((s, v) => s + v.eiwit, 0),
-  }
-  const gelogdTotaal = {
-    kcal: maaltijd.gelogd.reduce((s, v) => s + v.kcal, 0),
-    eiwit: maaltijd.gelogd.reduce((s, v) => s + v.eiwit, 0),
-  }
-  
+  const planKcal = maaltijd.voorgeschreven.reduce((s, v) => s + v.kcal, 0)
+  const gelogdKcal = maaltijd.gelogd.reduce((s, v) => s + v.kcal, 0)
   const isGelogd = maaltijd.gelogd.length > 0
-  const verschilKcal = gelogdTotaal.kcal - voorgeschrevenTotaal.kcal
-  const gegetenItems = maaltijd.voorgeschreven.filter(v => v.status === "gegeten").length
-  const totaalItems = maaltijd.voorgeschreven.length
-  const compliance = totaalItems > 0 ? Math.round((gegetenItems / totaalItems) * 100) : 0
-
-  // Status samenvatting
-  const overgeslagen = maaltijd.voorgeschreven.filter(v => v.status === "overgeslagen")
-  const vervangen = maaltijd.voorgeschreven.filter(v => v.status === "vervangen")
-  const toegevoegd = maaltijd.gelogd.filter(v => v.status === "toegevoegd")
+  const diff = gelogdKcal - planKcal
+  
+  const gegetenCount = maaltijd.voorgeschreven.filter(v => v.status === "gegeten").length
+  const compliance = maaltijd.voorgeschreven.length > 0 ? Math.round((gegetenCount / maaltijd.voorgeschreven.length) * 100) : 0
 
   return (
-    <Card className="border-border overflow-hidden">
-      {/* Header met status overzicht */}
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between bg-secondary/30 px-4 py-3 hover:bg-secondary/50 transition-colors"
-      >
-        <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center size-9 rounded-lg bg-background border border-border">
-            <Utensils className="size-4 text-muted-foreground" />
-          </div>
-          <div className="text-left">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-foreground">{maaltijd.naam}</span>
-              <span className="text-[11px] text-muted-foreground">{maaltijd.tijd}</span>
-            </div>
-            <div className="flex items-center gap-2 mt-0.5">
-              {isGelogd ? (
-                <>
-                  <Badge variant="outline" className={cn(
-                    "text-[9px] h-4 px-1.5",
-                    compliance >= 80 ? "border-success/30 text-success" : compliance >= 50 ? "border-warning/30 text-warning" : "border-destructive/30 text-destructive"
-                  )}>
-                    {compliance}% plan
-                  </Badge>
-                  {overgeslagen.length > 0 && (
-                    <span className="text-[10px] text-muted-foreground">{overgeslagen.length} overgeslagen</span>
-                  )}
-                  {vervangen.length > 0 && (
-                    <span className="text-[10px] text-warning">{vervangen.length} vervangen</span>
-                  )}
-                  {toegevoegd.length > 0 && (
-                    <span className="text-[10px] text-chart-2">+{toegevoegd.length} extra</span>
-                  )}
-                </>
-              ) : (
-                <Badge variant="outline" className="text-[9px] h-4 px-1.5 text-muted-foreground">
-                  Nog niet gelogd
-                </Badge>
-              )}
-            </div>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          {/* Kcal vergelijking */}
-          {isGelogd && (
-            <div className="text-right">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs text-muted-foreground line-through">{voorgeschrevenTotaal.kcal}</span>
-                <span className="text-sm font-semibold text-foreground">{gelogdTotaal.kcal} kcal</span>
-              </div>
-              <Badge className={cn(
-                "text-[9px] h-4",
-                Math.abs(verschilKcal) <= 50
-                  ? "bg-success/10 text-success border-success/20"
-                  : verschilKcal > 0
-                    ? "bg-warning/10 text-warning border-warning/20"
-                    : "bg-chart-2/10 text-chart-2 border-chart-2/20"
-              )}>
-                {verschilKcal > 0 ? "+" : ""}{verschilKcal} kcal
-              </Badge>
-            </div>
+    <div className="border-l-2 border-border pl-4 pb-4 last:pb-0 relative">
+      {/* Timeline dot */}
+      <div className={cn(
+        "absolute -left-[5px] top-0 size-2 rounded-full",
+        isGelogd ? (compliance >= 80 ? "bg-success" : "bg-warning") : "bg-muted-foreground"
+      )} />
+      
+      {/* Header row */}
+      <button onClick={() => setOpen(!open)} className="w-full flex items-center justify-between group">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground font-mono w-10">{maaltijd.tijd}</span>
+          <span className="text-sm font-medium text-foreground">{maaltijd.naam}</span>
+          {!isGelogd && (
+            <Badge variant="outline" className="text-[9px] h-4 text-muted-foreground">Wacht</Badge>
           )}
-          
-          <div className={cn("transition-transform", expanded ? "rotate-180" : "")}>
-            <Eye className="size-4 text-muted-foreground" />
-          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {isGelogd && (
+            <>
+              <span className="text-xs text-muted-foreground line-through">{planKcal}</span>
+              <span className="text-sm font-semibold text-foreground">{gelogdKcal}</span>
+              <Badge className={cn(
+                "text-[9px] h-4 font-mono",
+                Math.abs(diff) <= 50 ? "bg-success/10 text-success" : diff > 0 ? "bg-warning/10 text-warning" : "bg-chart-2/10 text-chart-2"
+              )}>
+                {diff > 0 ? "+" : ""}{diff}
+              </Badge>
+            </>
+          )}
+          <Eye className={cn("size-3.5 text-muted-foreground transition-transform", open && "rotate-180")} />
         </div>
       </button>
 
-      {/* Expanded content met vergelijking */}
-      {expanded && (
-        <CardContent className="p-0">
-          <div className="grid grid-cols-2 divide-x divide-border">
-            {/* VOORGESCHREVEN kolom */}
-            <div className="p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <ChefHat className="size-4 text-primary" />
-                <span className="text-[11px] font-semibold text-primary uppercase tracking-wider">Voorgeschreven</span>
-              </div>
-              <div className="flex flex-col gap-2">
-                {maaltijd.voorgeschreven.map((item, j) => (
-                  <div key={j} className={cn(
-                    "flex items-center gap-2 py-1.5 px-2 rounded-md transition-colors",
-                    item.status === "overgeslagen" && "bg-secondary/50 opacity-60",
-                    item.status === "vervangen" && "bg-warning/5"
-                  )}>
-                    <StatusIndicator status={item.status} />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className={cn(
-                          "text-xs truncate",
-                          item.status === "overgeslagen" ? "text-muted-foreground line-through" : "text-foreground"
-                        )}>
-                          {item.naam}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground shrink-0">({item.hoeveelheid})</span>
-                      </div>
-                      {item.status === "vervangen" && item.vervangenDoor && (
-                        <p className="text-[10px] text-warning mt-0.5">Vervangen door: {item.vervangenDoor}</p>
-                      )}
-                    </div>
-                    <span className="text-[11px] text-muted-foreground shrink-0">{item.kcal}</span>
-                  </div>
-                ))}
-                <div className="border-t border-border pt-2 mt-1 flex justify-between items-center">
-                  <span className="text-[10px] text-muted-foreground uppercase">Totaal plan</span>
-                  <span className="text-xs font-semibold text-foreground">{voorgeschrevenTotaal.kcal} kcal / {voorgeschrevenTotaal.eiwit}g E</span>
+      {/* Expanded detail */}
+      {open && (
+        <div className="mt-3 grid grid-cols-2 gap-3">
+          {/* Plan */}
+          <div className="bg-secondary/30 rounded-lg p-3">
+            <p className="text-[10px] font-semibold text-primary uppercase tracking-wide mb-2">Plan</p>
+            <div className="space-y-1.5">
+              {maaltijd.voorgeschreven.map((item, i) => (
+                <div key={i} className={cn("flex items-center gap-2 text-xs", item.status === "overgeslagen" && "opacity-50")}>
+                  <StatusIcon status={item.status} />
+                  <span className={cn("flex-1 truncate", item.status === "overgeslagen" && "line-through")}>{item.naam}</span>
+                  <span className="text-muted-foreground font-mono text-[10px]">{item.kcal}</span>
                 </div>
-              </div>
-            </div>
-
-            {/* GELOGD kolom */}
-            <div className="p-4 bg-secondary/20">
-              <div className="flex items-center gap-2 mb-3">
-                <Scale className="size-4 text-chart-2" />
-                <span className="text-[11px] font-semibold text-chart-2 uppercase tracking-wider">Werkelijk gelogd</span>
-              </div>
-              {isGelogd ? (
-                <div className="flex flex-col gap-2">
-                  {maaltijd.gelogd.map((item, j) => (
-                    <div key={j} className={cn(
-                      "flex items-center gap-2 py-1.5 px-2 rounded-md",
-                      item.status === "toegevoegd" && "bg-chart-2/10"
-                    )}>
-                      <StatusIndicator status={item.status} />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs text-foreground truncate">{item.naam}</span>
-                          {item.bron === "barcode" && (
-                            <ScanBarcode className="size-3 text-primary shrink-0" />
-                          )}
-                        </div>
-                        <span className="text-[10px] text-muted-foreground">({item.hoeveelheid})</span>
-                      </div>
-                      <span className="text-[11px] text-muted-foreground shrink-0">{item.kcal}</span>
-                    </div>
-                  ))}
-                  <div className="border-t border-border pt-2 mt-1 flex justify-between items-center">
-                    <span className="text-[10px] text-muted-foreground uppercase">Totaal gelogd</span>
-                    <span className={cn(
-                      "text-xs font-semibold",
-                      Math.abs(verschilKcal) <= 50 ? "text-success" : "text-foreground"
-                    )}>{gelogdTotaal.kcal} kcal / {gelogdTotaal.eiwit}g E</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <div className="size-10 rounded-full bg-secondary flex items-center justify-center mb-2">
-                    <Clock className="size-4 text-muted-foreground" />
-                  </div>
-                  <p className="text-xs text-muted-foreground">Nog geen voeding gelogd</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">Wacht op client input</p>
-                </div>
-              )}
+              ))}
             </div>
           </div>
-        </CardContent>
+          
+          {/* Gelogd */}
+          <div className="bg-chart-2/5 rounded-lg p-3">
+            <p className="text-[10px] font-semibold text-chart-2 uppercase tracking-wide mb-2">Gelogd</p>
+            {isGelogd ? (
+              <div className="space-y-1.5">
+                {maaltijd.gelogd.map((item, i) => (
+                  <div key={i} className="flex items-center gap-2 text-xs">
+                    <StatusIcon status={item.status} />
+                    <span className="flex-1 truncate">{item.naam}</span>
+                    {item.bron === "barcode" && <ScanBarcode className="size-3 text-primary" />}
+                    <span className="text-muted-foreground font-mono text-[10px]">{item.kcal}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[11px] text-muted-foreground italic">Nog niet gelogd</p>
+            )}
+          </div>
+        </div>
       )}
-    </Card>
+    </div>
   )
 }
 
 // ==== HOOFD COMPONENT ====
 
 export function VoedingTab() {
-  const [geselecteerdeDatum, setGeselecteerdeDatum] = useState(new Date())
-  const [toonAlles, setToonAlles] = useState(true)
+  const [datum, setDatum] = useState(new Date())
+  const isVandaag = datum.toDateString() === new Date().toDateString()
 
-  function vorigeDag() {
-    setGeselecteerdeDatum(prev => {
-      const d = new Date(prev)
-      d.setDate(d.getDate() - 1)
-      return d
-    })
-  }
-
-  function volgendeDag() {
-    setGeselecteerdeDatum(prev => {
-      const d = new Date(prev)
-      d.setDate(d.getDate() + 1)
-      return d
-    })
-  }
-
-  const isVandaag = geselecteerdeDatum.toDateString() === new Date().toDateString()
-
-  // Bereken dag samenvatting
-  const dagStats = {
-    gegetenItems: maaltijden.flatMap(m => m.voorgeschreven).filter(v => v.status === "gegeten").length,
-    totaalItems: maaltijden.flatMap(m => m.voorgeschreven).length,
-    overgeslagen: maaltijden.flatMap(m => m.voorgeschreven).filter(v => v.status === "overgeslagen").length,
-    vervangen: maaltijden.flatMap(m => m.voorgeschreven).filter(v => v.status === "vervangen").length,
-    toegevoegd: maaltijden.flatMap(m => m.gelogd).filter(v => v.status === "toegevoegd").length,
-  }
+  const totaalPlan = maaltijden.reduce((s, m) => s + m.voorgeschreven.reduce((ss, v) => ss + v.kcal, 0), 0)
+  const totaalGelogd = maaltijden.reduce((s, m) => s + m.gelogd.reduce((ss, v) => ss + v.kcal, 0), 0)
+  const suppIngenomen = supplementen.filter(s => s.ingenomen).length
 
   return (
-    <div className="flex flex-col gap-5 p-6">
-      {/* Header: Datum + plan info */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="p-6">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1 rounded-lg border border-border bg-card">
-            <Button variant="ghost" size="icon" className="size-8" onClick={vorigeDag}>
+          <div className="flex items-center bg-card border border-border rounded-lg">
+            <Button variant="ghost" size="icon" className="size-8" onClick={() => setDatum(d => { const n = new Date(d); n.setDate(n.getDate() - 1); return n })}>
               <ChevronLeft className="size-4" />
             </Button>
-            <span className="px-2 text-sm font-medium text-foreground min-w-[180px] text-center">
-              {isVandaag ? "Vandaag" : formatDatum(geselecteerdeDatum)}
+            <span className="px-3 text-sm font-medium min-w-[120px] text-center">
+              {isVandaag ? "Vandaag" : formatDatum(datum)}
             </span>
-            <Button variant="ghost" size="icon" className="size-8" onClick={volgendeDag} disabled={isVandaag}>
+            <Button variant="ghost" size="icon" className="size-8" onClick={() => setDatum(d => { const n = new Date(d); n.setDate(n.getDate() + 1); return n })} disabled={isVandaag}>
               <ChevronRight className="size-4" />
             </Button>
           </div>
-          {isVandaag && <Badge variant="outline" className="text-[10px] animate-pulse">Live</Badge>}
+          {isVandaag && <div className="size-2 rounded-full bg-success animate-pulse" />}
         </div>
-        <div className="flex items-center gap-2">
-          <Badge className="bg-secondary text-foreground border-border text-[10px] gap-1">
-            <Apple className="size-3" />
-            Hoog Eiwit Lean
-          </Badge>
-          <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1 border-primary/30 text-primary">
-            <Sparkles className="size-3" />
-            AI optimalisatie
-          </Button>
-        </div>
+        <Button variant="outline" size="sm" className="gap-1.5 text-xs border-primary/30 text-primary">
+          <Sparkles className="size-3.5" />
+          AI Optimalisatie
+        </Button>
       </div>
 
-      {/* Dag samenvatting kaart */}
-      <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-transparent">
-        <CardContent className="py-4 px-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-semibold text-foreground mb-1">Dag samenvatting</h3>
-              <div className="flex items-center gap-4 text-xs">
-                <span className="flex items-center gap-1.5">
-                  <Check className="size-3 text-success" />
-                  <span className="text-muted-foreground">{dagStats.gegetenItems}/{dagStats.totaalItems} plan gevolgd</span>
+      {/* 2-kolom grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        {/* LINKER KOLOM: Metrics (2/5) */}
+        <div className="lg:col-span-2 space-y-5">
+          {/* Dag totaal */}
+          <Card className="border-primary/20">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <p className="text-2xl font-bold text-foreground">{totaalGelogd}</p>
+                  <p className="text-xs text-muted-foreground">van {totaalPlan} kcal plan</p>
+                </div>
+                <div className="text-right">
+                  <p className={cn(
+                    "text-lg font-bold",
+                    Math.abs(totaalGelogd - totaalPlan) <= 100 ? "text-success" : "text-warning"
+                  )}>
+                    {Math.round((totaalGelogd / totaalPlan) * 100)}%
+                  </p>
+                  <p className="text-[10px] text-muted-foreground">compliance</p>
+                </div>
+              </div>
+              <Progress value={(totaalGelogd / totaalPlan) * 100} className="h-2" />
+            </CardContent>
+          </Card>
+
+          {/* Macro bars */}
+          <Card>
+            <CardHeader className="p-4 pb-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Apple className="size-4 text-primary" />
+                {"Macro's"}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-0 space-y-3">
+              <MacroBar label="Eiwit" gelogd={macroTargets.eiwit.gelogd} doel={macroTargets.eiwit.doel} kleur="bg-chart-1" />
+              <MacroBar label="Koolh." gelogd={macroTargets.koolhydraten.gelogd} doel={macroTargets.koolhydraten.doel} kleur="bg-chart-2" />
+              <MacroBar label="Vetten" gelogd={macroTargets.vetten.gelogd} doel={macroTargets.vetten.doel} kleur="bg-chart-4" />
+            </CardContent>
+          </Card>
+
+          {/* Supplementen */}
+          <Card>
+            <CardHeader className="p-4 pb-3">
+              <CardTitle className="text-sm flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <Pill className="size-4 text-chart-3" />
+                  Supplementen
                 </span>
-                {dagStats.overgeslagen > 0 && (
-                  <span className="flex items-center gap-1.5">
-                    <X className="size-3 text-muted-foreground" />
-                    <span className="text-muted-foreground">{dagStats.overgeslagen} overgeslagen</span>
-                  </span>
-                )}
-                {dagStats.vervangen > 0 && (
-                  <span className="flex items-center gap-1.5">
-                    <ArrowUpDown className="size-3 text-warning" />
-                    <span className="text-warning">{dagStats.vervangen} vervangen</span>
-                  </span>
-                )}
-                {dagStats.toegevoegd > 0 && (
-                  <span className="flex items-center gap-1.5">
-                    <Plus className="size-3 text-chart-2" />
-                    <span className="text-chart-2">{dagStats.toegevoegd} extra items</span>
-                  </span>
-                )}
+                <Badge variant="outline" className="text-[10px]">{suppIngenomen}/{supplementen.length}</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+              <div className="grid grid-cols-2 gap-2">
+                {supplementen.map((s, i) => (
+                  <div key={i} className={cn(
+                    "flex items-center gap-2 p-2 rounded-md text-xs",
+                    s.ingenomen ? "bg-success/10" : "bg-secondary/50"
+                  )}>
+                    {s.ingenomen ? <Check className="size-3 text-success" /> : <Clock className="size-3 text-muted-foreground" />}
+                    <span className={s.ingenomen ? "text-foreground" : "text-muted-foreground"}>{s.naam}</span>
+                  </div>
+                ))}
               </div>
-            </div>
-            <div className="text-right">
-              <p className="text-2xl font-bold text-foreground">{Math.round((dagStats.gegetenItems / dagStats.totaalItems) * 100)}%</p>
-              <p className="text-[10px] text-muted-foreground">Plan compliance</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
 
-      {/* Macro overzicht */}
-      <Card className="border-border">
-        <CardContent className="px-5 py-4">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <Apple className="size-4 text-primary" />
-              Dagelijkse macro{"'"}s
-            </h3>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1 text-[10px]">
-                <div className="size-2 rounded-full bg-primary" />
-                <span className="text-muted-foreground">Voorgeschreven</span>
+          {/* Week chart */}
+          <Card>
+            <CardHeader className="p-4 pb-3">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <TrendingUp className="size-4 text-chart-1" />
+                Week trend
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-0">
+              <div className="h-32">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={weekData} barGap={2}>
+                    <XAxis dataKey="dag" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" tickLine={false} axisLine={false} />
+                    <YAxis hide domain={[0, 3000]} />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "6px", fontSize: "11px" }}
+                      formatter={(v: number, n: string) => [`${v} kcal`, n === "plan" ? "Plan" : "Gelogd"]}
+                    />
+                    <Bar dataKey="plan" fill="hsl(var(--primary))" opacity={0.2} radius={[3, 3, 0, 0]} />
+                    <Bar dataKey="gelogd" radius={[3, 3, 0, 0]}>
+                      {weekData.map((e, i) => {
+                        const pct = (e.gelogd / e.plan) * 100
+                        return <Cell key={i} fill={pct >= 90 && pct <= 110 ? "hsl(var(--success))" : "hsl(var(--warning))"} />
+                      })}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
-              <div className="flex items-center gap-1 text-[10px]">
-                <div className="size-2 rounded-full bg-chart-2" />
-                <span className="text-muted-foreground">Gelogd</span>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center justify-around flex-wrap gap-4">
-            <MacroRing label="Calorieën" gelogd={macroTargets.kcal.gelogd} doel={macroTargets.kcal.doel} eenheid="" kleur="text-primary" />
-            <MacroRing label="Eiwit" gelogd={macroTargets.eiwit.gelogd} doel={macroTargets.eiwit.doel} eenheid="g" kleur="text-chart-1" />
-            <MacroRing label="Koolhydraten" gelogd={macroTargets.koolhydraten.gelogd} doel={macroTargets.koolhydraten.doel} eenheid="g" kleur="text-chart-2" />
-            <MacroRing label="Vetten" gelogd={macroTargets.vetten.gelogd} doel={macroTargets.vetten.doel} eenheid="g" kleur="text-chart-4" />
-            <MacroRing label="Vezels" gelogd={macroTargets.vezels.gelogd} doel={macroTargets.vezels.doel} eenheid="g" kleur="text-chart-3" />
-            <div className="flex flex-col items-center gap-1.5">
-              <div className="flex size-16 items-center justify-center rounded-full border-[3px] border-chart-2 bg-chart-2/10">
-                <Droplets className="size-5 text-chart-2" />
-              </div>
-              <div className="text-center">
-                <p className="text-[11px] font-semibold text-foreground">{macroTargets.water.gelogd}L</p>
-                <p className="text-[10px] text-muted-foreground">/ {macroTargets.water.doel}L</p>
-                <p className="text-[10px] text-muted-foreground">Water</p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Maaltijden sectie */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-foreground">Maaltijden: voorgeschreven vs gelogd</h3>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 text-[10px] gap-1"
-            onClick={() => setToonAlles(!toonAlles)}
-          >
-            {toonAlles ? <EyeOff className="size-3" /> : <Eye className="size-3" />}
-            {toonAlles ? "Inklappen" : "Uitklappen"}
-          </Button>
+            </CardContent>
+          </Card>
         </div>
-        <div className="flex flex-col gap-3">
-          {maaltijden.map((maaltijd, i) => (
-            <MaaltijdKaart key={i} maaltijd={maaltijd} />
-          ))}
+
+        {/* RECHTER KOLOM: Maaltijden (3/5) */}
+        <div className="lg:col-span-3">
+          <Card className="h-full">
+            <CardHeader className="p-4 pb-3 border-b border-border">
+              <CardTitle className="text-sm flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <Scale className="size-4 text-chart-2" />
+                  Maaltijden: Plan vs Gelogd
+                </span>
+                <div className="flex items-center gap-3 text-[10px]">
+                  <span className="flex items-center gap-1"><Check className="size-3 text-success" /> Gevolgd</span>
+                  <span className="flex items-center gap-1"><ArrowUpDown className="size-3 text-warning" /> Vervangen</span>
+                  <span className="flex items-center gap-1"><Plus className="size-3 text-chart-2" /> Extra</span>
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4">
+              <div className="space-y-0">
+                {maaltijden.map((m, i) => (
+                  <MaaltijdRow key={i} maaltijd={m} />
+                ))}
+              </div>
+              
+              {/* Niet gelogde warning */}
+              {maaltijden.some(m => m.gelogd.length === 0) && (
+                <div className="mt-4 p-3 rounded-lg bg-warning/10 border border-warning/20 flex items-start gap-2">
+                  <AlertCircle className="size-4 text-warning shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-medium text-warning">Niet volledig gelogd</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {maaltijden.filter(m => m.gelogd.length === 0).map(m => m.naam).join(", ")} nog niet ingevuld
+                    </p>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
-
-      {/* Supplementen */}
-      <Card className="border-border">
-        <CardHeader className="px-5 pt-4 pb-3">
-          <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <Pill className="size-4 text-chart-3" />
-            Supplementenprotocol
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-5 pb-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-            {supplementen.map((sup, i) => (
-              <div
-                key={i}
-                className={cn(
-                  "flex items-center gap-3 p-3 rounded-lg border transition-colors",
-                  sup.ingenomen
-                    ? "bg-success/5 border-success/20"
-                    : "bg-secondary/30 border-border"
-                )}
-              >
-                <div className={cn(
-                  "size-6 rounded-full flex items-center justify-center shrink-0",
-                  sup.ingenomen ? "bg-success text-white" : "bg-secondary"
-                )}>
-                  {sup.ingenomen ? <Check className="size-3.5" /> : <Clock className="size-3.5 text-muted-foreground" />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-foreground truncate">{sup.naam}</p>
-                  <p className="text-[10px] text-muted-foreground">{sup.dosering} - {sup.timing}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Week compliance chart */}
-      <Card className="border-border">
-        <CardHeader className="px-5 pt-4 pb-3">
-          <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <TrendingUp className="size-4 text-chart-1" />
-            Week overzicht: voorgeschreven vs gelogd
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="px-5 pb-4">
-          <div className="h-48">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={complianceData} barGap={2}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                <XAxis dataKey="dag" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
-                <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" domain={[0, 3000]} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
-                    fontSize: "12px",
-                  }}
-                  formatter={(value: number, name: string) => [
-                    `${value} kcal`,
-                    name === "voorgeschreven" ? "Plan" : "Gelogd"
-                  ]}
-                />
-                <Legend 
-                  wrapperStyle={{ fontSize: "11px" }}
-                  formatter={(value) => value === "voorgeschreven" ? "Plan" : "Gelogd"}
-                />
-                <Bar dataKey="voorgeschreven" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} opacity={0.3} />
-                <Bar dataKey="gelogd" radius={[4, 4, 0, 0]}>
-                  {complianceData.map((entry, index) => (
-                    <Cell 
-                      key={index}
-                      fill={entry.compliance >= 90 ? "hsl(var(--success))" : entry.compliance >= 80 ? "hsl(var(--warning))" : "hsl(var(--destructive))"}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   )
 }
