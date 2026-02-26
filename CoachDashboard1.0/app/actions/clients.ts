@@ -1144,8 +1144,6 @@ function getWeekDateRange(weekNumber: number, year: number): { start: string; en
   return { start: fmt(monday), end: fmt(sunday) }
 }
 
-export { getWeekDateRange }
-
 export async function getWeekSummary(
   clientId: string,
   weekNumber: number,
