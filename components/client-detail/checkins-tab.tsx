@@ -356,23 +356,15 @@ export function CheckinsTab() {
                     </div>
                   </div>
 
-                  {/* Opmerkingen - Stacked */}
-                  <div className="flex flex-col gap-2">
-                    {checkin.clientOpmerking && (
-                      <div className="flex gap-2 items-start">
-                        <MessageSquare className="size-3.5 text-muted-foreground shrink-0 mt-0.5" />
-                        <p className="text-xs text-muted-foreground leading-relaxed italic">
-                          {`"${checkin.clientOpmerking}"`}
-                        </p>
-                      </div>
-                    )}
-                    {checkin.coachNotitie && (
-                      <div className="flex gap-2 items-start rounded-md bg-primary/5 p-2 -mx-2">
-                        <span className="text-[10px] font-bold text-primary shrink-0">COACH</span>
-                        <p className="text-xs text-foreground leading-relaxed">{checkin.coachNotitie}</p>
-                      </div>
-                    )}
-                  </div>
+                  {/* Client opmerking */}
+                  {checkin.clientOpmerking && (
+                    <div className="flex gap-2 items-start">
+                      <MessageSquare className="size-3.5 text-muted-foreground shrink-0 mt-0.5" />
+                      <p className="text-xs text-muted-foreground leading-relaxed italic">
+                        {`"${checkin.clientOpmerking}"`}
+                      </p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
