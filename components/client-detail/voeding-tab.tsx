@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Apple, Pill, Clock, ChevronLeft, ChevronRight, Check, X, ScanBarcode, Plus, ArrowUpDown, Eye, TrendingUp } from "lucide-react"
+import { Apple, Pill, Clock, ChevronLeft, ChevronRight, Check, X, ScanBarcode, Plus, ArrowUpDown, Eye, TrendingUp, Scale, AlertCircle } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
