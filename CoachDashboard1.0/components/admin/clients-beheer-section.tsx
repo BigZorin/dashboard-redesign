@@ -266,7 +266,7 @@ export function ClientsBeheerSection() {
                         </SelectContent>
                       </Select>
 
-                      {/* Goedkeuren / Afwijzen */}
+                      {/* Goedkeuren / Afwijzen — alleen beschikbaar als coach is toegewezen */}
                       {client.status === "wachtrij" && (
                         <>
                           <Button
@@ -274,7 +274,8 @@ export function ClientsBeheerSection() {
                             variant="outline"
                             className="h-8 text-xs border-success/30 text-success hover:bg-success/10 hover:text-success"
                             onClick={() => handleApprove(client.id)}
-                            disabled={isActioning}
+                            disabled={isActioning || !client.coachId}
+                            title={!client.coachId ? "Wijs eerst een coach toe" : ""}
                           >
                             {isActioning ? <Loader2 className="size-3 animate-spin" /> : <CheckCircle2 className="size-3 mr-1" />}
                             Goedkeuren
@@ -284,7 +285,8 @@ export function ClientsBeheerSection() {
                             variant="outline"
                             className="h-8 text-xs border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
                             onClick={() => handleReject(client.id)}
-                            disabled={isActioning}
+                            disabled={isActioning || !client.coachId}
+                            title={!client.coachId ? "Wijs eerst een coach toe" : ""}
                           >
                             <XCircle className="size-3 mr-1" />
                             Afwijzen
@@ -297,7 +299,8 @@ export function ClientsBeheerSection() {
                           variant="outline"
                           className="h-8 text-xs border-success/30 text-success hover:bg-success/10 hover:text-success"
                           onClick={() => handleApprove(client.id)}
-                          disabled={isActioning}
+                          disabled={isActioning || !client.coachId}
+                          title={!client.coachId ? "Wijs eerst een coach toe" : ""}
                         >
                           {isActioning ? <Loader2 className="size-3 animate-spin" /> : <CheckCircle2 className="size-3 mr-1" />}
                           Alsnog goedkeuren
