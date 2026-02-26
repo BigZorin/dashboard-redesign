@@ -439,6 +439,8 @@ export function VoedingTab() {
                         color: "#fff",
                         padding: "8px 12px"
                       }}
+                      itemStyle={{ color: "#fff" }}
+                      labelStyle={{ color: "#fff", fontWeight: 600, marginBottom: "4px" }}
                       formatter={(v: number, n: string) => [`${v} kcal`, n === "plan" ? "Plan" : "Gelogd"]}
                     />
                     <Bar dataKey="plan" fill="#e5e5e5" opacity={0.4} radius={[4, 4, 0, 0]} />
