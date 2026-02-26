@@ -1,9 +1,11 @@
 "use client"
 
-import { TrendingUp, TrendingDown, CalendarDays, Dumbbell, Apple, Minus, Activity, Moon, Droplets, StickyNote } from "lucide-react"
+import { useState } from "react"
+import { TrendingUp, TrendingDown, CalendarDays, Dumbbell, Apple, Minus, Activity, Moon, Droplets, StickyNote, Sparkles, Pill, RefreshCw, Bot } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 
 // ============================================================================
@@ -97,6 +99,47 @@ const recenteNotities = [
   },
 ]
 
+/** AI Automatiseringsregels — Per domein */
+type AIMode = "ai_stuurt" | "voorstellen" | "handmatig"
+
+const aiDomeinen = [
+  {
+    id: "voeding",
+    label: "Voeding & Macro's",
+    icon: Apple,
+    beschrijving: "Maaltijdplannen, macro-aanpassingen",
+    defaultMode: "voorstellen" as AIMode,
+  },
+  {
+    id: "training",
+    label: "Training & Progressie",
+    icon: Dumbbell,
+    beschrijving: "Gewichten, sets, reps, deload",
+    defaultMode: "voorstellen" as AIMode,
+  },
+  {
+    id: "rustdagen",
+    label: "Rustdagen & Herstel",
+    icon: Moon,
+    beschrijving: "Extra rustdagen, actief herstel",
+    defaultMode: "ai_stuurt" as AIMode,
+  },
+  {
+    id: "supplementen",
+    label: "Supplementen",
+    icon: Pill,
+    beschrijving: "Supplement suggesties en dosering",
+    defaultMode: "handmatig" as AIMode,
+  },
+  {
+    id: "programmawissel",
+    label: "Programmawissel",
+    icon: RefreshCw,
+    beschrijving: "Overstap naar nieuw programma",
+    defaultMode: "voorstellen" as AIMode,
+  },
+]
+
 
 function MacroBar({ label, huidig, doel, kleur }: { label: string; huidig: number; doel: number; kleur: string }) {
   const percentage = Math.min(Math.round((huidig / doel) * 100), 100)
@@ -114,6 +157,14 @@ function MacroBar({ label, huidig, doel, kleur }: { label: string; huidig: numbe
 }
 
 export function OverzichtTab() {
+  const [aiModes, setAiModes] = useState<Record<string, AIMode>>(
+    Object.fromEntries(aiDomeinen.map(d => [d.id, d.defaultMode]))
+  )
+
+  const updateAiMode = (domeinId: string, mode: AIMode) => {
+    setAiModes(prev => ({ ...prev, [domeinId]: mode }))
+  }
+
   return (
     <div className="flex flex-col gap-6 p-6">
       {/* Snelle stats rij */}
@@ -366,6 +417,61 @@ export function OverzichtTab() {
           </CardContent>
         </Card>
       </div>
+
+      {/* AI Automatiseringsregels */}
+      <Card className="border-border">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-semibold flex items-center gap-2">
+            <Bot className="size-4 text-primary" />
+            AI Automatiseringsregels
+          </CardTitle>
+          <p className="text-[11px] text-muted-foreground">Bepaal hoe AI handelt per domein voor deze client</p>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            {aiDomeinen.map((domein) => {
+              const Icon = domein.icon
+              return (
+                <div key={domein.id} className="flex flex-col gap-2 p-3 rounded-lg bg-secondary/30 border border-border">
+                  <div className="flex items-center gap-2">
+                    <Icon className="size-4 text-primary" />
+                    <span className="text-xs font-semibold text-foreground">{domein.label}</span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground leading-relaxed">{domein.beschrijving}</p>
+                  <Select
+                    value={aiModes[domein.id]}
+                    onValueChange={(value: AIMode) => updateAiMode(domein.id, value)}
+                  >
+                    <SelectTrigger className="h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ai_stuurt" className="text-xs">
+                        <span className="flex items-center gap-1.5">
+                          <Sparkles className="size-3 text-primary" />
+                          AI stuurt
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="voorstellen" className="text-xs">
+                        <span className="flex items-center gap-1.5">
+                          <span className="size-2 rounded-full bg-warning" />
+                          Voorstellen
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="handmatig" className="text-xs">
+                        <span className="flex items-center gap-1.5">
+                          <span className="size-2 rounded-full bg-muted-foreground" />
+                          Handmatig
+                        </span>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )
+            })}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
