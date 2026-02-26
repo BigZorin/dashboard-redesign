@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Apple, Droplets, Pill, Clock, Sparkles, ChevronLeft, ChevronRight, Check, X, ScanBarcode, Plus, ArrowUpDown, Eye, EyeOff, Scale, TrendingUp, AlertCircle } from "lucide-react"
+import { Apple, Pill, Clock, ChevronLeft, ChevronRight, Check, X, ScanBarcode, Plus, ArrowUpDown, Eye, TrendingUp } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -233,42 +233,15 @@ function MaaltijdRow({ maaltijd }: { maaltijd: typeof maaltijden[0] }) {
   )
 }
 
-// ==== AI VOORSTELLEN DATA ====
-
-const aiVoorstellenVoeding = [
-  {
-    id: "ai_v1",
-    type: "macro_aanpassing" as const,
-    titel: "Eiwit target verhogen",
-    beschrijving: "Op basis van trainingsintensiteit en hersteltijd, verhoog eiwit naar 175g/dag",
-    zekerheid: 87,
-    urgentie: "medium" as const,
-  },
-  {
-    id: "ai_v2",
-    type: "maaltijd_suggestie" as const,
-    titel: "Avondsnack toevoegen",
-    beschrijving: "Client mist vaak eiwitdoel. Suggestie: kwark + noten voor het slapen",
-    zekerheid: 92,
-    urgentie: "low" as const,
-  },
-]
-
 // ==== HOOFD COMPONENT ====
 
 export function VoedingTab() {
   const [datum, setDatum] = useState(new Date())
-  const [aiMode, setAiMode] = useState<"voorstellen" | "handmatig">("voorstellen")
-  const [aiVoorstellen, setAiVoorstellen] = useState(aiVoorstellenVoeding)
   const isVandaag = datum.toDateString() === new Date().toDateString()
 
   const totaalPlan = maaltijden.reduce((s, m) => s + m.voorgeschreven.reduce((ss, v) => ss + v.kcal, 0), 0)
   const totaalGelogd = maaltijden.reduce((s, m) => s + m.gelogd.reduce((ss, v) => ss + v.kcal, 0), 0)
   const suppIngenomen = supplementen.filter(s => s.ingenomen).length
-
-  const handleAiActie = (id: string, actie: "approve" | "reject") => {
-    setAiVoorstellen(prev => prev.filter(v => v.id !== id))
-  }
 
   return (
     <div className="p-6">
@@ -288,69 +261,8 @@ export function VoedingTab() {
           </div>
           {isVandaag && <div className="size-2 rounded-full bg-success animate-pulse" />}
         </div>
-        <div className="flex items-center gap-2">
-          {/* AI Mode Toggle */}
-          <div className="flex items-center bg-secondary rounded-lg p-0.5">
-            <button
-              onClick={() => setAiMode("voorstellen")}
-              className={cn(
-                "px-3 py-1 text-xs font-medium rounded-md transition-all",
-                aiMode === "voorstellen" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <Sparkles className="size-3 inline mr-1" />
-              Voorstellen
-            </button>
-            <button
-              onClick={() => setAiMode("handmatig")}
-              className={cn(
-                "px-3 py-1 text-xs font-medium rounded-md transition-all",
-                aiMode === "handmatig" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              Handmatig
-            </button>
-          </div>
-          <Button variant="outline" size="sm" className="gap-1.5 text-xs border-primary/30 text-primary">
-            <Sparkles className="size-3.5" />
-            AI Analyse
-          </Button>
-        </div>
+        {isVandaag && <Badge className="bg-success/10 text-success text-[10px]">Vandaag</Badge>}
       </div>
-
-      {/* Inline AI Voorstellen */}
-      {aiMode === "voorstellen" && aiVoorstellen.length > 0 && (
-        <div className="mb-6 space-y-2">
-          {aiVoorstellen.map((voorstel) => (
-            <div
-              key={voorstel.id}
-              className={cn(
-                "flex items-center gap-3 p-3 rounded-lg border-l-4",
-                voorstel.urgentie === "high" ? "bg-destructive/5 border-l-destructive" :
-                voorstel.urgentie === "medium" ? "bg-warning/5 border-l-warning" :
-                "bg-primary/5 border-l-primary"
-              )}
-            >
-              <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 shrink-0">
-                <Sparkles className="size-4 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground">{voorstel.titel}</p>
-                <p className="text-xs text-muted-foreground truncate">{voorstel.beschrijving}</p>
-              </div>
-              <Badge variant="outline" className="text-[9px] shrink-0">{voorstel.zekerheid}%</Badge>
-              <div className="flex items-center gap-1 shrink-0">
-                <Button size="icon" variant="ghost" className="size-7 text-success hover:bg-success/10" onClick={() => handleAiActie(voorstel.id, "approve")}>
-                  <Check className="size-3.5" />
-                </Button>
-                <Button size="icon" variant="ghost" className="size-7 text-destructive hover:bg-destructive/10" onClick={() => handleAiActie(voorstel.id, "reject")}>
-                  <X className="size-3.5" />
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
 
       {/* 2-kolom grid */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">

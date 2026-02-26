@@ -1,6 +1,6 @@
 "use client"
 
-import { User, Target, Dumbbell, Apple, Heart, Briefcase, Sparkles, Save, AlertCircle } from "lucide-react"
+import { User, Target, Dumbbell, Apple, Heart, Briefcase, Save, AlertCircle } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -146,23 +146,6 @@ export function IntakeTab() {
             Opslaan
           </Button>
         </div>
-      </div>
-
-      {/* AI Generatie banner */}
-      <div className="flex items-center gap-4 rounded-lg border border-primary/20 bg-primary/5 p-4">
-        <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-          <Sparkles className="size-5 text-primary" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-foreground">AI Programma Genereren</p>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Genereer automatisch een trainings- en voedingsplan op basis van deze intake gegevens.
-          </p>
-        </div>
-        <Button size="sm" className="gap-1.5 text-xs bg-primary text-primary-foreground hover:bg-primary/90 shrink-0">
-          <Sparkles className="size-3.5" />
-          Genereren
-        </Button>
       </div>
 
       {/* Formulier secties */}
