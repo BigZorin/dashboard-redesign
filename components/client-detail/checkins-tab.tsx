@@ -259,7 +259,7 @@ export function CheckinsTab() {
                   : "border-border"
               }`}>
                 {/* Header met key metrics */}
-                <div className="flex items-center justify-between p-4 border-b border-border bg-secondary/20">
+                <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-secondary/20">
                   <div className="flex items-center gap-4">
                     <div>
                       <p className="text-base font-semibold text-foreground">Week {checkin.weekNummer}</p>
