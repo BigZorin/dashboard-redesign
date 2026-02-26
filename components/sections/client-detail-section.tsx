@@ -409,6 +409,13 @@ export function ClientDetailSection({ clientId, onTerug }: ClientDetailSectionPr
                 Metingen & Voortgang
               </TabsTrigger>
               <TabsTrigger
+                value="ai-config"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 text-sm"
+              >
+                <Bot className="size-3.5 mr-1.5" />
+                AI Config
+              </TabsTrigger>
+              <TabsTrigger
                 value="instellingen"
                 className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 text-sm"
               >
@@ -452,6 +459,9 @@ export function ClientDetailSection({ clientId, onTerug }: ClientDetailSectionPr
           <TabsContent value="metingen" className="m-0 h-full">
             <MetingenTab />
           </TabsContent>
+          <TabsContent value="ai-config" className="m-0 h-full">
+            <AIConfigTab />
+          </TabsContent>
           <TabsContent value="instellingen" className="m-0 h-full">
             <InstellingenTab />
           </TabsContent>
@@ -466,9 +476,31 @@ export function ClientDetailSection({ clientId, onTerug }: ClientDetailSectionPr
 // Contains: AI Summary + AI Feed + Client Memory
 // ============================================================================
 
-/** AI Samenvatting */
+/** AI Samenvatting - Uitgebreid */
 const aiSamenvatting = {
-  tekst: "Lisa zit in week 6 van haar cut. Gewicht daalt consistent (−1.8kg in 4 weken). Training compliance uitstekend (92%). Punt van aandacht: eiwitinname in weekenden structureel te laag. Slaapkwaliteit wisselend, correlatie met late trainingen.",
+  hoofdTekst: "Lisa zit in week 6 van haar cut en maakt uitstekende progressie. Alle indicatoren wijzen op een succesvolle fase.",
+  secties: [
+    {
+      titel: "Gewicht & Compositie",
+      tekst: "Gewicht daalt consistent met gemiddeld 0.45kg per week (−1.8kg totaal in 4 weken). Dit is precies in lijn met het geplande deficit van 500kcal/dag. Taille is met 2cm afgenomen, wat duidt op vetverlie in plaats van spiermassa.",
+      trend: "positief" as const,
+    },
+    {
+      titel: "Training",
+      tekst: "Training compliance is uitstekend (92%). Alle compound lifts blijven stabiel of verbeteren licht ondanks het deficit. Squat PR van 72.5kg vorige week.",
+      trend: "positief" as const,
+    },
+    {
+      titel: "Voeding",
+      tekst: "Gemiddelde inname ligt op target (1650 kcal). Punt van aandacht: eiwitinname in weekenden structureel 25-30g onder target (gem. 105g vs doordeweeks 142g). Dit patroon is consistent over 4 weken.",
+      trend: "aandacht" as const,
+    },
+    {
+      titel: "Herstel & Welzijn",
+      tekst: "Slaapkwaliteit wisselend (gem. 6.8/10). Correlatie gevonden met late trainingen (na 20:00): slaapkwaliteit dan gemiddeld 1.5 punt lager. Stressniveau stabiel.",
+      trend: "neutraal" as const,
+    },
+  ],
   bijgewerkt: "nu",
 }
 
@@ -657,11 +689,6 @@ function getUrgentieBorderColor(urgentie?: Urgentie) {
 function OverzichtTabWithAI() {
   const [feedFilter, setFeedFilter] = useState<"alles" | "openstaand" | "goedgekeurd" | "afgewezen" | "auto">("alles")
   const [expandedReasoning, setExpandedReasoning] = useState<string | null>(null)
-  const [activityLogOpen, setActivityLogOpen] = useState(false)
-  const [activityLogPaused, setActivityLogPaused] = useState(false)
-  const [aiRuleModes, setAiRuleModes] = useState<Record<string, AIRuleMode>>(
-    Object.fromEntries(aiDomeinen.map(d => [d.id, d.defaultMode]))
-  )
 
   const filteredFeed = feedItems.filter((item) => {
     if (feedFilter === "alles") return true
@@ -676,31 +703,53 @@ function OverzichtTabWithAI() {
 
   return (
     <div className="flex flex-col gap-6 p-6">
-      {/* ROW 1: AI Summary + Feed + Memory (2 columns) */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
-        {/* LEFT COLUMN: AI Summary + AI Feed */}
-        <div className="flex flex-col gap-6">
-        {/* AI Summary */}
-        <Card className="border-primary/20 bg-primary/5">
-          <CardContent className="p-4">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="flex items-center justify-center size-8 rounded-lg bg-primary/10">
-                  <Sparkles className="size-4 text-primary" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-foreground">AI Samenvatting</h3>
-                  <p className="text-[10px] text-muted-foreground">Bijgewerkt: {aiSamenvatting.bijgewerkt}</p>
-                </div>
+      {/* AI Summary - Full width, detailed */}
+      <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+        <CardContent className="p-5">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center size-10 rounded-xl bg-primary/10">
+                <Sparkles className="size-5 text-primary" />
               </div>
-              <Button variant="ghost" size="sm" className="h-7 text-xs gap-1.5">
-                <RefreshCw className="size-3" />
-                Vernieuw
-              </Button>
+              <div>
+                <h3 className="text-base font-semibold text-foreground">AI Samenvatting</h3>
+                <p className="text-xs text-muted-foreground">Bijgewerkt: {aiSamenvatting.bijgewerkt}</p>
+              </div>
             </div>
-            <p className="text-sm text-foreground/90 leading-relaxed">{aiSamenvatting.tekst}</p>
-          </CardContent>
-        </Card>
+            <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5">
+              <RefreshCw className="size-3" />
+              Vernieuw analyse
+            </Button>
+          </div>
+          
+          <p className="text-sm text-foreground font-medium mb-4">{aiSamenvatting.hoofdTekst}</p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {aiSamenvatting.secties.map((sectie, i) => (
+              <div
+                key={i}
+                className={cn(
+                  "p-3 rounded-lg border",
+                  sectie.trend === "positief" && "bg-success/5 border-success/20",
+                  sectie.trend === "aandacht" && "bg-warning/5 border-warning/20",
+                  sectie.trend === "neutraal" && "bg-secondary/50 border-border"
+                )}
+              >
+                <div className="flex items-center gap-2 mb-1.5">
+                  {sectie.trend === "positief" && <TrendingUp className="size-3.5 text-success" />}
+                  {sectie.trend === "aandacht" && <TrendingDown className="size-3.5 text-warning" />}
+                  {sectie.trend === "neutraal" && <Minus className="size-3.5 text-muted-foreground" />}
+                  <span className="text-xs font-semibold text-foreground">{sectie.titel}</span>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">{sectie.tekst}</p>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* AI Feed - Full width */}
+      <div className="flex flex-col gap-4">
 
         {/* AI Feed */}
         <div className="flex flex-col gap-4">
@@ -846,9 +895,26 @@ function OverzichtTabWithAI() {
           </div>
         </div>
       </div>
+    </div>
+  )
+}
 
-      {/* RIGHT COLUMN: Client Memory */}
-      <div className="flex flex-col gap-6">
+// ============================================================================
+// AI CONFIG TAB
+// Contains: Client Memory + AI Automatiseringsregels + Data Status + AI Activity Log
+// ============================================================================
+
+function AIConfigTab() {
+  const [activityLogPaused, setActivityLogPaused] = useState(false)
+  const [aiRuleModes, setAiRuleModes] = useState<Record<string, AIRuleMode>>(
+    Object.fromEntries(aiDomeinen.map(d => [d.id, d.defaultMode]))
+  )
+
+  return (
+    <div className="flex flex-col gap-6 p-6">
+      {/* ROW 1: Client Memory + AI Automatiseringsregels */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Client Memory */}
         <Card className="border-border">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
@@ -860,6 +926,7 @@ function OverzichtTabWithAI() {
                 <Plus className="size-3" /> Toevoegen
               </Button>
             </div>
+            <p className="text-[11px] text-muted-foreground">Wat de AI heeft geleerd over deze client</p>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             {clientMemory.map((mem) => (
@@ -880,66 +947,64 @@ function OverzichtTabWithAI() {
             ))}
           </CardContent>
         </Card>
-      </div>
 
-      </div>
-
-      {/* ROW 2: AI Automatiseringsregels */}
-      <Card className="border-border">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <Bot className="size-4 text-primary" />
-            AI Automatiseringsregels
-          </CardTitle>
-          <p className="text-[11px] text-muted-foreground">Bepaal hoe AI handelt per domein</p>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-            {aiDomeinen.map((domein) => {
-              const Icon = domein.icon
-              return (
-                <div key={domein.id} className="flex flex-col gap-2 p-3 rounded-lg bg-secondary/30 border border-border">
-                  <div className="flex items-center gap-2">
-                    <Icon className="size-4 text-primary" />
-                    <span className="text-xs font-semibold text-foreground">{domein.label}</span>
+        {/* AI Automatiseringsregels */}
+        <Card className="border-border">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <Bot className="size-4 text-primary" />
+              AI Automatiseringsregels
+            </CardTitle>
+            <p className="text-[11px] text-muted-foreground">Bepaal hoe AI handelt per domein</p>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {aiDomeinen.map((domein) => {
+                const Icon = domein.icon
+                return (
+                  <div key={domein.id} className="flex flex-col gap-2 p-3 rounded-lg bg-secondary/30 border border-border">
+                    <div className="flex items-center gap-2">
+                      <Icon className="size-4 text-primary" />
+                      <span className="text-xs font-semibold text-foreground">{domein.label}</span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">{domein.beschrijving}</p>
+                    <Select
+                      value={aiRuleModes[domein.id]}
+                      onValueChange={(value: AIRuleMode) => setAiRuleModes(prev => ({ ...prev, [domein.id]: value }))}
+                    >
+                      <SelectTrigger className="h-7 text-[11px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ai_stuurt" className="text-xs">
+                          <span className="flex items-center gap-1.5">
+                            <Sparkles className="size-3 text-primary" />
+                            AI stuurt
+                          </span>
+                        </SelectItem>
+                        <SelectItem value="voorstellen" className="text-xs">
+                          <span className="flex items-center gap-1.5">
+                            <span className="size-1.5 rounded-full bg-warning" />
+                            Voorstellen
+                          </span>
+                        </SelectItem>
+                        <SelectItem value="handmatig" className="text-xs">
+                          <span className="flex items-center gap-1.5">
+                            <span className="size-1.5 rounded-full bg-muted-foreground" />
+                            Handmatig
+                          </span>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <p className="text-[10px] text-muted-foreground">{domein.beschrijving}</p>
-                  <Select
-                    value={aiRuleModes[domein.id]}
-                    onValueChange={(value: AIRuleMode) => setAiRuleModes(prev => ({ ...prev, [domein.id]: value }))}
-                  >
-                    <SelectTrigger className="h-7 text-[11px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ai_stuurt" className="text-xs">
-                        <span className="flex items-center gap-1.5">
-                          <Sparkles className="size-3 text-primary" />
-                          AI stuurt
-                        </span>
-                      </SelectItem>
-                      <SelectItem value="voorstellen" className="text-xs">
-                        <span className="flex items-center gap-1.5">
-                          <span className="size-1.5 rounded-full bg-warning" />
-                          Voorstellen
-                        </span>
-                      </SelectItem>
-                      <SelectItem value="handmatig" className="text-xs">
-                        <span className="flex items-center gap-1.5">
-                          <span className="size-1.5 rounded-full bg-muted-foreground" />
-                          Handmatig
-                        </span>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              )
-            })}
-          </div>
-        </CardContent>
-      </Card>
+                )
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-      {/* ROW 3: Data Status + AI Activity Log */}
+      {/* ROW 2: Data Status + AI Activity Log */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Data Status */}
         <Card className="border-border">
@@ -958,11 +1023,11 @@ function OverzichtTabWithAI() {
                 {dataBronnen.filter(d => d.status === "beschikbaar").map(bron => {
                   const Icon = bron.icon
                   return (
-                    <div key={bron.id} className="flex items-center justify-between py-1 px-2 rounded bg-success/5">
+                    <div key={bron.id} className="flex items-center justify-between py-1.5 px-2 rounded bg-success/5">
                       <div className="flex items-center gap-2">
                         <Circle className="size-1.5 fill-success text-success" />
-                        <Icon className="size-3 text-muted-foreground" />
-                        <span className="text-[11px] text-foreground">{bron.label}</span>
+                        <Icon className="size-3.5 text-muted-foreground" />
+                        <span className="text-xs text-foreground">{bron.label}</span>
                       </div>
                       <span className="text-[10px] text-muted-foreground">{bron.detail}</span>
                     </div>
@@ -979,11 +1044,11 @@ function OverzichtTabWithAI() {
                   {dataBronnen.filter(d => d.status === "beperkt").map(bron => {
                     const Icon = bron.icon
                     return (
-                      <div key={bron.id} className="flex items-center justify-between py-1 px-2 rounded bg-warning/5">
+                      <div key={bron.id} className="flex items-center justify-between py-1.5 px-2 rounded bg-warning/5">
                         <div className="flex items-center gap-2">
                           <div className="size-1.5 rounded-full border border-warning" />
-                          <Icon className="size-3 text-muted-foreground" />
-                          <span className="text-[11px] text-foreground">{bron.label}</span>
+                          <Icon className="size-3.5 text-muted-foreground" />
+                          <span className="text-xs text-foreground">{bron.label}</span>
                         </div>
                         <span className="text-[10px] text-muted-foreground">{bron.detail}</span>
                       </div>
@@ -1001,11 +1066,11 @@ function OverzichtTabWithAI() {
                   {dataBronnen.filter(d => d.status === "niet_beschikbaar").map(bron => {
                     const Icon = bron.icon
                     return (
-                      <div key={bron.id} className="flex items-center justify-between py-1 px-2 rounded bg-secondary/30">
+                      <div key={bron.id} className="flex items-center justify-between py-1.5 px-2 rounded bg-secondary/30">
                         <div className="flex items-center gap-2">
                           <Circle className="size-1.5 text-muted-foreground" />
-                          <Icon className="size-3 text-muted-foreground/50" />
-                          <span className="text-[11px] text-muted-foreground">{bron.label}</span>
+                          <Icon className="size-3.5 text-muted-foreground/50" />
+                          <span className="text-xs text-muted-foreground">{bron.label}</span>
                         </div>
                         <button className="text-[10px] text-primary hover:underline">Activeren</button>
                       </div>
@@ -1016,12 +1081,12 @@ function OverzichtTabWithAI() {
             )}
 
             {/* AI Dekking */}
-            <div className="pt-2 border-t border-border">
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[11px] font-medium text-foreground">AI dekking</span>
+            <div className="pt-3 border-t border-border">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium text-foreground">AI dekking</span>
                 <span className="text-sm font-bold text-primary">{aiDekking}%</span>
               </div>
-              <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
+              <div className="h-2 rounded-full bg-secondary overflow-hidden">
                 <div
                   className="h-full rounded-full bg-gradient-to-r from-primary to-primary/60"
                   style={{ width: `${aiDekking}%` }}
@@ -1057,43 +1122,28 @@ function OverzichtTabWithAI() {
                 >
                   {activityLogPaused ? <Play className="size-3" /> : <Pause className="size-3" />}
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="size-6"
-                  onClick={() => setActivityLogOpen(!activityLogOpen)}
-                >
-                  {activityLogOpen ? <ChevronUp className="size-3" /> : <ChevronDown className="size-3" />}
-                </Button>
               </div>
             </div>
           </CardHeader>
           <CardContent>
-            <div
-              className={cn(
-                "rounded-lg bg-[#0d0d0d] border border-border overflow-hidden transition-all",
-                activityLogOpen ? "max-h-[300px]" : "max-h-[160px]"
-              )}
-            >
-              <div className="p-3 overflow-y-auto max-h-[inherit] font-mono text-[10px] space-y-1">
-                {aiActivityLog.map((log, i) => {
-                  const config = logTypeConfig[log.type]
-                  return (
-                    <div key={i} className="flex gap-2">
-                      <span className="text-muted-foreground shrink-0 w-8">{log.tijd}</span>
-                      <span className={cn("shrink-0 w-14 font-semibold", config.color)}>
-                        {config.label}
-                      </span>
-                      <div className="flex flex-col gap-0.5 min-w-0">
-                        <span className="text-foreground/90">{log.tekst}</span>
-                        {log.detail && (
-                          <span className="text-muted-foreground text-[9px]">→ {log.detail}</span>
-                        )}
-                      </div>
+            <div className="rounded-lg bg-[#0d0d0d] border border-border p-4 font-mono text-[11px] space-y-2">
+              {aiActivityLog.map((log, i) => {
+                const config = logTypeConfig[log.type]
+                return (
+                  <div key={i} className="flex gap-3">
+                    <span className="text-muted-foreground shrink-0 w-10">{log.tijd}</span>
+                    <span className={cn("shrink-0 w-16 font-semibold", config.color)}>
+                      {config.label}
+                    </span>
+                    <div className="flex flex-col gap-0.5 min-w-0">
+                      <span className="text-foreground/90">{log.tekst}</span>
+                      {log.detail && (
+                        <span className="text-muted-foreground text-[10px]">  {log.detail}</span>
+                      )}
                     </div>
-                  )
-                })}
-              </div>
+                  </div>
+                )
+              })}
             </div>
           </CardContent>
         </Card>
