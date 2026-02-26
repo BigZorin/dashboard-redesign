@@ -414,10 +414,6 @@ export function VoedingTab({ clientId }: VoedingTabProps) {
               </Card>
             )}
 
-            {/* Supplementen */}
-            {supplements.length > 0 && (
-              <SupplementenCard supplements={supplements} />
-            )}
           </div>
 
           {/* RECHTER KOLOM: Maaltijden + trend (3/5) */}
@@ -537,6 +533,11 @@ export function VoedingTab({ clientId }: VoedingTabProps) {
                   )}
                 </CardContent>
               </Card>
+            )}
+
+            {/* Supplementen */}
+            {supplements.length > 0 && (
+              <SupplementenCard supplements={supplements} />
             )}
           </div>
         </div>
