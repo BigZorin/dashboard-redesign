@@ -252,119 +252,127 @@ export function CheckinsTab() {
                 <span className="text-[11px] font-bold text-primary">W{checkin.weekNummer}</span>
               </button>
 
-              {/* Content kaart */}
-              <Card className={`flex-1 transition-all ${
+              {/* Content kaart - Verbeterd design */}
+              <Card className={`flex-1 transition-all overflow-hidden ${
                 vergelijkModus && geselecteerdeWeken.includes(checkin.id)
                   ? "border-primary/40 ring-1 ring-primary/20"
                   : "border-border"
               }`}>
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between mb-3">
+                {/* Header met key metrics */}
+                <div className="flex items-center justify-between p-4 border-b border-border bg-secondary/20">
+                  <div className="flex items-center gap-4">
                     <div>
-                      <p className="text-sm font-semibold text-foreground">Week {checkin.weekNummer}</p>
-                      <p className="text-[11px] text-muted-foreground">{checkin.datum}</p>
+                      <p className="text-base font-semibold text-foreground">Week {checkin.weekNummer}</p>
+                      <p className="text-xs text-muted-foreground">{checkin.datum}</p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {checkin.heeftFotos && (
-                        <Badge variant="outline" className="text-[10px] gap-1">
-                          <Camera className="size-3" />
-                          {checkin.aantalFotos} {"foto's"}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Metrics grid */}
-                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 mb-3">
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Gewicht</span>
-                      <div className="flex items-center gap-1">
-                        <span className="text-sm font-bold text-foreground">{checkin.gewicht} kg</span>
-                        {getTrendIcon(checkin.gewichtVerandering)}
-                        <span className={`text-[11px] ${checkin.gewichtVerandering <= 0 ? "text-success" : "text-destructive"}`}>
-                          {checkin.gewichtVerandering > 0 ? "+" : ""}{checkin.gewichtVerandering}
-                        </span>
+                    {/* Key metric: Gewicht */}
+                    <div className="flex items-center gap-3 pl-4 border-l border-border">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] text-muted-foreground uppercase">Gewicht</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-lg font-bold text-foreground">{checkin.gewicht}</span>
+                          <span className="text-xs text-muted-foreground">kg</span>
+                          <div className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
+                            checkin.gewichtVerandering <= 0 ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"
+                          }`}>
+                            {getTrendIcon(checkin.gewichtVerandering)}
+                            {checkin.gewichtVerandering > 0 ? "+" : ""}{checkin.gewichtVerandering}
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Taille</span>
-                      <span className="text-sm font-bold text-foreground">{checkin.taille} cm</span>
-                    </div>
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Training</span>
-                      <Badge
-                        variant="outline"
-                        className={`text-[10px] w-fit ${
-                          checkin.complianceTraining >= 90 ? "border-success/30 text-success" : "border-warning/30 text-warning-foreground"
-                        }`}
-                      >
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {/* Compliance badges */}
+                    <div className="flex items-center gap-1.5">
+                      <div className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold ${
+                        checkin.complianceTraining >= 90 ? "bg-success/10 text-success" : "bg-warning/10 text-warning"
+                      }`}>
+                        <span className="text-muted-foreground font-normal">Training</span>
                         {checkin.complianceTraining}%
-                      </Badge>
-                    </div>
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Voeding</span>
-                      <Badge
-                        variant="outline"
-                        className={`text-[10px] w-fit ${
-                          checkin.complianceVoeding >= 80 ? "border-success/30 text-success" : "border-warning/30 text-warning-foreground"
-                        }`}
-                      >
+                      </div>
+                      <div className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold ${
+                        checkin.complianceVoeding >= 80 ? "bg-success/10 text-success" : "bg-warning/10 text-warning"
+                      }`}>
+                        <span className="text-muted-foreground font-normal">Voeding</span>
                         {checkin.complianceVoeding}%
+                      </div>
+                    </div>
+                    {checkin.heeftFotos && (
+                      <Badge variant="outline" className="text-[10px] gap-1 border-primary/30 text-primary">
+                        <Camera className="size-3" />
+                        {checkin.aantalFotos}
                       </Badge>
+                    )}
+                  </div>
+                </div>
+
+                <CardContent className="p-4">
+                  {/* Welzijn scores - Compact inline */}
+                  <div className="flex items-center gap-6 mb-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-muted-foreground w-12">Energie</span>
+                      <div className="h-2 w-20 rounded-full bg-secondary overflow-hidden">
+                        <div className={`h-full rounded-full ${checkin.energie >= 7 ? "bg-success" : checkin.energie >= 5 ? "bg-warning" : "bg-destructive"}`} style={{ width: `${checkin.energie * 10}%` }} />
+                      </div>
+                      <span className="text-xs font-semibold text-foreground w-8">{checkin.energie}/10</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-muted-foreground w-12">Slaap</span>
+                      <div className="h-2 w-20 rounded-full bg-secondary overflow-hidden">
+                        <div className={`h-full rounded-full ${checkin.slaap >= 7 ? "bg-success" : checkin.slaap >= 5 ? "bg-warning" : "bg-destructive"}`} style={{ width: `${checkin.slaap * 10}%` }} />
+                      </div>
+                      <span className="text-xs font-semibold text-foreground w-8">{checkin.slaap}/10</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-muted-foreground w-12">Stress</span>
+                      <div className="h-2 w-20 rounded-full bg-secondary overflow-hidden">
+                        <div className={`h-full rounded-full ${checkin.stress <= 4 ? "bg-success" : checkin.stress <= 6 ? "bg-warning" : "bg-destructive"}`} style={{ width: `${checkin.stress * 10}%` }} />
+                      </div>
+                      <span className="text-xs font-semibold text-foreground w-8">{checkin.stress}/10</span>
                     </div>
                   </div>
 
-                  {/* Scores */}
-                  <div className="grid grid-cols-3 gap-3 mb-3">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[10px] text-muted-foreground">Energie</span>
-                      <ScoreBalk waarde={checkin.energie} />
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[10px] text-muted-foreground">Slaap</span>
-                      <ScoreBalk waarde={checkin.slaap} />
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[10px] text-muted-foreground">Stress</span>
-                      <ScoreBalk waarde={checkin.stress} />
-                    </div>
-                  </div>
-
-                  {/* Lichaamsmaten detail */}
-                  <div className="grid grid-cols-4 gap-2 mb-3 rounded-lg bg-secondary/40 p-2">
-                    <div className="text-center">
-                      <span className="text-[10px] text-muted-foreground block">Taille</span>
-                      <span className="text-xs font-semibold text-foreground">{checkin.taille} cm</span>
-                    </div>
-                    <div className="text-center">
-                      <span className="text-[10px] text-muted-foreground block">Heupen</span>
-                      <span className="text-xs font-semibold text-foreground">{checkin.heupen} cm</span>
-                    </div>
-                    <div className="text-center">
-                      <span className="text-[10px] text-muted-foreground block">Borst</span>
-                      <span className="text-xs font-semibold text-foreground">{checkin.borst} cm</span>
-                    </div>
-                    <div className="text-center">
-                      <span className="text-[10px] text-muted-foreground block">Armen</span>
-                      <span className="text-xs font-semibold text-foreground">{checkin.armen} cm</span>
+                  {/* Lichaamsmaten - Compact grid */}
+                  <div className="flex items-center gap-6 pb-4 mb-4 border-b border-border">
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Maten</span>
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs text-muted-foreground">Taille</span>
+                        <span className="text-xs font-semibold text-foreground">{checkin.taille}cm</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs text-muted-foreground">Heupen</span>
+                        <span className="text-xs font-semibold text-foreground">{checkin.heupen}cm</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs text-muted-foreground">Borst</span>
+                        <span className="text-xs font-semibold text-foreground">{checkin.borst}cm</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs text-muted-foreground">Armen</span>
+                        <span className="text-xs font-semibold text-foreground">{checkin.armen}cm</span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Opmerkingen */}
-                  {checkin.clientOpmerking && (
-                    <div className="flex gap-2 rounded-lg bg-secondary/40 p-3 mb-2">
-                      <MessageSquare className="size-3.5 text-muted-foreground shrink-0 mt-0.5" />
-                      <p className="text-xs text-foreground leading-relaxed italic">
-                        {`"${checkin.clientOpmerking}"`}
-                      </p>
-                    </div>
-                  )}
-                  {checkin.coachNotitie && (
-                    <div className="flex gap-2 rounded-lg bg-primary/5 p-3">
-                      <span className="text-[10px] font-semibold text-primary shrink-0 mt-0.5">COACH:</span>
-                      <p className="text-xs text-foreground leading-relaxed">{checkin.coachNotitie}</p>
-                    </div>
-                  )}
+                  {/* Opmerkingen - Stacked */}
+                  <div className="flex flex-col gap-2">
+                    {checkin.clientOpmerking && (
+                      <div className="flex gap-2 items-start">
+                        <MessageSquare className="size-3.5 text-muted-foreground shrink-0 mt-0.5" />
+                        <p className="text-xs text-muted-foreground leading-relaxed italic">
+                          {`"${checkin.clientOpmerking}"`}
+                        </p>
+                      </div>
+                    )}
+                    {checkin.coachNotitie && (
+                      <div className="flex gap-2 items-start rounded-md bg-primary/5 p-2 -mx-2">
+                        <span className="text-[10px] font-bold text-primary shrink-0">COACH</span>
+                        <p className="text-xs text-foreground leading-relaxed">{checkin.coachNotitie}</p>
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </div>
