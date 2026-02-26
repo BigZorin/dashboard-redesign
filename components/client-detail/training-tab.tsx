@@ -5,7 +5,6 @@ import {
   TrendingUp,
   ChevronDown,
   ChevronRight,
-  Sparkles,
   Check,
   Clock,
   Edit3,
@@ -15,6 +14,8 @@ import {
   Play,
   CalendarDays,
   BarChart3,
+  Trash2,
+  MoreVertical,
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -28,6 +29,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 // ============================================================================
 // PLACEHOLDER DATA — Alle programma's van de cliënt
@@ -260,19 +267,10 @@ export function TrainingTab() {
               {actieveProgrammas.length} actief &middot; {voltooide.length} voltooid
             </p>
           </div>
-        <div className="flex items-center gap-2">
-          <Button
-            size="sm"
-            className="h-8 gap-1.5 text-xs bg-gradient-to-r from-[#6c3caf] to-[#5b2d9e] hover:from-[#7c4dbd] hover:to-[#6c3caf] text-white border-0"
-          >
-            <Sparkles className="size-3.5" />
-            AI genereert programma
-          </Button>
-          <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs border-border">
-            <Plus className="size-3.5" />
-            Toewijzen
-          </Button>
-        </div>
+        <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs border-border">
+          <Plus className="size-3.5" />
+          Programma toewijzen
+        </Button>
         </div>
 
         {/* Actieve programma's */}
@@ -281,7 +279,12 @@ export function TrainingTab() {
             <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actief</h4>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               {actieveProgrammas.map((prog) => (
-                <ProgrammaKaart key={prog.id} programma={prog} onKlik={() => selecteerProgramma(prog.id)} />
+                <ProgrammaKaart 
+                  key={prog.id} 
+                  programma={prog} 
+                  onKlik={() => selecteerProgramma(prog.id)} 
+                  onVerwijder={() => console.log("Verwijder programma:", prog.id)}
+                />
               ))}
             </div>
           </div>
@@ -293,7 +296,12 @@ export function TrainingTab() {
             <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Voltooid</h4>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               {voltooide.map((prog) => (
-                <ProgrammaKaart key={prog.id} programma={prog} onKlik={() => selecteerProgramma(prog.id)} />
+                <ProgrammaKaart 
+                  key={prog.id} 
+                  programma={prog} 
+                  onKlik={() => selecteerProgramma(prog.id)}
+                  onVerwijder={() => console.log("Verwijder programma:", prog.id)}
+                />
               ))}
             </div>
           </div>
@@ -527,9 +535,11 @@ export function TrainingTab() {
 function ProgrammaKaart({
   programma: prog,
   onKlik,
+  onVerwijder,
 }: {
   programma: typeof programmas[number]
   onKlik: () => void
+  onVerwijder?: () => void
 }) {
   const isVoltooid = prog.status === "voltooid"
   const voortgang = Math.round((prog.huidigeWeek / prog.totaalWeken) * 100)
@@ -560,22 +570,37 @@ function ProgrammaKaart({
           <h4 className="text-sm font-bold text-white">{prog.naam}</h4>
           <p className="text-[11px] text-white/80">{prog.type}</p>
         </div>
-        {isVoltooid && (
-          <div className="absolute top-2 right-2 z-10">
-            <Badge className="bg-white/20 text-white border-white/30 text-[9px] backdrop-blur-sm">
-              <Check className="size-2.5 mr-0.5" />
-              Voltooid
-            </Badge>
-          </div>
-        )}
-        {!isVoltooid && (
-          <div className="absolute top-2 right-2 z-10">
-            <Badge className="bg-white/20 text-white border-white/30 text-[9px] backdrop-blur-sm">
-              <Play className="size-2.5 mr-0.5" />
-              Actief
-            </Badge>
-          </div>
-        )}
+        
+        {/* Status badge + Menu */}
+        <div className="absolute top-2 right-2 z-10 flex items-center gap-1">
+          <Badge className="bg-white/20 text-white border-white/30 text-[9px] backdrop-blur-sm">
+            {isVoltooid ? (
+              <><Check className="size-2.5 mr-0.5" />Voltooid</>
+            ) : (
+              <><Play className="size-2.5 mr-0.5" />Actief</>
+            )}
+          </Badge>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+              <button className="flex items-center justify-center size-6 rounded-md bg-white/20 hover:bg-white/30 backdrop-blur-sm transition-colors">
+                <MoreVertical className="size-3.5 text-white" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onKlik(); }}>
+                <Edit3 className="size-3.5 mr-2" />
+                Bewerken
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={(e) => { e.stopPropagation(); onVerwijder?.(); }}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="size-3.5 mr-2" />
+                Verwijderen
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {/* Info */}

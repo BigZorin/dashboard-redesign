@@ -45,7 +45,6 @@ import {
   Pen,
   Filter,
   Heart,
-  Layers,
 } from "lucide-react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -87,7 +86,6 @@ import { CheckinsTab } from "@/components/client-detail/checkins-tab"
 import { DailyCheckinTab } from "@/components/client-detail/daily-checkin-tab"
 import { MetingenTab } from "@/components/client-detail/metingen-tab"
 import { InstellingenTab } from "@/components/client-detail/instellingen-tab"
-import { ProgrammasTab } from "@/components/client-detail/programmas-tab"
 
 // ============================================================================
 // CLIENT DETAIL PAGE — Tabbed Layout (per brief)
@@ -346,13 +344,6 @@ export function ClientDetailSection({ clientId, onTerug }: ClientDetailSectionPr
                 <TabBadge count={aiVoorstellenPerTab.training} />
               </TabsTrigger>
   <TabsTrigger
-  value="programmas"
-  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 text-sm"
-  >
-  <Layers className="size-3.5 mr-1.5" />
-  {"Programma's"}
-  </TabsTrigger>
-  <TabsTrigger
   value="voeding"
   className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 text-sm"
   >
@@ -403,9 +394,6 @@ export function ClientDetailSection({ clientId, onTerug }: ClientDetailSectionPr
           </TabsContent>
   <TabsContent value="training" className="m-0 h-full">
   <TrainingTab />
-  </TabsContent>
-  <TabsContent value="programmas" className="m-0 h-full">
-  <ProgrammasTab />
   </TabsContent>
   <TabsContent value="voeding" className="m-0 h-full">
             <VoedingTab />
