@@ -65,6 +65,7 @@ import { OverzichtTab } from "@/components/client-detail/overzicht-tab"
 import { TrainingTab } from "@/components/client-detail/training-tab"
 import { VoedingTab } from "@/components/client-detail/voeding-tab"
 import { CheckinsTab } from "@/components/client-detail/checkins-tab"
+import { DailyCheckinTab } from "@/components/client-detail/daily-checkin-tab"
 import { MetingenTab } from "@/components/client-detail/metingen-tab"
 import { InstellingenTab } from "@/components/client-detail/instellingen-tab"
 
@@ -369,7 +370,14 @@ export function ClientDetailSection({ clientId, onTerug }: ClientDetailSectionPr
                 className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 text-sm"
               >
                 <ClipboardList className="size-3.5 mr-1.5" />
-                Check-ins & Intake
+                Wekelijks
+              </TabsTrigger>
+              <TabsTrigger
+                value="daily"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 text-sm"
+              >
+                <Zap className="size-3.5 mr-1.5" />
+                Dagelijks
               </TabsTrigger>
               <TabsTrigger
                 value="metingen"
@@ -412,6 +420,9 @@ export function ClientDetailSection({ clientId, onTerug }: ClientDetailSectionPr
           </TabsContent>
           <TabsContent value="checkins" className="m-0 h-full">
             <CheckinsTab />
+          </TabsContent>
+          <TabsContent value="daily" className="m-0 h-full">
+            <DailyCheckinTab />
           </TabsContent>
           <TabsContent value="metingen" className="m-0 h-full">
             <MetingenTab />
